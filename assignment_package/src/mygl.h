@@ -13,6 +13,7 @@
 #include <QOpenGLShaderProgram>
 #include <smartpointerhelp.h>
 
+#include "player.h"
 
 class MyGL : public OpenGLContext
 {
@@ -26,11 +27,12 @@ private:
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
 
-    uPtr<Camera> mp_camera;
     uPtr<Terrain> mp_terrain;
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
+
+    Player player;
 
     void MoveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that

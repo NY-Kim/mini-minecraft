@@ -10,7 +10,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       mp_geomCube(mkU<Cube>(this)), mp_worldAxes(mkU<WorldAxes>(this)),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
-      mp_camera(mkU<Camera>()), mp_terrain(mkU<Terrain>())
+      mp_terrain(mkU<Terrain>()), player()
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -85,9 +85,9 @@ void MyGL::resizeGL(int w, int h)
 {
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
-    *mp_camera = Camera(w, h, glm::vec3(mp_terrain->dimensions.x, mp_terrain->dimensions.y * 0.75, mp_terrain->dimensions.z),
+    *player.camera = Camera(w, h, glm::vec3(mp_terrain->dimensions.x, mp_terrain->dimensions.y * 0.75, mp_terrain->dimensions.z),
                        glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
-    glm::mat4 viewproj = mp_camera->getViewProj();
+    glm::mat4 viewproj = player.camera->getViewProj();
 
     // Upload the view-projection matrix to our shaders (i.e. onto the graphics card)
 
@@ -113,8 +113,8 @@ void MyGL::paintGL()
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    mp_progFlat->setViewProjMatrix(mp_camera->getViewProj());
-    mp_progLambert->setViewProjMatrix(mp_camera->getViewProj());
+    mp_progFlat->setViewProjMatrix(player.camera->getViewProj());
+    mp_progLambert->setViewProjMatrix(player.camera->getViewProj());
 
     GLDrawScene();
 
@@ -161,44 +161,7 @@ void MyGL::GLDrawScene()
 
 void MyGL::keyPressEvent(QKeyEvent *e)
 {
-
-    float amount = 2.0f;
-    if(e->modifiers() & Qt::ShiftModifier){
-        amount = 10.0f;
-    }
-    // http://doc.qt.io/qt-5/qt.html#Key-enum
-    // This could all be much more efficient if a switch
-    // statement were used, but I really dislike their
-    // syntax so I chose to be lazy and use a long
-    // chain of if statements instead
     if (e->key() == Qt::Key_Escape) {
         QApplication::quit();
-    } else if (e->key() == Qt::Key_Right) {
-        mp_camera->RotateAboutUp(-amount);
-    } else if (e->key() == Qt::Key_Left) {
-        mp_camera->RotateAboutUp(amount);
-    } else if (e->key() == Qt::Key_Up) {
-        mp_camera->RotateAboutRight(-amount);
-    } else if (e->key() == Qt::Key_Down) {
-        mp_camera->RotateAboutRight(amount);
-    } else if (e->key() == Qt::Key_1) {
-        mp_camera->fovy += amount;
-    } else if (e->key() == Qt::Key_2) {
-        mp_camera->fovy -= amount;
-    } else if (e->key() == Qt::Key_W) {
-        mp_camera->TranslateAlongLook(amount);
-    } else if (e->key() == Qt::Key_S) {
-        mp_camera->TranslateAlongLook(-amount);
-    } else if (e->key() == Qt::Key_D) {
-        mp_camera->TranslateAlongRight(amount);
-    } else if (e->key() == Qt::Key_A) {
-        mp_camera->TranslateAlongRight(-amount);
-    } else if (e->key() == Qt::Key_Q) {
-        mp_camera->TranslateAlongUp(-amount);
-    } else if (e->key() == Qt::Key_E) {
-        mp_camera->TranslateAlongUp(amount);
-    } else if (e->key() == Qt::Key_R) {
-        *mp_camera = Camera(this->width(), this->height());
-    }
-    mp_camera->RecomputeAttributes();
+    } else player.keyEventUpdate(e, this->width(), this->height());
 }
