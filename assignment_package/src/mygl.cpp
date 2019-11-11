@@ -165,3 +165,20 @@ void MyGL::keyPressEvent(QKeyEvent *e)
         QApplication::quit();
     } else player.keyEventUpdate(e, this->width(), this->height());
 }
+
+void MyGL::keyReleaseEvent(QKeyEvent *e) {
+    player.keyEventUpdate(e, 0, 0);
+}
+
+void MyGL::mouseMoveEvent(QMouseEvent *m) {
+    player.mouseEventUpdate(m);
+    MoveMouseToCenter();
+}
+
+void MyGL::mousePressEvent(QMouseEvent *m) {
+    player.mouseEventUpdate(m);
+}
+
+void MyGL::mouseReleaseEvent(QMouseEvent *m) {
+    player.mouseEventUpdate(m);
+}
