@@ -32,7 +32,9 @@ private:
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
 
-    Player player;
+    // Additional variables for project
+    uPtr<Player> player;
+    int64_t lastUpdate;
 
     void MoveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that

@@ -1,14 +1,17 @@
 #include "player.h"
+#include <iostream>
 
 Player::Player()
-    : camera(mkU<Camera>()), wasdPressed(std::make_tuple(false, false, false, false)),
-      cursorXYChange(std::make_tuple(0.f, 0.f))
+    : camera(mkU<Camera>()), velocity(0.f, 0.f, 0.f),
+      wasdPressed(std::make_tuple(false, false, false, false)), spacebarPressed(false),
+      cursorXYChange(0.f, 0.f), lmbPressed(false), rmbPressed(false),
+      godMode(false), onGround(true)
 {}
 
 Player::~Player()
 {}
 
-void Player::keyEventUpdate(QKeyEvent *e, unsigned int w, unsigned int h) {
+void Player::keyEventUpdate(QKeyEvent *e) {
     // Modified from base code
     float amount = 2.0f;
     if(e->modifiers() & Qt::ShiftModifier){
@@ -17,15 +20,7 @@ void Player::keyEventUpdate(QKeyEvent *e, unsigned int w, unsigned int h) {
 
     // Check if key was pressed or released, then act accordingly
     if (e->type() == QEvent::KeyPress) {
-        if (e->key() == Qt::Key_Right) {
-            camera->RotateAboutUp(-amount);
-        } else if (e->key() == Qt::Key_Left) {
-            camera->RotateAboutUp(amount);
-        } else if (e->key() == Qt::Key_Up) {
-            camera->RotateAboutRight(-amount);
-        } else if (e->key() == Qt::Key_Down) {
-            camera->RotateAboutRight(amount);
-        } else if (e->key() == Qt::Key_1) {
+        if (e->key() == Qt::Key_1) {
             camera->fovy += amount;
         } else if (e->key() == Qt::Key_2) {
             camera->fovy -= amount;
@@ -41,12 +36,16 @@ void Player::keyEventUpdate(QKeyEvent *e, unsigned int w, unsigned int h) {
         } else if (e->key() == Qt::Key_D) {
             camera->TranslateAlongRight(amount);
             std::get<3>(wasdPressed) = true;
-        } else if (e->key() == Qt::Key_Q) {
+        } else if (e->key() == Qt::Key_Q && godMode) {
             camera->TranslateAlongUp(-amount);
-        } else if (e->key() == Qt::Key_E) {
+        } else if (e->key() == Qt::Key_E && godMode) {
             camera->TranslateAlongUp(amount);
         } else if (e->key() == Qt::Key_R) {
-            *camera = Camera(w, h);
+            *camera = Camera(camera->width, camera->height);
+        } else if (e->key() == Qt::Key_F) {
+            godMode = !godMode;
+        } else if (e->key() == Qt::Key_Space) {
+            spacebarPressed = true;
         }
         camera->RecomputeAttributes();
     }
@@ -64,5 +63,7 @@ void Player::keyEventUpdate(QKeyEvent *e, unsigned int w, unsigned int h) {
 }
 
 void Player::mouseEventUpdate(QMouseEvent *m) {
-
+    if (m->type() == QEvent::MouseMove) {
+        cursorXYChange += QPoint(camera->width / 2, camera->height / 2) - m->pos();
+    }
 }

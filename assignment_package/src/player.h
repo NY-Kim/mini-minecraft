@@ -13,21 +13,24 @@ class Player
 {
 public:
     // Player property member variables specified in writeup
+    uPtr<Camera> camera;
     glm::vec3 position;
     glm::vec3 velocity;
-    uPtr<Camera> camera;
     std::tuple<bool, bool, bool, bool> wasdPressed;
     bool spacebarPressed;
-    std::tuple<float, float> cursorXYChange;
+    QPoint cursorXYChange;
+    bool lmbPressed;
+    bool rmbPressed;
 
-    // Additional property member variables
+    // Additional property member variables 
     bool godMode;
+    bool onGround;
 
     Player();
     virtual ~Player();
 
     // Function to update member variables based on key event
-    void keyEventUpdate(QKeyEvent* e, unsigned int w, unsigned int h);
+    void keyEventUpdate(QKeyEvent* e);
 
     // Function to update member variables based on mouse event
     void mouseEventUpdate(QMouseEvent* m);
