@@ -88,7 +88,7 @@ void MyGL::resizeGL(int w, int h)
 {
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
-    *player->camera = Camera(w, h, glm::vec3(mp_terrain->dimensions.x, mp_terrain->dimensions.y * 0.75, mp_terrain->dimensions.z),
+    *player->camera = Camera(w, h, glm::vec3(19.f, 137.f, 8.f),
                             glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
     player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 
@@ -115,20 +115,20 @@ void MyGL::timerUpdate()
     // Step 2. Iterate over all entities that are capable of receiving input
     // and read their present controller state
     if (std::get<0>(player->wasdPressed)) {
-        player->velocity[2] = 2.f;
-    } else {
-        player->velocity[2] = 0.f;
-    }
-    if (std::get<1>(player->wasdPressed)) {
-        player->velocity[0] = -2.f;
+        player->velocity[0] = 2.f;
     } else {
         player->velocity[0] = 0.f;
     }
+    if (std::get<1>(player->wasdPressed)) {
+        player->velocity[2] = -2.f;
+    } else {
+        player->velocity[2] = 0.f;
+    }
     if (std::get<2>(player->wasdPressed)) {
-        player->velocity[2] = (player->velocity[2] == 2.f) ? 0.f : -2.f;
+        player->velocity[0] = (player->velocity[2] == 2.f) ? 0.f : -2.f;
     }
     if (std::get<3>(player->wasdPressed)) {
-        player->velocity[0] = (player->velocity[0] == -2.f) ? 0.f : 2.f;
+        player->velocity[2] = (player->velocity[0] == -2.f) ? 0.f : 2.f;
     }
 
     if (player->spacebarPressed) {
@@ -145,46 +145,51 @@ void MyGL::timerUpdate()
         player->cursorXYChange.setY(0);
     }
 
+    if (player->qPressed) {
+        player->velocity[1] = -2.f;
+    }
+    if (player->ePressed) {
+        player->velocity[1] = (player->qPressed) ? 0.f : 2.f;
+    }
+
     // Step 3. Iterate over all entities in scene and perform "physics update"
     // and
     // Step 4. Prevent physics entities from colliding with other physics entities
     // In order to check for collisions, we volume cast using the translation vector
-    // We first change position based on the vector then move it back if needed before updating camera
-    glm::vec3 trans(player->velocity[0] * deltaT / 1000.f,
-                    player->velocity[1] * deltaT / 1000.f,
-                    player->velocity[2] * deltaT / 1000.f);
-    glm::vec3 updatedPos(player->position + trans);
+    // We find the furthest possible point , then volume cast and reupdate camera if necessary
+    glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
+                    player->velocity[1] * deltaT / 100.f,
+                    player->velocity[2] * deltaT / 100.f);
 
-    for (int xPos = floor(player->position[0]); xPos < ceil(updatedPos[0]); xPos++) {
-        if (mp_terrain->getBlockAt(xPos, floor(player->position[1]), floor(player->position[2])) != EMPTY) {
-            updatedPos[0] = xPos - 0.01;
-            trans[0] = updatedPos[0] - player->position[0];
-            break;
-        }
-    }
-    for (int yPos = floor(player->position[1]); yPos < ceil(updatedPos[1]); yPos++) {
-        if (mp_terrain->getBlockAt(floor(player->position[0]), yPos, floor(player->position[2])) != EMPTY) {
-            updatedPos[1] = yPos - 0.01;
-            trans[1] = updatedPos[1] - player->position[1];
-            break;
-        }
-    }
-    for (int zPos = floor(player->position[2]); zPos < ceil(updatedPos[2]); zPos++) {
-        if (mp_terrain->getBlockAt(floor(player->position[0]), floor(player->position[1]), zPos) != EMPTY) {
-            updatedPos[2] = zPos - 0.01;
-            trans[2] = updatedPos[2] - player->position[2];
-            break;
-        }
+    std::cout << glm::to_string(player->position) << std::endl;
+
+    glm::vec3 updatedPos(player->position);
+
+    if (player->godMode) {
+        glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
+        updatedPos += grounded * trans[0];
+    } else {
+        updatedPos += player->camera->look * trans[0];
     }
 
-    player->position = updatedPos;
-    player->camera->TranslateAlongRight(trans[0]);
+    updatedPos += player->camera->up * trans[1];
+    updatedPos += player->camera->right * trans[2];
+
+/// ASK IN OFFICE HOURS ABOUT COLLISION DETECTION
+
+    if (player->godMode) {
+        player->camera->TranslateAlongLook(trans[0]);
+    } else {
+        player->camera->TranslateAlongLookWalk(trans[0]);
+    }
+
     player->camera->TranslateAlongUp(trans[1]);
-    player->camera->TranslateAlongLook(trans[2]);
+    player->camera->TranslateAlongRight(trans[2]);
     player->camera->RecomputeAttributes();
+    player->position = player->camera->eye;
 
     // Gravity only affects player if not in god mode
-    player->velocity[1] = (player->godMode) ? 0 : player->velocity[1] - (9.8 * deltaT / 1000.f);
+    player->velocity[1] = (true) ? 0 : player->velocity[1] - (9.8 * deltaT / 1000.f);
 
     // Step 5. Process all renderable entities and draw them
     update();

@@ -25,6 +25,8 @@ public:
     // Additional property member variables 
     bool godMode;
     bool onGround;
+    bool qPressed;
+    bool ePressed;
 
     Player();
     virtual ~Player();

@@ -101,3 +101,10 @@ void Camera::TranslateAlongUp(float amt)
     eye += translation;
     ref += translation;
 }
+
+void Camera::TranslateAlongLookWalk(float amt) {
+    glm::vec3 grounded = glm::normalize(glm::vec3(look[0], 0, look[2]));
+    glm::vec3 translation = grounded * amt;
+    eye += translation;
+    ref += translation;
+}
