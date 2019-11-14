@@ -18,7 +18,7 @@ public:
     glm::vec3 velocity;
     std::tuple<bool, bool, bool, bool> wasdPressed;
     bool spacebarPressed;
-    QPoint cursorXYChange;
+    bool mouseMoved;
     bool lmbPressed;
     bool rmbPressed;
 

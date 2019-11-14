@@ -131,18 +131,14 @@ void MyGL::timerUpdate()
         player->velocity[2] = (player->velocity[0] == -2.f) ? 0.f : 2.f;
     }
 
+    if (player->mouseMoved) {
+        player->camera->RotatePolar();
+        player->mouseMoved = false;
+    }
+
     if (player->spacebarPressed) {
         player->velocity[1] = 2.f;
         player->spacebarPressed = false;
-    }
-
-    if (player->cursorXYChange.x() != 0.f) {
-        player->camera->RotateAboutUp(player->cursorXYChange.x());
-        player->cursorXYChange.setX(0);
-    }
-    if (player->cursorXYChange.y() != 0.f) {
-        player->camera->RotateAboutRight(player->cursorXYChange.y());
-        player->cursorXYChange.setY(0);
     }
 
     if (player->qPressed) {
@@ -160,8 +156,6 @@ void MyGL::timerUpdate()
     glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
                     player->velocity[1] * deltaT / 100.f,
                     player->velocity[2] * deltaT / 100.f);
-
-    std::cout << glm::to_string(player->position) << std::endl;
 
     glm::vec3 updatedPos(player->position);
 

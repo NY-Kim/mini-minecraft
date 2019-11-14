@@ -29,7 +29,10 @@ public:
               V,        //Represents the vertical component of the plane of the viewing frustum that passes through the camera's reference point. Used in Camera::Raycast.
               H;        //Represents the horizontal component of the plane of the viewing frustum that passes through the camera's reference point. Used in Camera::Raycast.
 
+    glm::vec2 polar;
+
     glm::mat4 getViewProj();
+
 
     void RecomputeAttributes();
 
@@ -40,5 +43,7 @@ public:
     void TranslateAlongRight(float amt);
     void TranslateAlongUp(float amt);
 
+    void RotatePolar();
     void TranslateAlongLookWalk(float amt);
+    void RecomputePolar();
 };

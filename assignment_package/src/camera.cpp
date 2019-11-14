@@ -24,7 +24,8 @@ Camera::Camera(unsigned int w, unsigned int h, const glm::vec3 &e, const glm::ve
     far_clip(1000),
     eye(e),
     ref(r),
-    world_up(worldUp)
+    world_up(worldUp),
+    polar(0.f, 0.f)
 {
     RecomputeAttributes();
 }
@@ -43,7 +44,8 @@ Camera::Camera(const Camera &c):
     right(c.right),
     world_up(c.world_up),
     V(c.V),
-    H(c.H)
+    H(c.H),
+    polar(c.polar)
 {}
 
 
@@ -102,9 +104,40 @@ void Camera::TranslateAlongUp(float amt)
     ref += translation;
 }
 
+void::Camera::RotatePolar() {
+    // Normalize angles appropriately
+    if (polar[0] >= 360) {
+        while (polar[0] > 360) {
+            polar[0] -= 360;
+        }
+    } else if (polar[0] < 0) {
+        while (polar[0] < 0) {
+            polar[0] += 360;
+        }
+    }
+    polar[1] = glm::clamp(polar[1], -89.99f, 89.99f);
+
+    glm::mat4 align = glm::rotate(glm::mat4(1.0f), glm::radians(polar[0]), glm::vec3(0.f, 1.f, 0.f)) *
+                      glm::rotate(glm::mat4(1.0f), glm::radians(polar[1]), glm::vec3(1.f, 0.f, 0.f));
+
+    look = glm::vec3(align * glm::vec4(0.f, 0.f, -1.f, 0.f));
+    right = glm::vec3(align * glm::vec4(1.f, 0.f, 0.f, 0.f));
+    up = glm::vec3(align * glm::vec4(world_up, 0.f));
+
+    ref = eye + look;
+
+    float tan_fovy = tan(glm::radians(fovy/2));
+    float len = glm::length(ref - eye);
+    aspect = width/height;
+    V = up*len*tan_fovy;
+    H = right*len*aspect*tan_fovy;
+
+}
+
 void Camera::TranslateAlongLookWalk(float amt) {
     glm::vec3 grounded = glm::normalize(glm::vec3(look[0], 0, look[2]));
     glm::vec3 translation = grounded * amt;
     eye += translation;
     ref += translation;
 }
+
