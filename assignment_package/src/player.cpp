@@ -68,7 +68,6 @@ void Player::mouseEventUpdate(QMouseEvent *m) {
         QPoint cursorXYChange = QPoint(camera->width / 2, camera->height / 2) - m->pos();
         camera->polar[0] += cursorXYChange.x() / 10.f;
         camera->polar[1] += cursorXYChange.y() / 10.f;
-        std::cout << glm::to_string(camera->polar) << std::endl;
         mouseMoved = true;
     }
 }

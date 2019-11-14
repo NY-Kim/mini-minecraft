@@ -51,6 +51,8 @@ public:
 
     void GLDrawScene();
 
+    float rayMarch(glm::vec3 ray, glm::vec3 currPos);
+
 protected:
     void keyPressEvent(QKeyEvent *e);
     void keyReleaseEvent(QKeyEvent *e);

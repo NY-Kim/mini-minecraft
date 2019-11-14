@@ -102,6 +102,36 @@ void MyGL::resizeGL(int w, int h)
     printGLErrorLog();
 }
 
+float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
+    float minT;
+    float currT = 0.f;
+
+    // March to find blocks that the vertex (position: currPos) will intersect with
+    while (currT < 1.f && currT >= 0.f) {
+        minT = 1.f;
+        glm::vec3 intPos = glm::floor(currPos);
+        for (int i = 0; i < 3; i++) {
+
+            // Check if the coordinate is increasing or decreasing by using ray sign
+            if (ray[i] > 0) {
+                minT = std::min(minT, (intPos[i] + 1 - currPos[i]) / ray[i]);
+            } else {
+                minT = std::min(minT, (intPos[i] - currPos[i]) / ray[i]);
+            }
+        }
+
+        // Move position to next block and check if we have reached/passed our final point
+        currPos += glm::vec3(minT) * ray;
+        currT += minT;
+
+        // Check if there will be a collision
+        glm::vec3 blockCoords = glm::floor(currPos);
+        if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
+            return currT;
+        }
+    }
+    return glm::clamp(currT, 0.f, 1.f);
+}
 
 // MyGL's constructor links timerUpdate() to a timer that fires 60 times per second.
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
@@ -153,37 +183,52 @@ void MyGL::timerUpdate()
     // Step 4. Prevent physics entities from colliding with other physics entities
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
-    glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
-                    player->velocity[1] * deltaT / 100.f,
-                    player->velocity[2] * deltaT / 100.f);
+    if (player->velocity[0] != 0.f || player->velocity[1] != 0.f || player->velocity[2] != 0) {
+        glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
+                        player->velocity[1] * deltaT / 100.f,
+                        player->velocity[2] * deltaT / 100.f);
 
-    glm::vec3 updatedPos(player->position);
+        glm::vec3 updatedPos(player->position);
 
-    if (player->godMode) {
-        glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
-        updatedPos += grounded * trans[0];
-    } else {
-        updatedPos += player->camera->look * trans[0];
+        if (player->godMode) {
+            glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
+            updatedPos += grounded * trans[0];
+        } else {
+            updatedPos += player->camera->look * trans[0];
+        }
+
+        updatedPos += player->camera->up * trans[1];
+        updatedPos += player->camera->right * trans[2];
+
+        glm::vec3 ray = updatedPos - player->position;
+
+        float minT = 1.f;
+        for (int x = 0; x <= 1; ++x) {
+            for (int y = 0; y <= 2; ++y) {
+                for (int z = 0; z >= -1; --z) {
+                    glm::vec3 currVertPos = glm::floor(player->position + glm::vec3(x, y, z));
+                    minT = std::min(minT, rayMarch(ray, currVertPos));
+                }
+            }
+        }
+
+        std::cout << minT << std::endl;
+        trans *= minT;
+
+        if (player->godMode) {
+            player->camera->TranslateAlongLook(trans[0]);
+        } else {
+            player->camera->TranslateAlongLookWalk(trans[0]);
+        }
+
+        player->camera->TranslateAlongUp(trans[1]);
+        player->camera->TranslateAlongRight(trans[2]);
+        player->camera->RecomputeAttributes();
+        player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
+
+        // Gravity only affects player if not in god mode
+        player->velocity[1] = (true) ? 0 : player->velocity[1] - (9.8 * deltaT / 1000.f);
     }
-
-    updatedPos += player->camera->up * trans[1];
-    updatedPos += player->camera->right * trans[2];
-
-/// ASK IN OFFICE HOURS ABOUT COLLISION DETECTION
-
-    if (player->godMode) {
-        player->camera->TranslateAlongLook(trans[0]);
-    } else {
-        player->camera->TranslateAlongLookWalk(trans[0]);
-    }
-
-    player->camera->TranslateAlongUp(trans[1]);
-    player->camera->TranslateAlongRight(trans[2]);
-    player->camera->RecomputeAttributes();
-    player->position = player->camera->eye;
-
-    // Gravity only affects player if not in god mode
-    player->velocity[1] = (true) ? 0 : player->velocity[1] - (9.8 * deltaT / 1000.f);
 
     // Step 5. Process all renderable entities and draw them
     update();
