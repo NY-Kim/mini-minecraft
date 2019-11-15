@@ -7,6 +7,7 @@ Terrain::Terrain() : dimensions(64, 256, 64)
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
 {
+    if (x < 0 || y < 0 || z < 0 || x > 63 || y > 255 || z > 63) return EMPTY;
     // TODO: Make this work with your new block storage!
     return m_blocks[x][y][z];
 }
