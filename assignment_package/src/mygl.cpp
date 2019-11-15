@@ -121,7 +121,7 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         }
 
         // Move position to next block and check if we have reached/passed our final point
-        currPos += glm::vec3(minT) * ray;
+        currPos += ray * minT;
         currT += minT;
 
         // Check if there will be a collision
@@ -227,7 +227,7 @@ void MyGL::timerUpdate()
         player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 
         // Gravity only affects player if not in god mode
-        player->velocity[1] = (true) ? 0 : player->velocity[1] - (9.8 * deltaT / 1000.f);
+        player->velocity[1] = (true) ? 0 : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
     }
 
     // Step 5. Process all renderable entities and draw them
