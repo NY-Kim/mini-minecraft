@@ -123,8 +123,12 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
             }
         }
 
+        if (axisOfIntersection == -1) {
+            return 0.f;
+        }
+
         // Move position to next block
-        currPos += ray * (minT / length);
+        currPos += ray * minT;
         currT += minT;
 
         // Offset block coord by -1 along the axis we hit IF AND ONLY IF the ray's direction
@@ -136,7 +140,7 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         // Check if there will be a collision
         glm::vec3 blockCoords = glm::floor(currPos) + offset;
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
-            return currT;
+            return std::max(currT - 0.01f, 0.f);
         }
         currCell = blockCoords;
     }
@@ -201,35 +205,39 @@ void MyGL::timerUpdate()
         glm::vec3 updatedPos(player->position);
 
         if (player->godMode) {
+            updatedPos += player->camera->look * trans[0];
+        } else {
             glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
             updatedPos += grounded * trans[0];
-        } else {
-            updatedPos += player->camera->look * trans[0];
         }
 
-        updatedPos += player->camera->up * trans[1];
+        updatedPos += (player->godMode) ? player->camera->up * trans[1] : player->camera->world_up * trans[1];
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
+        glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
         float minT = glm::length(ray);
         for (int x = 0; x <= 1; ++x) {
             for (int y = 0; y <= 2; ++y) {
                 for (int z = 0; z >= -1; --z) {
-                    glm::vec3 currVertPos = player->position + glm::vec3(x, y, z);
+                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
                     minT = std::min(minT, rayMarch(ray, currVertPos));
                 }
             }
         }
-
         ray *= (minT / glm::length(ray));
+        if (std::isnan(ray[0])) {
+            ray = glm::vec3(0.f);
+        }
         player->camera->eye += ray;
         player->camera->ref += ray;
         player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
-
-        // Gravity only affects player if not in god mode
-        player->velocity[1] = (true) ? 0 : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
+        std::cout << glm::to_string(player->position) << std::endl;
     }
+
+    // Gravity only affects player if not in god mode
+    player->velocity[1] = (player->godMode) ? 0 : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
 
     // Step 5. Process all renderable entities and draw them
     update();
