@@ -8,9 +8,9 @@
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      mp_geomCube(mkU<Cube>(this)), mp_worldAxes(mkU<WorldAxes>(this)),
+      mp_worldAxes(mkU<WorldAxes>(this)),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
-      mp_camera(mkU<Camera>()), mp_terrain(mkU<Terrain>())
+      mp_camera(mkU<Camera>()), mp_terrain(mkU<Terrain>(this))
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -26,7 +26,6 @@ MyGL::~MyGL()
 {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
-    mp_geomCube->destroy();
 }
 
 
@@ -60,7 +59,6 @@ void MyGL::initializeGL()
     glGenVertexArrays(1, &vao);
 
     //Create the instance of Cube
-    mp_geomCube->create();
     mp_worldAxes->create();
 
     // Create and set up the diffuse shader
@@ -77,7 +75,6 @@ void MyGL::initializeGL()
     // using multiple VAOs, we can just bind one once.
 //    vao.bind();
     glBindVertexArray(vao);
-
     mp_terrain->CreateTestScene();
 }
 
@@ -115,46 +112,20 @@ void MyGL::paintGL()
 
     mp_progFlat->setViewProjMatrix(mp_camera->getViewProj());
     mp_progLambert->setViewProjMatrix(mp_camera->getViewProj());
-
     GLDrawScene();
 
     glDisable(GL_DEPTH_TEST);
     mp_progFlat->setModelMatrix(glm::mat4());
     mp_progFlat->draw(*mp_worldAxes);
     glEnable(GL_DEPTH_TEST);
+
 }
 
 void MyGL::GLDrawScene()
 {
-    for(int x = 0; x < mp_terrain->dimensions.x; ++x)
-    {
-        for(int y = 0; y < mp_terrain->dimensions.y; ++y)
-        {
-            for(int z = 0; z < mp_terrain->dimensions.z; ++z)
-            {
-                BlockType t;
-                if((t = mp_terrain->m_blocks[x][y][z]) != EMPTY)
-                {
-                    switch(t)
-                    {
-                    case DIRT:
-                        mp_progLambert->setGeometryColor(glm::vec4(121.f, 85.f, 58.f, 255.f) / 255.f);
-                        break;
-                    case GRASS:
-                        mp_progLambert->setGeometryColor(glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f);
-                        break;
-                    case STONE:
-                        mp_progLambert->setGeometryColor(glm::vec4(0.5f));
-                        break;
-                    default:
-                        // Other types are as of yet not defined
-                        break;
-                    }
-                    mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(x, y, z)));
-                    mp_progLambert->draw(*mp_geomCube);
-                }
-            }
-        }
+    for (std::map<uint64_t, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
+        mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+        mp_progLambert->draw(i->second);
     }
 }
 
