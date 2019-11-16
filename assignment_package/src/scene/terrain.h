@@ -27,4 +27,13 @@ public:
     void setBlockAt(int x, int y, int z, BlockType t); // Given a world-space coordinate (which may have negative
                                                            // values) set the block at that point in space to the
                                                            // given type.
+    //fbm functions
+    float noise2D(glm::vec2 n);
+    float interpNoise2D(float x, float y);
+    float fbm(float x, float y);
+
+    //add block
+    void addBlock(float x, float y, float z);
+    //delete block
+    void deleteBlock(float x, float y, float z);
 };
