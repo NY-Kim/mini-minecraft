@@ -6,47 +6,16 @@
 
 Terrain::Terrain(OpenGLContext* context)
     : context(context), m_chunks(std::map<uint64_t, Chunk>()), dimensions(64, 256, 64)
-{
-    for(int x = 0; x < this->dimensions[0]; x += 16) {
-        for(int z = 0; z < this->dimensions[2]; z += 16) {
-            glm::ivec2 origin(x,z);
-            Chunk chunk = Chunk(context, origin);
-
-            if (m_chunks.find(serialize(x - 16, z)) != m_chunks.end()) {
-                Chunk* negX = &m_chunks[serialize(x - 16, z)];
-                chunk.negX_chunk = negX;
-                negX->posX_chunk = &chunk;
-            }
-
-            if (m_chunks.find(serialize(x + 16, z)) != m_chunks.end()) {
-                Chunk* posX = &m_chunks[serialize(x + 16, z)];
-                chunk.posX_chunk = posX;
-                posX->negX_chunk = &chunk;
-            }
-
-            if (m_chunks.find(serialize(x, z - 16)) != m_chunks.end()) {
-                Chunk* negZ = &m_chunks[serialize(x, z - 16)];
-                chunk.negZ_chunk = negZ;
-                negZ->posZ_chunk = &chunk;
-            }
-
-            if (m_chunks.find(serialize(x, z + 16)) != m_chunks.end()) {
-                Chunk* posZ = &m_chunks[serialize(x, z + 16)];
-                chunk.posZ_chunk = posZ;
-                posZ->negZ_chunk = &chunk;
-            }
-
-            m_chunks[serialize(x, z)] = chunk;
-        }
-    }
-}
+{}
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
 {
     uint64_t key = serialize(x, z);
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
-    return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
+    if (m_chunks.find(key) != m_chunks.end()) {
+        return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
+    }
 }
 
 void Terrain::setBlockAt(int x, int y, int z, BlockType t)
@@ -54,7 +23,38 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     uint64_t key = serialize(x, z);
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
-    m_chunks[key].getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
+    if (m_chunks.find(key) != m_chunks.end()) {
+        m_chunks[key].getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
+    } else {
+        glm::ivec2 origin = deserialize(key);
+        Chunk chunk = Chunk(context, origin);
+
+        if (m_chunks.find(serialize(x - 16, z)) != m_chunks.end()) {
+            Chunk* negX = &m_chunks[serialize(x - 16, z)];
+            chunk.negX_chunk = negX;
+            negX->posX_chunk = &chunk;
+        }
+
+        if (m_chunks.find(serialize(x + 16, z)) != m_chunks.end()) {
+            Chunk* posX = &m_chunks[serialize(x + 16, z)];
+            chunk.posX_chunk = posX;
+            posX->negX_chunk = &chunk;
+        }
+
+        if (m_chunks.find(serialize(x, z - 16)) != m_chunks.end()) {
+            Chunk* negZ = &m_chunks[serialize(x, z - 16)];
+            chunk.negZ_chunk = negZ;
+            negZ->posZ_chunk = &chunk;
+        }
+
+        if (m_chunks.find(serialize(x, z + 16)) != m_chunks.end()) {
+            Chunk* posZ = &m_chunks[serialize(x, z + 16)];
+            chunk.posZ_chunk = posZ;
+            posZ->negZ_chunk = &chunk;
+        }
+
+        m_chunks[key] = chunk;
+    }
 }
 
 void Terrain::CreateTestScene()
@@ -338,7 +338,6 @@ glm::ivec2 deserialize(uint64_t key) {
     glm::ivec2 xz;
     xz[0] = key >> 32;
     xz[1] = key & 0xffffffff;
-    std::cout << xz[0] << ", " << xz[1] << std::endl;
     return xz;
 }
 
