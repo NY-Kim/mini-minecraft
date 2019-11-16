@@ -159,10 +159,6 @@ void MyGL::timerUpdate()
     lastUpdate = QDateTime::currentMSecsSinceEpoch();
     int64_t deltaT = lastUpdate - prev;
 
-    if (!player->godMode) {
-        std::cout<<""<<std::endl;
-    }
-
     // Step 2. Iterate over all entities that are capable of receiving input
     // and read their present controller state
     if (std::get<0>(player->wasdPressed)) {
@@ -222,7 +218,18 @@ void MyGL::timerUpdate()
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
+
+        // If it ain't broke, don't fix it :)
         if (glm::length(ray) == 0) {
+            update();
+            return;
+        }
+
+        // If in god mode, just move along the ray
+        if (player->godMode) {
+            player->camera->eye += ray;
+            player->camera->ref += ray;
+            player->position += ray;
             update();
             return;
         }
