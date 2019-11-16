@@ -115,7 +115,7 @@ void::Camera::RotatePolar() {
             polar[0] += 360;
         }
     }
-    polar[1] = glm::clamp(polar[1], -89.99f, 89.99f);
+    polar[1] = glm::clamp(polar[1], -89.f, 89.f);
 
     glm::mat4 align = glm::rotate(glm::mat4(1.0f), glm::radians(polar[0]), glm::vec3(0.f, 1.f, 0.f)) *
                       glm::rotate(glm::mat4(1.0f), glm::radians(polar[1]), glm::vec3(1.f, 0.f, 0.f));

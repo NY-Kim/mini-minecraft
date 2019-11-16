@@ -216,14 +216,17 @@ void MyGL::timerUpdate()
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
+        if (glm::length(ray) == 0) {
+            update();
+            return;
+        }
         glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
         float minT = glm::length(ray);
         for (int x = 0; x <= 1; ++x) {
             for (int y = 0; y <= 2; ++y) {
                 for (int z = 0; z >= -1; --z) {
-                    float checkForFeet = (y == 0) ? 0.5f : y;
-                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, checkForFeet, z);
+                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
                     minT = std::min(minT, rayMarch(ray, currVertPos));
                 }
             }
@@ -232,16 +235,13 @@ void MyGL::timerUpdate()
         ray = glm::normalize(ray) * minT;
         player->camera->eye += ray;
         player->camera->ref += ray;
-
-        glm::vec3 formerPos(player->position);
-        player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
-        player->onGround = (player->position[1] == formerPos[1]);
+        player->position += ray;
     }
 
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position + glm::vec3(0.f, 0.5f, 0.f));
     player->onGround = mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) != EMPTY;
-    player->velocity[1] = (player->godMode || player->onGround) ? 0 : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
+    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
 
     // Step 5. Process all renderable entities and draw them
     update();
