@@ -216,14 +216,14 @@ void MyGL::timerUpdate()
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
-        std::cout << glm::to_string(ray) << std::endl;
         glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
         float minT = glm::length(ray);
         for (int x = 0; x <= 1; ++x) {
             for (int y = 0; y <= 2; ++y) {
                 for (int z = 0; z >= -1; --z) {
-                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
+                    float checkForFeet = (y == 0) ? 0.5f : y;
+                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, checkForFeet, z);
                     minT = std::min(minT, rayMarch(ray, currVertPos));
                 }
             }
@@ -232,8 +232,10 @@ void MyGL::timerUpdate()
         ray = glm::normalize(ray) * minT;
         player->camera->eye += ray;
         player->camera->ref += ray;
-        player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 
+        glm::vec3 formerPos(player->position);
+        player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
+        player->onGround = (player->position[1] == formerPos[1]);
     }
 
     // Gravity only affects player if not in god mode or not on ground
