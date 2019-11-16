@@ -106,6 +106,7 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
     float minT;
     float currT = 0.f;
     float length = glm::length(ray);
+    ray = glm::normalize(ray);
     glm::ivec3 currCell(currPos);
 
     // March to find blocks that the vertex (position: currPos) will intersect with
@@ -211,10 +212,11 @@ void MyGL::timerUpdate()
             updatedPos += grounded * trans[0];
         }
 
-        updatedPos += (player->godMode) ? player->camera->up * trans[1] : player->camera->world_up * trans[1];
+        updatedPos += player->camera->up * trans[1];
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
+        std::cout << glm::to_string(ray) << std::endl;
         glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
         float minT = glm::length(ray);
@@ -226,18 +228,18 @@ void MyGL::timerUpdate()
                 }
             }
         }
-        ray *= (minT / glm::length(ray));
-        if (std::isnan(ray[0])) {
-            ray = glm::vec3(0.f);
-        }
+        minT -= 0.5f;
+        ray = glm::normalize(ray) * minT;
         player->camera->eye += ray;
         player->camera->ref += ray;
         player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
-        std::cout << glm::to_string(player->position) << std::endl;
+
     }
 
-    // Gravity only affects player if not in god mode
-    player->velocity[1] = (player->godMode) ? 0 : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
+    // Gravity only affects player if not in god mode or not on ground
+    glm::ivec3 currPos(player->position + glm::vec3(0.f, 0.5f, 0.f));
+    player->onGround = mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) != EMPTY;
+    player->velocity[1] = (player->godMode || player->onGround) ? 0 : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
 
     // Step 5. Process all renderable entities and draw them
     update();
