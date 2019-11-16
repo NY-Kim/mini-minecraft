@@ -152,10 +152,16 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
 void MyGL::timerUpdate()
 {
+
+
     // Step 1. Computer time elapsed since last update call
     int64_t prev = lastUpdate;
     lastUpdate = QDateTime::currentMSecsSinceEpoch();
     int64_t deltaT = lastUpdate - prev;
+
+    if (!player->godMode) {
+        std::cout<<""<<std::endl;
+    }
 
     // Step 2. Iterate over all entities that are capable of receiving input
     // and read their present controller state
@@ -186,10 +192,10 @@ void MyGL::timerUpdate()
         player->spacebarPressed = false;
     }
 
-    if (player->qPressed) {
+    if (player->qPressed && player->godMode) {
         player->velocity[1] = -2.f;
     }
-    if (player->ePressed) {
+    if (player->ePressed && player->godMode) {
         player->velocity[1] = (player->qPressed) ? 0.f : 2.f;
     }
 
@@ -198,7 +204,7 @@ void MyGL::timerUpdate()
     // Step 4. Prevent physics entities from colliding with other physics entities
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
-    if (player->velocity[0] != 0.f || player->velocity[1] != 0.f || player->velocity[2] != 0.f) {
+    if (glm::length(player->velocity) > 0.f) {
         glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
                         player->velocity[1] * deltaT / 100.f,
                         player->velocity[2] * deltaT / 100.f);
@@ -240,7 +246,7 @@ void MyGL::timerUpdate()
 
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position + glm::vec3(0.f, 0.5f, 0.f));
-    player->onGround = mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) != EMPTY;
+    player->onGround = mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY;
     player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
 
     // Step 5. Process all renderable entities and draw them
