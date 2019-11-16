@@ -49,7 +49,8 @@ public:
 
 protected:
     void keyPressEvent(QKeyEvent *e);
-    //mousePressEven
+    //mousePressEvent
+    void mousePressEvent(QMouseEvent *e);
 
 private slots:
     /// Slot that gets called ~60 times per second
