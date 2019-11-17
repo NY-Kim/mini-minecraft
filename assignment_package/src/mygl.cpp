@@ -102,6 +102,7 @@ void MyGL::resizeGL(int w, int h)
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
 void MyGL::timerUpdate()
 {
+    //if (mp_camera.get()->eye)
     update();
 }
 

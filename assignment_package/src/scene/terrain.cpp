@@ -1,6 +1,7 @@
 #include <scene/terrain.h>
 
 #include <scene/cube.h>
+#include <iostream>
 
 Terrain::Terrain() : dimensions(64, 256, 64)
 {}
@@ -116,21 +117,25 @@ float Terrain::fbm(float x, float y)
 
 //add/delete block function===================================================
 //add
-void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)//float x, float y, float z)
+void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
 {
     glm::vec3 blockCoord = rayMarch(eye, look);
     blockCoord = glm::floor(blockCoord - (look * 0.75f));
     setBlockAt((int)blockCoord[0], (int)blockCoord[1],
             (int)blockCoord[2], LAVA);
+    std::cout << "added at: " << (int)blockCoord[0] << ", " << (int)blockCoord[1]
+            << ", " << (int)blockCoord[2] << std::endl;
 }
 
 //delete
-void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)//float x, float y, float z)
+void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
 {
     glm::vec3 blockCoord = rayMarch(eye, look);
     blockCoord = glm::floor(blockCoord);
     setBlockAt((int)blockCoord[0], (int)blockCoord[1],
             (int)blockCoord[2], EMPTY);
+    std::cout << "deleted from: " << (int)blockCoord[0] << ", " << (int)blockCoord[1]
+            << ", " << (int)blockCoord[2] << std::endl;
 }
 
 //helper function for ray marching
@@ -146,7 +151,6 @@ glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look)
         if (getBlockAt((int)currBlockCoord[0],
                        (int)currBlockCoord[1],
                        (int)currBlockCoord[2]) == EMPTY) {
-
             continue;
         } else {
             hit = true;
