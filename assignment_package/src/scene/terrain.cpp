@@ -5,12 +5,12 @@
 #include <iostream>
 
 Terrain::Terrain(OpenGLContext* context)
-    : context(context), m_chunks(std::map<uint64_t, Chunk>()), dimensions(64, 256, 64)
+    : context(context), m_chunks(std::map<std::pair<int, int>, Chunk>()), dimensions(64, 256, 64)
 {}
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
 {
-    uint64_t key = serialize(x, z);
+    std::pair<int, int> key = getOrigin(x, z);
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
     if (m_chunks.find(key) != m_chunks.end()) {
@@ -20,35 +20,36 @@ BlockType Terrain::getBlockAt(int x, int y, int z) const
 
 void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 {
-    uint64_t key = serialize(x, z);
+    std::pair<int, int> key = getOrigin(x, z);
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
     if (m_chunks.find(key) != m_chunks.end()) {
         m_chunks[key].getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
     } else {
-        glm::ivec2 origin = deserialize(key);
+        glm::ivec2 origin = glm::ivec2(key.first, key.second);
         Chunk chunk = Chunk(context, origin);
+        chunk.getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
 
-        if (m_chunks.find(serialize(x - 16, z)) != m_chunks.end()) {
-            Chunk* negX = &m_chunks[serialize(x - 16, z)];
+        if (m_chunks.find(std::pair<int, int>(key.first - 16, key.second)) != m_chunks.end()) {
+            Chunk* negX = &m_chunks[std::pair<int, int>(key.first - 16, key.second)];
             chunk.negX_chunk = negX;
             negX->posX_chunk = &chunk;
         }
 
-        if (m_chunks.find(serialize(x + 16, z)) != m_chunks.end()) {
-            Chunk* posX = &m_chunks[serialize(x + 16, z)];
+        if (m_chunks.find(std::pair<int, int>(key.first + 16, key.second)) != m_chunks.end()) {
+            Chunk* posX = &m_chunks[std::pair<int, int>(key.first + 16, key.second)];
             chunk.posX_chunk = posX;
             posX->negX_chunk = &chunk;
         }
 
-        if (m_chunks.find(serialize(x, z - 16)) != m_chunks.end()) {
-            Chunk* negZ = &m_chunks[serialize(x, z - 16)];
+        if (m_chunks.find(std::pair<int, int>(key.first, key.second - 16)) != m_chunks.end()) {
+            Chunk* negZ = &m_chunks[std::pair<int, int>(key.first, key.second - 16)];
             chunk.negZ_chunk = negZ;
             negZ->posZ_chunk = &chunk;
         }
 
-        if (m_chunks.find(serialize(x, z + 16)) != m_chunks.end()) {
-            Chunk* posZ = &m_chunks[serialize(x, z + 16)];
+        if (m_chunks.find(std::pair<int, int>(key.first, key.second + 16)) != m_chunks.end()) {
+            Chunk* posZ = &m_chunks[std::pair<int, int>(key.first, key.second + 16)];
             chunk.posZ_chunk = posZ;
             posZ->negZ_chunk = &chunk;
         }
@@ -98,7 +99,7 @@ void Terrain::CreateTestScene()
        setBlockAt(32, y, 32, GRASS);
     }
 
-    for (std::map<uint64_t, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+    for (std::map<std::pair<int, int>, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
         i->second.Chunk::create();
     }
 }
@@ -135,6 +136,7 @@ void Chunk::create() {
             for (int z = 0; z < 16; z++)
             {
                 BlockType block = getBlockAt(x, y, z);
+
                 if (block == EMPTY) {
                     continue;
                 }
@@ -319,30 +321,36 @@ BlockType& Chunk::getBlockAt(int x, int y, int z) {
     return m_blocks[x + 16 * z + 256 * y];
 }
 
-uint64_t serialize(int x, int z) {
-    uint32_t x_coor, z_coor;
+std::pair<int, int> getOrigin(int x, int z) {
+    std::pair<int, int> xz;
     if (x >= 0) {
-        x_coor = (uint32_t) x / 16 * 16;
+        xz.first = x / 16 * 16;
     } else {
-        x_coor = (x - 15) / 16 * 16;
+        xz.first = (x - 15) / 16 * 16;
     }
     if (z >= 0) {
-        z_coor = (uint32_t) z / 16 * 16;
+        xz.second = z / 16 * 16;
     } else {
-        z_coor = (z - 15) / 16 * 16;
+        xz.second = (z - 15) / 16 * 16;
     }
-    return (uint64_t) (x_coor) << 32 | z_coor;
-}
 
-glm::ivec2 deserialize(uint64_t key) {
-    glm::ivec2 xz;
-    xz[0] = key >> 32;
-    xz[1] = key & 0xffffffff;
     return xz;
 }
 
 glm::ivec2 getChunkCoordinates(int x, int z) {
-    return glm::ivec2(x % 16, z % 16);
+    glm::ivec2 xz;
+    if (x >= 0) {
+        xz[0] = x % 16;
+    } else {
+        xz[0] = (x % 16 + 16) % 16;
+    }
+    if (z >= 0) {
+        xz[1] = z % 16;
+    } else {
+        xz[1] = (z % 16 + 16) % 16;
+    }
+
+    return xz;
 }
 
 glm::ivec2 getWorldCoordinates(glm::ivec2 position, int x, int z) {

@@ -39,7 +39,7 @@ public:
     Terrain(OpenGLContext* context);
     OpenGLContext* context;
 
-    std::map<uint64_t, Chunk> m_chunks;
+    std::map<std::pair<int, int>, Chunk> m_chunks;
 
     void CreateTestScene();
 
@@ -52,8 +52,7 @@ public:
                                                            // given type.
 };
 
-uint64_t serialize(int x, int z); // given a world coordinate, converts it to a key for m_chunks
-glm::ivec2 deserialize(uint64_t key);
+std::pair<int, int> getOrigin(int x, int z);
 glm::ivec2 getChunkCoordinates(int x, int z); // given a world coordinate, converts it to a chunk coordinate
 glm::ivec2 getWorldCoordinates(glm::ivec2 position, int x, int z); // given the chunk's position and its coordinates
                                                                     // converts it to a world coordinate
