@@ -188,12 +188,16 @@ void MyGL::timerUpdate()
 
     if (player->qPressed) {
         player->velocity[1] = -2.f;
+    } else if (player->godMode) {
+        player->velocity[1] = 0.f;
     }
+
     if (player->ePressed) {
         player->velocity[1] = (player->qPressed) ? 0.f : 2.f;
     }
+
     if (player->fPressed) {
-        player->godMode = !player->godMode;
+        player->godMode = !(player->godMode);
         if (player->godMode) {
             player->velocity[1] = 0;
         }

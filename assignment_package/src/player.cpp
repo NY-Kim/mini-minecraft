@@ -55,9 +55,9 @@ void Player::keyEventUpdate(QKeyEvent *e) {
             std::get<2>(wasdPressed) = false;
         } else if (e->key() == Qt::Key_D) {
             std::get<3>(wasdPressed) = false;
-        } else if (e->key() == Qt::Key_Q && godMode) {
+        } else if (e->key() == Qt::Key_Q) {
             qPressed = false;
-        } else if (e->key() == Qt::Key_E && godMode) {
+        } else if (e->key() == Qt::Key_E) {
             ePressed = false;
         }
     }
