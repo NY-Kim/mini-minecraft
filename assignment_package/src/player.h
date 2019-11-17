@@ -27,6 +27,7 @@ public:
     bool onGround;
     bool qPressed;
     bool ePressed;
+    bool fPressed;
 
     Player();
     virtual ~Player();

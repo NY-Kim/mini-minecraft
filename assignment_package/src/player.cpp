@@ -6,7 +6,7 @@ Player::Player()
       wasdPressed(std::make_tuple(false, false, false, false)), spacebarPressed(false),
       mouseMoved(false), lmbPressed(false), rmbPressed(false),
       godMode(true), onGround(true),
-      qPressed(false), ePressed(false)
+      qPressed(false), ePressed(false), fPressed(false)
 {}
 
 Player::~Player()
@@ -40,7 +40,7 @@ void Player::keyEventUpdate(QKeyEvent *e) {
         } else if (e->key() == Qt::Key_R) {
             *camera = Camera(camera->width, camera->height);
         } else if (e->key() == Qt::Key_F) {
-            godMode = !godMode;
+            fPressed = true;;
         } else if (e->key() == Qt::Key_Space) {
             spacebarPressed = true;
         }

@@ -152,8 +152,6 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
 void MyGL::timerUpdate()
 {
-
-
     // Step 1. Computer time elapsed since last update call
     int64_t prev = lastUpdate;
     lastUpdate = QDateTime::currentMSecsSinceEpoch();
@@ -188,11 +186,18 @@ void MyGL::timerUpdate()
         player->spacebarPressed = false;
     }
 
-    if (player->qPressed && player->godMode) {
+    if (player->qPressed) {
         player->velocity[1] = -2.f;
     }
-    if (player->ePressed && player->godMode) {
+    if (player->ePressed) {
         player->velocity[1] = (player->qPressed) ? 0.f : 2.f;
+    }
+    if (player->fPressed) {
+        player->godMode = !player->godMode;
+        if (player->godMode) {
+            player->velocity[1] = 0;
+        }
+        player->fPressed = false;
     }
 
     // Step 3. Iterate over all entities in scene and perform "physics update"
@@ -254,7 +259,7 @@ void MyGL::timerUpdate()
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position + glm::vec3(0.f, 0.5f, 0.f));
     player->onGround = mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY;
-    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 10000.f), -2.0);
+    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -2.0);
 
     // Step 5. Process all renderable entities and draw them
     update();
