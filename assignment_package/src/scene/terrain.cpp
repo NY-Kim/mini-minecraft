@@ -70,10 +70,8 @@ void Terrain::CreateTestScene()
             for (int y = 127; y < height; y++) {
                 if (y <= 128) {
                     setBlockAt(x, y, z, STONE);
-                    //m_blocks[x][y][z] = STONE;
                 } else {
                     setBlockAt(x, y, z, DIRT);
-                    //m_blocks[x][y][z] = DIRT;
                 }
             }
             int y = (int)glm::floor(height);
@@ -167,10 +165,6 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
     }
     blockCoord = glm::floor(blockCoord + normal);
     setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
-
-//    glm::vec3 blockCoord = rayMarch(eye, look);
-//    blockCoord = glm::floor(blockCoord - (look * 0.01f));
-//    setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
 }
 
 //delete
@@ -212,181 +206,189 @@ glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look, bool* reach)
 
 //helper function to decide regenerate terrain and which direction
 //N:1 > NE:2 > E:3 > SE:4 > S:5 > SW:6 > W:7 > NW:8
-int Terrain::checkRegenerate(glm::vec3 eye)
+std::vector<int> Terrain::checkRegenerate(glm::vec3 eye)
 {
     //std::pair<int, int> key = getOrigin(int(eye.x) + 32, int(eye.z));
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 30)) == m_chunks.end()) {
-        return 1;
-    } else if (m_chunks.find(getOrigin(int(eye.x) + 30, int(eye.z) + 30)) == m_chunks.end()) {
-        return 2;
-    } else if (m_chunks.find(getOrigin(int(eye.x) + 30, int(eye.z))) == m_chunks.end()) {
-        return 3;
-    } else if (m_chunks.find(getOrigin(int(eye.x) + 30, int(eye.z) - 30)) == m_chunks.end()) {
-        return 4;
-    } else if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 30)) == m_chunks.end()) {
-        return 5;
-    } else if (m_chunks.find(getOrigin(int(eye.x) - 30, int(eye.z) - 30)) == m_chunks.end()) {
-        return 6;
-    } else if (m_chunks.find(getOrigin(int(eye.x) - 30, int(eye.z))) == m_chunks.end()) {
-        return 7;
-    } else if (m_chunks.find(getOrigin(int(eye.x) - 30, int(eye.z) + 30)) == m_chunks.end()) {
-        return 8;
-    } else {
-        return 0;
+    std::vector<int> cases;
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 60)) == m_chunks.end()) {
+        cases.push_back(1);
     }
+    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) + 60)) == m_chunks.end()) {
+        cases.push_back(2);
+    }
+    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z))) == m_chunks.end()) {
+        cases.push_back(3);
+    }
+    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) - 60)) == m_chunks.end()) {
+        cases.push_back(4);
+    }
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 60)) == m_chunks.end()) {
+        cases.push_back(5);
+    }
+    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) - 60)) == m_chunks.end()) {
+        cases.push_back(6);
+    }
+    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z))) == m_chunks.end()) {
+        cases.push_back(7);
+    }
+    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) + 60)) == m_chunks.end()) {
+        cases.push_back(8);
+    }
+    return cases;
 }
 
 //regenerating terrain
-void Terrain::regenerateTerrain(int regenCase, glm::vec3 eye)
+void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
 {
     glm::ivec2 origin = terrOrigin(eye);
     std::cout << "camera origin: " << origin[0] << ", " << origin[1] << std::endl;
     int originX = int(origin[0]);
     int originZ = int(origin[1]);
-    std::cout << "camera origin in int: " << originX << ", " << originZ << std::endl;
-    if (regenCase == 1) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
+    for (int regenCase : regenCaseList) {
+        if (regenCase == 1) {
+            for(int x = 0; x < 64; ++x)
             {
-                float height = fbm(((originX + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX + x, y, originZ + 64 + z, STONE);
-                    } else {
-                        setBlockAt(originX + x, y, originZ + 64 + z, DIRT);
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX + x, y, originZ + 64 + z, STONE);
+                        } else {
+                            setBlockAt(originX + x, y, originZ + 64 + z, DIRT);
+                        }
                     }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
                 }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
+            }
+        } else if (regenCase == 2) {
+            for(int x = 0; x < 64; ++x)
+            {
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX + 64 + x, y, originZ + 64 + z, STONE);
+                        } else {
+                            setBlockAt(originX + 64 + x, y, originZ + 64 + z, DIRT);
+                        }
+                    }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX + 64 + x, y, originZ + 64 + z, GRASS);
+                }
+            }
+        } else if (regenCase == 3) {
+            for(int x = 0; x < 64; ++x)
+            {
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX + 64 + x, y, originZ + z, STONE);
+                        } else {
+                            setBlockAt(originX + 64 + x, y, originZ + z, DIRT);
+                        }
+                    }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX + 64 + x, y, originZ + z, GRASS);
+                }
             }
         }
-    } else if (regenCase == 2) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
+        else if (regenCase == 4) {
+            for(int x = 0; x < 64; ++x)
             {
-                float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX + 64 + x, y, originZ + 64 + z, STONE);
-                    } else {
-                        setBlockAt(originX + 64 + x, y, originZ + 64 + z, DIRT);
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX + 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX + 64 + x, y, originZ - 64 + z, STONE);
+                        } else {
+                            setBlockAt(originX + 64 + x, y, originZ - 64 + z, DIRT);
+                        }
                     }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX + 64 + x, y, originZ - 64 + z, GRASS);
                 }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX + 64 + x, y, originZ + 64 + z, GRASS);
             }
-        }
-    } else if (regenCase == 3) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
+        } else if (regenCase == 5) {
+            for(int x = 0; x < 64; ++x)
             {
-                float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX + 64 + x, y, originZ + z, STONE);
-                    } else {
-                        setBlockAt(originX + 64 + x, y, originZ + z, DIRT);
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX + x, y, originZ - 64 + z, STONE);
+                        } else {
+                            setBlockAt(originX + x, y, originZ - 64 + z, DIRT);
+                        }
                     }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX + x, y, originZ - 64 + z, GRASS);
                 }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX + 64 + x, y, originZ + z, GRASS);
             }
-        }
-    }
-    else if (regenCase == 4) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
+        } else if (regenCase == 6) {
+            for(int x = 0; x < 64; ++x)
             {
-                float height = fbm(((originX + 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX + 64 + x, y, originZ - 64 + z, STONE);
-                    } else {
-                        setBlockAt(originX + 64 + x, y, originZ - 64 + z, DIRT);
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX - 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX - 64 + x, y, originZ - 64 + z, STONE);
+                        } else {
+                            setBlockAt(originX - 64 + x, y, originZ - 64 + z, DIRT);
+                        }
                     }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX - 64 + x, y, originZ - 64 + z, GRASS);
                 }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX + 64 + x, y, originZ - 64 + z, GRASS);
             }
-        }
-    } else if (regenCase == 5) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
+        } else if (regenCase == 7) {
+            for(int x = 0; x < 64; ++x)
             {
-                float height = fbm(((originX + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX + x, y, originZ - 64 + z, STONE);
-                    } else {
-                        setBlockAt(originX + x, y, originZ - 64 + z, DIRT);
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX - 64 + x, y, originZ + z, STONE);
+                        } else {
+                            setBlockAt(originX - 64 + x, y, originZ + z, DIRT);
+                        }
                     }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX - 64 + x, y, originZ + z, GRASS);
                 }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX + x, y, originZ - 64 + z, GRASS);
             }
-        }
-    } else if (regenCase == 6) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
+        } else if (regenCase == 8) {
+            for(int x = 0; x < 64; ++x)
             {
-                float height = fbm(((originX - 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX - 64 + x, y, originZ - 64 + z, STONE);
-                    } else {
-                        setBlockAt(originX - 64 + x, y, originZ - 64 + z, DIRT);
+                for(int z = 0; z < 64; ++z)
+                {
+                    float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
+                    height = pow(height, 3.f) * 52.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            setBlockAt(originX - 64 + x, y, originZ + 64 + z, STONE);
+                        } else {
+                            setBlockAt(originX - 64 + x, y, originZ + 64 + z, DIRT);
+                        }
                     }
+                    int y = (int)glm::floor(height);
+                    setBlockAt(originX - 64 + x, y, originZ + 64 + z, GRASS);
                 }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX - 64 + x, y, originZ - 64 + z, GRASS);
-            }
-        }
-    } else if (regenCase == 7) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
-            {
-                float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX - 64 + x, y, originZ + z, STONE);
-                    } else {
-                        setBlockAt(originX - 64 + x, y, originZ + z, DIRT);
-                    }
-                }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX - 64 + x, y, originZ + z, GRASS);
-            }
-        }
-    } else if (regenCase == 8) {
-        for(int x = 0; x < 64; ++x)
-        {
-            for(int z = 0; z < 64; ++z)
-            {
-                float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
-                for (int y = 127; y < height; y++) {
-                    if (y <= 128) {
-                        setBlockAt(originX - 64 + x, y, originZ + 64 + z, STONE);
-                    } else {
-                        setBlockAt(originX - 64 + x, y, originZ + 64 + z, DIRT);
-                    }
-                }
-                int y = (int)glm::floor(height);
-                setBlockAt(originX - 64 + x, y, originZ + 64 + z, GRASS);
             }
         }
     }
@@ -644,7 +646,18 @@ std::pair<int, int> getOrigin(int x, int z) {
 }
 
 glm::ivec2 getChunkCoordinates(int x, int z) {
-    return glm::ivec2(x % 16, z % 16);
+    glm::ivec2 xz;
+    if (x >= 0) {
+        xz[0] = x % 16;
+    } else {
+        xz[0] = (x % 16 + 16) % 16;
+    }
+    if (z >= 0) {
+        xz[1] = z % 16;
+    } else {
+        xz[1] = (z % 16 + 16) % 16;
+    }
+    return xz;
 }
 
 glm::ivec2 getWorldCoordinates(glm::ivec2 position, int x, int z) {

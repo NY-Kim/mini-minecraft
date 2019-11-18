@@ -64,9 +64,9 @@ public:
     glm::vec3 rayMarch(glm::vec3 eye, glm::vec3 look, bool *reach);
 
     //helper function to decide regenerate terrain and which direction
-    int checkRegenerate(glm::vec3 eye);
+    std::vector<int> checkRegenerate(glm::vec3 eye);
     //regenerating terrain
-    void regenerateTerrain(int regenCase, glm::vec3 eye);
+    void regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye);
     //helper function for getting current 4X4 chunk origin
     glm::ivec2 terrOrigin(glm::vec3 eye);
 };
