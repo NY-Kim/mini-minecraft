@@ -1,4 +1,21 @@
-Nayeong Kim 
+*Ray DongHo Kim
+
+Milestone 1: Procedural Terrain
+
+2019-11-16 1:20PM 
+Veronica explained what Hannah told her about ray-marching. She told me the concept/logic of it which was used for my add/delete block function.
+
+2019-11-16 1:50PM 
+Alexis explained to me how to safely get my partner's work from her branch and work on my branch and not mess it up with others using git.
+Also she explained the concept of ray-intersection further.
+
+2019-11-17 4:00PM
+Helen explained to me how to avoid diagonally adding block and determine the face that ray hits, to properly draw new block next to the face, not by the edge/corner of the block.
+
+2019 11-17 5:00PM 
+I was inefficiently creating chunks and setting blocks for generating additional terrain. Jake suggested me to just iterate to the blocks of "new terrain", instead of initializing the chunks first then setting blocks for each of them.
+
+*Nayeong Kim 
 
 Milestone 1: Terrain Rendering and Chunking
 
@@ -15,7 +32,7 @@ Blocks in negative-x or negative-z values won't draw correctly. Made a several f
 Looked up how to remove DS_Store files
 https://stackoverflow.com/questions/107701/how-can-i-remove-ds-store-files-from-a-git-repository
 
-Alexander Do
+*Alexander Do
 
 Milestone 1: Terrain Rendering and Chunking
 
