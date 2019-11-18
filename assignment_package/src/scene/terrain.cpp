@@ -208,7 +208,6 @@ glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look, bool* reach)
 //N:1 > NE:2 > E:3 > SE:4 > S:5 > SW:6 > W:7 > NW:8
 std::vector<int> Terrain::checkRegenerate(glm::vec3 eye)
 {
-    //std::pair<int, int> key = getOrigin(int(eye.x) + 32, int(eye.z));
     std::vector<int> cases;
     if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 60)) == m_chunks.end()) {
         cases.push_back(1);
