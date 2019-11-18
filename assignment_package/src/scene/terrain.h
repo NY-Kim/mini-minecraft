@@ -61,12 +61,14 @@ public:
     //delete block
     void deleteBlock(glm::vec3 eye, glm::vec3 look);
     //ray marching helper function
-    glm::vec3 rayMarch(glm::vec3 eye, glm::vec3 look);
+    glm::vec3 rayMarch(glm::vec3 eye, glm::vec3 look, bool *reach);
 
-//    //helper function to decide regenerate terrain and which direction
-//    int checkRegenerate(glm::vec3 eye);
-//    //regenerating terrain
-//    void regenerateTerrain(int regenCase);
+    //helper function to decide regenerate terrain and which direction
+    int checkRegenerate(glm::vec3 eye);
+    //regenerating terrain
+    void regenerateTerrain(int regenCase, glm::vec3 eye);
+    //helper function for getting current 4X4 chunk origin
+    glm::ivec2 terrOrigin(glm::vec3 eye);
 };
 
 std::pair<int, int> getOrigin(int x, int z);

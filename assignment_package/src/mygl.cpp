@@ -100,11 +100,11 @@ void MyGL::resizeGL(int w, int h)
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
 void MyGL::timerUpdate()
 {
-//    //N:1 > NE:2 > E:3 > SE:4 > S:5 > SW:6 > W:7 > NW:8
-//    int regenCase = mp_terrain->checkRegenerate(mp_camera->eye);
-//    if (regenCase != 0) {
-//        mp_terrain->regenerateTerrain(regenCase);
-//    }
+    int regenCase = mp_terrain->checkRegenerate(mp_camera->eye);
+    if (regenCase != 0) {
+        mp_terrain->regenerateTerrain(regenCase, mp_camera->eye);
+        mp_terrain->create();
+    }
     update();
 }
 
@@ -186,6 +186,12 @@ void MyGL::mousePressEvent(QMouseEvent *e)
         mp_terrain->deleteBlock(mp_camera->eye, mp_camera->look);
         mp_terrain->create();
         update();
+//        int regenCase = mp_terrain->checkRegenerate(mp_camera->eye);
+//        std::cout << "regenCase: " << regenCase << std::endl;
+//        if (regenCase != 0) {
+//            mp_terrain->regenerateTerrain(regenCase, mp_camera->eye);
+//            mp_terrain->create();
+//        }
     } else if (e->button() == Qt::RightButton) {
         mp_terrain->addBlock(mp_camera->eye, mp_camera->look);
         mp_terrain->create();

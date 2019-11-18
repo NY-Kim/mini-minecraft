@@ -60,7 +60,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 
 void Terrain::CreateTestScene()
 {
-    // Create the basic terrain floor
+    //Create the basic terrain floor
     for(int x = 0; x < 64; ++x)
     {
         for(int z = 0; z < 64; ++z)
@@ -133,75 +133,281 @@ float Terrain::fbm(float x, float y)
 //add
 void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
 {
-    glm::vec3 blockCoord = rayMarch(eye, look);
-    blockCoord = glm::floor(blockCoord - (look * 0.75f));
+    bool reach = false;
+    glm::vec3 blockCoord = rayMarch(eye, look, &reach);
+    glm::vec3 blockFloor = glm::floor(blockCoord);
+    glm::vec3 blockCeil = glm::ceil(blockCoord);
+    glm::vec3 blockMid = (blockFloor + blockCeil) / 2.0f;
+    glm::vec3 normal = blockCoord - blockMid;
+    float maxCoord = fmax(fmax(abs(normal[0]), abs(normal[1])), abs(normal[2]));
+    if (maxCoord == abs(normal[0])) {
+        if (normal[0] > 0) {
+            normal[0] = 1;
+        } else {
+            normal[0] = -1;
+        }
+        normal[1] = 0;
+        normal[2] = 0;
+    } else if (maxCoord == abs(normal[1])) {
+        if (normal[1] > 0) {
+            normal[1] = 1;
+        } else {
+            normal[1] = -1;
+        }
+        normal[0] = 0;
+        normal[2] = 0;
+    } else {
+        if (normal[2] > 0) {
+            normal[2] = 1;
+        } else {
+            normal[2] = -1;
+        }
+        normal[0] = 0;
+        normal[1] = 0;
+    }
+    blockCoord = glm::floor(blockCoord + normal);
     setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
+
+//    glm::vec3 blockCoord = rayMarch(eye, look);
+//    blockCoord = glm::floor(blockCoord - (look * 0.01f));
+//    setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
 }
 
 //delete
 void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
 {
-    glm::vec3 blockCoord = rayMarch(eye, look);
-    blockCoord = glm::floor(blockCoord);
-    setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], EMPTY);
+    bool reach = false;
+    glm::vec3 blockCoord = rayMarch(eye, look, &reach);
+    if (reach) {
+        blockCoord = glm::floor(blockCoord);
+        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], EMPTY);
+    }
 }
 
 //helper function for ray marching
-glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look)
+glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look, bool* reach)
 {
-    float step = 0.75;
+    int counter = 0;
+    float step = 0.01f;
     bool hit = false;
     glm::vec3 currPos = eye;
     glm::vec3 currBlockCoord;
-    while (!hit) {
+    while (!hit || (counter * step < 2)) {
         currPos = currPos + (look * step);
         currBlockCoord = glm::floor(currPos);
         if (getBlockAt((int)currBlockCoord[0],
                        (int)currBlockCoord[1],
                        (int)currBlockCoord[2]) == EMPTY) {
+            counter++;
             continue;
         } else {
             hit = true;
         }
     }
+    if (hit) {
+        *reach = true;
+    }
     return currPos;
 }
 
-////helper function to decide regenerate terrain and which direction
-////N:1 > NE:2 > E:3 > SE:4 > S:5 > SW:6 > W:7 > NW:8
-//int Terrain::checkRegenerate(glm::vec3 eye)
-//{
-//    //std::pair<int, int> key = getOrigin(int(eye.x) + 32, int(eye.z));
-//    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 32)) == m_chunks.end()) {
-//        return 1;
-//    } else if (m_chunks.find(getOrigin(int(eye.x) + 32, int(eye.z) + 32)) == m_chunks.end()) {
-//        return 2;
-//    } else if (m_chunks.find(getOrigin(int(eye.x) + 32, int(eye.z))) == m_chunks.end()) {
-//        return 3;
-//    } else if (m_chunks.find(getOrigin(int(eye.x) + 32, int(eye.z) - 32)) == m_chunks.end()) {
-//        return 4;
-//    } else if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 32)) == m_chunks.end()) {
-//        return 5;
-//    } else if (m_chunks.find(getOrigin(int(eye.x) - 32, int(eye.z) - 32)) == m_chunks.end()) {
-//        return 6;
-//    } else if (m_chunks.find(getOrigin(int(eye.x) - 32, int(eye.z))) == m_chunks.end()) {
-//        return 7;
-//    } else if (m_chunks.find(getOrigin(int(eye.x) - 32, int(eye.z) + 32)) == m_chunks.end()) {
-//        return 8;
-//    } else {
-//        return 0;
-//    }
-//}
+//helper function to decide regenerate terrain and which direction
+//N:1 > NE:2 > E:3 > SE:4 > S:5 > SW:6 > W:7 > NW:8
+int Terrain::checkRegenerate(glm::vec3 eye)
+{
+    //std::pair<int, int> key = getOrigin(int(eye.x) + 32, int(eye.z));
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 30)) == m_chunks.end()) {
+        return 1;
+    } else if (m_chunks.find(getOrigin(int(eye.x) + 30, int(eye.z) + 30)) == m_chunks.end()) {
+        return 2;
+    } else if (m_chunks.find(getOrigin(int(eye.x) + 30, int(eye.z))) == m_chunks.end()) {
+        return 3;
+    } else if (m_chunks.find(getOrigin(int(eye.x) + 30, int(eye.z) - 30)) == m_chunks.end()) {
+        return 4;
+    } else if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 30)) == m_chunks.end()) {
+        return 5;
+    } else if (m_chunks.find(getOrigin(int(eye.x) - 30, int(eye.z) - 30)) == m_chunks.end()) {
+        return 6;
+    } else if (m_chunks.find(getOrigin(int(eye.x) - 30, int(eye.z))) == m_chunks.end()) {
+        return 7;
+    } else if (m_chunks.find(getOrigin(int(eye.x) - 30, int(eye.z) + 30)) == m_chunks.end()) {
+        return 8;
+    } else {
+        return 0;
+    }
+}
 
-////regenerating terrain
-//void Terrain::regenerateTerrain(int regenCase)
-//{
-//    if (regenCase == 1) {
+//regenerating terrain
+void Terrain::regenerateTerrain(int regenCase, glm::vec3 eye)
+{
+    glm::ivec2 origin = terrOrigin(eye);
+    std::cout << "camera origin: " << origin[0] << ", " << origin[1] << std::endl;
+    int originX = int(origin[0]);
+    int originZ = int(origin[1]);
+    std::cout << "camera origin in int: " << originX << ", " << originZ << std::endl;
+    if (regenCase == 1) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX + x, y, originZ + 64 + z, STONE);
+                    } else {
+                        setBlockAt(originX + x, y, originZ + 64 + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
+            }
+        }
+    } else if (regenCase == 2) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX + 64 + x, y, originZ + 64 + z, STONE);
+                    } else {
+                        setBlockAt(originX + 64 + x, y, originZ + 64 + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX + 64 + x, y, originZ + 64 + z, GRASS);
+            }
+        }
+    } else if (regenCase == 3) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX + 64 + x, y, originZ + z, STONE);
+                    } else {
+                        setBlockAt(originX + 64 + x, y, originZ + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX + 64 + x, y, originZ + z, GRASS);
+            }
+        }
+    }
+    else if (regenCase == 4) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX + 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX + 64 + x, y, originZ - 64 + z, STONE);
+                    } else {
+                        setBlockAt(originX + 64 + x, y, originZ - 64 + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX + 64 + x, y, originZ - 64 + z, GRASS);
+            }
+        }
+    } else if (regenCase == 5) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX + x, y, originZ - 64 + z, STONE);
+                    } else {
+                        setBlockAt(originX + x, y, originZ - 64 + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX + x, y, originZ - 64 + z, GRASS);
+            }
+        }
+    } else if (regenCase == 6) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX - 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX - 64 + x, y, originZ - 64 + z, STONE);
+                    } else {
+                        setBlockAt(originX - 64 + x, y, originZ - 64 + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX - 64 + x, y, originZ - 64 + z, GRASS);
+            }
+        }
+    } else if (regenCase == 7) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX - 64 + x, y, originZ + z, STONE);
+                    } else {
+                        setBlockAt(originX - 64 + x, y, originZ + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX - 64 + x, y, originZ + z, GRASS);
+            }
+        }
+    } else if (regenCase == 8) {
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
+            {
+                float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX - 64 + x, y, originZ + 64 + z, STONE);
+                    } else {
+                        setBlockAt(originX - 64 + x, y, originZ + 64 + z, DIRT);
+                    }
+                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX - 64 + x, y, originZ + 64 + z, GRASS);
+            }
+        }
+    }
+}
 
-//    } else if (regenCase == 2) {
-
-//    }
-//}
+//helper function for getting current 4X4 chunk origin
+glm::ivec2 Terrain::terrOrigin(glm::vec3 eye)
+{
+    glm::ivec2 terrOrigin;
+    if (eye.x >= 0) {
+        terrOrigin[0] = (int)eye.x / 64 * 64;
+    } else {
+        terrOrigin[0] = (int)(eye.x - 63) / 64 * 64;
+    }
+    if (eye.z >= 0) {
+        terrOrigin[1] = (int)eye.z / 64 * 64;
+    } else {
+        terrOrigin[1] = (int)(eye.z - 63) / 64 * 64;
+    }
+    return terrOrigin;
+}
 
 Chunk::Chunk() : Drawable(nullptr) {}
 
