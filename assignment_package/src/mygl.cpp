@@ -262,7 +262,10 @@ void MyGL::timerUpdate()
 
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position + glm::vec3(0.f, 0.5f, 0.f));
-    player->onGround = mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY;
+    player->onGround = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
+                        mp_terrain->getBlockAt(currPos[0] + 1.f, currPos[1] - 1.f, currPos[2]) != EMPTY ||
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
+                        mp_terrain->getBlockAt(currPos[0] + 1.f, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
     player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -2.0);
 
     // Step 5. Process all renderable entities and draw them
