@@ -86,7 +86,7 @@ void MyGL::resizeGL(int w, int h)
 {
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
-    *player->camera = Camera(w, h, glm::vec3(19.f, 137.f, 8.f),
+    *player->camera = Camera(w, h, glm::vec3(19.f, 200.f, 8.f),
                             glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
     player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 

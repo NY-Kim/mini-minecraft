@@ -215,28 +215,28 @@ glm::vec4 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look)
 std::vector<int> Terrain::checkRegenerate(glm::vec3 eye)
 {
     std::vector<int> cases;
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 120)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 60)) == m_chunks.end()) {
         cases.push_back(1);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 120, int(eye.z) + 120)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) + 60)) == m_chunks.end()) {
         cases.push_back(2);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 120, int(eye.z))) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z))) == m_chunks.end()) {
         cases.push_back(3);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 120, int(eye.z) - 120)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) - 60)) == m_chunks.end()) {
         cases.push_back(4);
     }
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 120)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 60)) == m_chunks.end()) {
         cases.push_back(5);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 120, int(eye.z) - 120)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) - 60)) == m_chunks.end()) {
         cases.push_back(6);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 120, int(eye.z))) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z))) == m_chunks.end()) {
         cases.push_back(7);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 120, int(eye.z) + 120)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) + 60)) == m_chunks.end()) {
         cases.push_back(8);
     }
     return cases;
