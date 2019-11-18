@@ -1,9 +1,10 @@
 #include "drawable.h"
 #include <la.h>
+#include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(),
-      idxBound(false), posBound(false), norBound(false), colBound(false),
+    : bufIdx(), bufPos(), bufNor(), bufCol(), bufPNC(),
+      idxBound(false), posBound(false), norBound(false), colBound(false), pncBound(false),
       context(context)
 {}
 
@@ -14,9 +15,10 @@ Drawable::~Drawable()
 void Drawable::destroy()
 {
     context->glDeleteBuffers(1, &bufIdx);
-    context->glDeleteBuffers(1, &bufPos);
-    context->glDeleteBuffers(1, &bufNor);
-    context->glDeleteBuffers(1, &bufCol);
+//    context->glDeleteBuffers(1, &bufPos);
+//    context->glDeleteBuffers(1, &bufNor);
+//    context->glDeleteBuffers(1, &bufCol);
+    context->glDeleteBuffers(1, &bufPNC);
 }
 
 GLenum Drawable::drawMode()
@@ -63,6 +65,13 @@ void Drawable::generateCol()
     context->glGenBuffers(1, &bufCol);
 }
 
+void Drawable::generatePNC()
+{
+    pncBound = true;
+    // Create a VBO on our GPU and store its handle in bufPNC
+    context->glGenBuffers(1, &bufPNC);
+}
+
 bool Drawable::bindIdx()
 {
     if(idxBound) {
@@ -93,4 +102,12 @@ bool Drawable::bindCol()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufCol);
     }
     return colBound;
+}
+
+bool Drawable::bindPNC()
+{
+    if(pncBound) {
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNC);
+    }
+    return pncBound;
 }
