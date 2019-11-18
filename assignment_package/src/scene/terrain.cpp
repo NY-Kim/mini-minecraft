@@ -15,6 +15,8 @@ BlockType Terrain::getBlockAt(int x, int y, int z) const
 
   if (m_chunks.find(key) != m_chunks.end()) {
       return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
+  } else {
+      return EMPTY;
   }
 }
 
@@ -131,62 +133,65 @@ float Terrain::fbm(float x, float y)
 //add
 void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
 {
-    bool reach = false;
-    glm::vec3 blockCoord = rayMarch(eye, look, &reach);
-    glm::vec3 blockFloor = glm::floor(blockCoord);
-    glm::vec3 blockCeil = glm::ceil(blockCoord);
-    glm::vec3 blockMid = (blockFloor + blockCeil) / 2.0f;
-    glm::vec3 normal = blockCoord - blockMid;
-    float maxCoord = fmax(fmax(abs(normal[0]), abs(normal[1])), abs(normal[2]));
-    if (maxCoord == abs(normal[0])) {
-        if (normal[0] > 0) {
-            normal[0] = 1;
+    glm::vec4 rayMarched = rayMarch(eye, look);
+    if (rayMarched[3] == 1) {
+        glm::vec3 blockCoord = glm::vec3(rayMarched);
+        glm::vec3 blockFloor = glm::floor(blockCoord);
+        glm::vec3 blockCeil = glm::ceil(blockCoord);
+        glm::vec3 blockMid = (blockFloor + blockCeil) / 2.0f;
+        glm::vec3 normal = blockCoord - blockMid;
+        float maxCoord = fmax(fmax(abs(normal[0]), abs(normal[1])), abs(normal[2]));
+        if (maxCoord == abs(normal[0])) {
+            if (normal[0] > 0) {
+                normal[0] = 1;
+            } else {
+                normal[0] = -1;
+            }
+            normal[1] = 0;
+            normal[2] = 0;
+        } else if (maxCoord == abs(normal[1])) {
+            if (normal[1] > 0) {
+                normal[1] = 1;
+            } else {
+                normal[1] = -1;
+            }
+            normal[0] = 0;
+            normal[2] = 0;
         } else {
-            normal[0] = -1;
+            if (normal[2] > 0) {
+                normal[2] = 1;
+            } else {
+                normal[2] = -1;
+            }
+            normal[0] = 0;
+            normal[1] = 0;
         }
-        normal[1] = 0;
-        normal[2] = 0;
-    } else if (maxCoord == abs(normal[1])) {
-        if (normal[1] > 0) {
-            normal[1] = 1;
-        } else {
-            normal[1] = -1;
-        }
-        normal[0] = 0;
-        normal[2] = 0;
-    } else {
-        if (normal[2] > 0) {
-            normal[2] = 1;
-        } else {
-            normal[2] = -1;
-        }
-        normal[0] = 0;
-        normal[1] = 0;
+        blockCoord = glm::floor(blockCoord + normal);
+        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
     }
-    blockCoord = glm::floor(blockCoord + normal);
-    setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
 }
 
 //delete
 void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
 {
-    bool reach = false;
-    glm::vec3 blockCoord = rayMarch(eye, look, &reach);
-    if (reach) {
+    glm::vec4 rayMarched = rayMarch(eye, look);
+    if (rayMarched[3] == 1) {
+        glm::vec3 blockCoord = glm::vec3(rayMarched);
         blockCoord = glm::floor(blockCoord);
         setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], EMPTY);
+
     }
 }
 
 //helper function for ray marching
-glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look, bool* reach)
+glm::vec4 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look)
 {
     int counter = 0;
     float step = 0.01f;
     bool hit = false;
     glm::vec3 currPos = eye;
     glm::vec3 currBlockCoord;
-    while (!hit || (counter * step < 2)) {
+    while (!hit && (counter * step < 10.0f)) {
         currPos = currPos + (look * step);
         currBlockCoord = glm::floor(currPos);
         if (getBlockAt((int)currBlockCoord[0],
@@ -198,10 +203,11 @@ glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look, bool* reach)
             hit = true;
         }
     }
+    glm::vec4 result = glm::vec4(currPos, 0);
     if (hit) {
-        *reach = true;
+        result[3] = 1;
     }
-    return currPos;
+    return result;
 }
 
 //helper function to decide regenerate terrain and which direction
@@ -209,28 +215,28 @@ glm::vec3 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look, bool* reach)
 std::vector<int> Terrain::checkRegenerate(glm::vec3 eye)
 {
     std::vector<int> cases;
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 120)) == m_chunks.end()) {
         cases.push_back(1);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) + 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 120, int(eye.z) + 120)) == m_chunks.end()) {
         cases.push_back(2);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z))) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 120, int(eye.z))) == m_chunks.end()) {
         cases.push_back(3);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) - 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 120, int(eye.z) - 120)) == m_chunks.end()) {
         cases.push_back(4);
     }
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 120)) == m_chunks.end()) {
         cases.push_back(5);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) - 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 120, int(eye.z) - 120)) == m_chunks.end()) {
         cases.push_back(6);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z))) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 120, int(eye.z))) == m_chunks.end()) {
         cases.push_back(7);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) + 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 120, int(eye.z) + 120)) == m_chunks.end()) {
         cases.push_back(8);
     }
     return cases;
@@ -240,7 +246,6 @@ std::vector<int> Terrain::checkRegenerate(glm::vec3 eye)
 void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
 {
     glm::ivec2 origin = terrOrigin(eye);
-    std::cout << "camera origin: " << origin[0] << ", " << origin[1] << std::endl;
     int originX = int(origin[0]);
     int originZ = int(origin[1]);
     for (int regenCase : regenCaseList) {

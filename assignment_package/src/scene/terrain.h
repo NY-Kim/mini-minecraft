@@ -61,7 +61,7 @@ public:
     //delete block
     void deleteBlock(glm::vec3 eye, glm::vec3 look);
     //ray marching helper function
-    glm::vec3 rayMarch(glm::vec3 eye, glm::vec3 look, bool *reach);
+    glm::vec4 rayMarch(glm::vec3 eye, glm::vec3 look);
 
     //helper function to decide regenerate terrain and which direction
     std::vector<int> checkRegenerate(glm::vec3 eye);

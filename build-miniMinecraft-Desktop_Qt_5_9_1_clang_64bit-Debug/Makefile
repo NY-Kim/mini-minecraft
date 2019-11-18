@@ -62,7 +62,8 @@ SOURCES       = ../assignment_package/src/main.cpp \
 		../assignment_package/src/scene/transform.cpp \
 		../assignment_package/src/openglcontext.cpp \
 		../assignment_package/src/scene/terrain.cpp \
-		../assignment_package/src/scene/worldaxes.cpp qrc_glsl.cpp \
+		../assignment_package/src/scene/worldaxes.cpp \
+		../assignment_package/src/player.cpp qrc_glsl.cpp \
 		moc_mainwindow.cpp \
 		moc_mygl.cpp \
 		moc_cameracontrolshelp.cpp
@@ -79,6 +80,7 @@ OBJECTS       = main.o \
 		openglcontext.o \
 		terrain.o \
 		worldaxes.o \
+		player.o \
 		qrc_glsl.o \
 		moc_mainwindow.o \
 		moc_mygl.o \
@@ -216,6 +218,7 @@ DIST          = ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/spec_pre.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/qt_config.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/macx-clang/qmake.conf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/spec_post.prf \
+		../assignment_package/.qmake.stash \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/exclusive_builds.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/mac/sdk.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/toolchain.prf \
@@ -255,7 +258,8 @@ DIST          = ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/spec_pre.prf \
 		../assignment_package/src/openglcontext.h \
 		../assignment_package/src/scene/terrain.h \
 		../assignment_package/src/scene/worldaxes.h \
-		../assignment_package/src/smartpointerhelp.h ../assignment_package/src/main.cpp \
+		../assignment_package/src/smartpointerhelp.h \
+		../assignment_package/src/player.h ../assignment_package/src/main.cpp \
 		../assignment_package/src/mainwindow.cpp \
 		../assignment_package/src/mygl.cpp \
 		../assignment_package/src/shaderprogram.cpp \
@@ -267,7 +271,8 @@ DIST          = ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/spec_pre.prf \
 		../assignment_package/src/scene/transform.cpp \
 		../assignment_package/src/openglcontext.cpp \
 		../assignment_package/src/scene/terrain.cpp \
-		../assignment_package/src/scene/worldaxes.cpp
+		../assignment_package/src/scene/worldaxes.cpp \
+		../assignment_package/src/player.cpp
 QMAKE_TARGET  = MiniMinecraft
 DESTDIR       = 
 TARGET        = MiniMinecraft.app/Contents/MacOS/MiniMinecraft
@@ -418,6 +423,7 @@ Makefile: ../assignment_package/miniMinecraft.pro ../../../Qt5.9.1/5.9.1/clang_6
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/qt_config.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/macx-clang/qmake.conf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/exclusive_builds.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/mac/sdk.prf \
 		../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/toolchain.prf \
@@ -583,6 +589,7 @@ Makefile: ../assignment_package/miniMinecraft.pro ../../../Qt5.9.1/5.9.1/clang_6
 ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/qt_config.prf:
 ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/macx-clang/qmake.conf:
 ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/exclusive_builds.prf:
 ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/mac/sdk.prf:
 ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/toolchain.prf:
@@ -645,8 +652,8 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../assignment_package/glsl.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../Qt5.9.1/5.9.1/clang_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../assignment_package/src/la.h ../assignment_package/src/mainwindow.h ../assignment_package/src/mygl.h ../assignment_package/src/shaderprogram.h ../assignment_package/src/utils.h ../assignment_package/src/drawable.h ../assignment_package/src/camera.h ../assignment_package/src/cameracontrolshelp.h ../assignment_package/src/scene/cube.h ../assignment_package/src/scene/transform.h ../assignment_package/src/openglcontext.h ../assignment_package/src/scene/terrain.h ../assignment_package/src/scene/worldaxes.h ../assignment_package/src/smartpointerhelp.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../assignment_package/src/main.cpp ../assignment_package/src/mainwindow.cpp ../assignment_package/src/mygl.cpp ../assignment_package/src/shaderprogram.cpp ../assignment_package/src/utils.cpp ../assignment_package/src/drawable.cpp ../assignment_package/src/camera.cpp ../assignment_package/src/cameracontrolshelp.cpp ../assignment_package/src/scene/cube.cpp ../assignment_package/src/scene/transform.cpp ../assignment_package/src/openglcontext.cpp ../assignment_package/src/scene/terrain.cpp ../assignment_package/src/scene/worldaxes.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../assignment_package/src/la.h ../assignment_package/src/mainwindow.h ../assignment_package/src/mygl.h ../assignment_package/src/shaderprogram.h ../assignment_package/src/utils.h ../assignment_package/src/drawable.h ../assignment_package/src/camera.h ../assignment_package/src/cameracontrolshelp.h ../assignment_package/src/scene/cube.h ../assignment_package/src/scene/transform.h ../assignment_package/src/openglcontext.h ../assignment_package/src/scene/terrain.h ../assignment_package/src/scene/worldaxes.h ../assignment_package/src/smartpointerhelp.h ../assignment_package/src/player.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../assignment_package/src/main.cpp ../assignment_package/src/mainwindow.cpp ../assignment_package/src/mygl.cpp ../assignment_package/src/shaderprogram.cpp ../assignment_package/src/utils.cpp ../assignment_package/src/drawable.cpp ../assignment_package/src/camera.cpp ../assignment_package/src/cameracontrolshelp.cpp ../assignment_package/src/scene/cube.cpp ../assignment_package/src/scene/transform.cpp ../assignment_package/src/openglcontext.cpp ../assignment_package/src/scene/terrain.cpp ../assignment_package/src/scene/worldaxes.cpp ../assignment_package/src/player.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../assignment_package/forms/mainwindow.ui ../assignment_package/forms/cameracontrolshelp.ui $(DISTDIR)/
 
 
@@ -657,6 +664,7 @@ clean: compiler_clean
 
 distclean: clean 
 	-$(DEL_FILE) -r MiniMinecraft.app
+	-$(DEL_FILE) .qmake.stash
 	-$(DEL_FILE) Makefile
 
 
@@ -817,6 +825,9 @@ moc_mygl.cpp: ../assignment_package/src/openglcontext.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLVertexArrayObject \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglvertexarrayobject.h \
 		../assignment_package/src/smartpointerhelp.h \
+		../assignment_package/src/player.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QKeyEvent \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QMouseEvent \
 		../assignment_package/src/mygl.h \
 		moc_predefs.h \
 		../../../Qt5.9.1/5.9.1/clang_64/bin/moc
@@ -953,7 +964,10 @@ ui_mainwindow.h: ../assignment_package/forms/mainwindow.ui \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qevent.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLVertexArrayObject \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglvertexarrayobject.h \
-		../assignment_package/src/smartpointerhelp.h
+		../assignment_package/src/smartpointerhelp.h \
+		../assignment_package/src/player.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QKeyEvent \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QMouseEvent
 	/Users/raykim/Qt5.9.1/5.9.1/clang_64/bin/uic ../assignment_package/forms/mainwindow.ui -o ui_mainwindow.h
 
 ui_cameracontrolshelp.h: ../assignment_package/forms/cameracontrolshelp.ui \
@@ -992,7 +1006,128 @@ mainwindow.o: ../assignment_package/src/mainwindow.cpp ../assignment_package/src
 		../assignment_package/src/cameracontrolshelp.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/QWidget \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/qwidget.h \
-		ui_mainwindow.h
+		ui_mainwindow.h \
+		../assignment_package/src/mygl.h \
+		../assignment_package/src/openglcontext.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/QOpenGLWidget \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/qopenglwidget.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLFunctions_3_2_Core \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglfunctions_3_2_core.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtCore.framework/Headers/QTimer \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtCore.framework/Headers/qtimer.h \
+		../assignment_package/src/utils.h \
+		../assignment_package/src/shaderprogram.h \
+		../assignment_package/src/la.h \
+		../assignment_package/include/glm/glm.hpp \
+		../assignment_package/include/glm/detail/_fixes.hpp \
+		../assignment_package/include/glm/fwd.hpp \
+		../assignment_package/include/glm/detail/type_int.hpp \
+		../assignment_package/include/glm/detail/setup.hpp \
+		../assignment_package/include/glm/detail/type_float.hpp \
+		../assignment_package/include/glm/detail/type_vec.hpp \
+		../assignment_package/include/glm/detail/precision.hpp \
+		../assignment_package/include/glm/detail/type_mat.hpp \
+		../assignment_package/include/glm/vec2.hpp \
+		../assignment_package/include/glm/detail/type_vec2.hpp \
+		../assignment_package/include/glm/detail/_swizzle.hpp \
+		../assignment_package/include/glm/detail/_swizzle_func.hpp \
+		../assignment_package/include/glm/detail/type_vec2.inl \
+		../assignment_package/include/glm/vec3.hpp \
+		../assignment_package/include/glm/detail/type_vec3.hpp \
+		../assignment_package/include/glm/detail/type_vec3.inl \
+		../assignment_package/include/glm/vec4.hpp \
+		../assignment_package/include/glm/detail/type_vec4.hpp \
+		../assignment_package/include/glm/detail/type_vec4.inl \
+		../assignment_package/include/glm/mat2x2.hpp \
+		../assignment_package/include/glm/detail/type_mat2x2.hpp \
+		../assignment_package/include/glm/detail/type_mat2x2.inl \
+		../assignment_package/include/glm/mat2x3.hpp \
+		../assignment_package/include/glm/detail/type_mat2x3.hpp \
+		../assignment_package/include/glm/detail/type_mat2x3.inl \
+		../assignment_package/include/glm/mat2x4.hpp \
+		../assignment_package/include/glm/detail/type_mat2x4.hpp \
+		../assignment_package/include/glm/detail/type_mat2x4.inl \
+		../assignment_package/include/glm/mat3x2.hpp \
+		../assignment_package/include/glm/detail/type_mat3x2.hpp \
+		../assignment_package/include/glm/detail/type_mat3x2.inl \
+		../assignment_package/include/glm/mat3x3.hpp \
+		../assignment_package/include/glm/detail/type_mat3x3.hpp \
+		../assignment_package/include/glm/detail/type_mat3x3.inl \
+		../assignment_package/include/glm/mat3x4.hpp \
+		../assignment_package/include/glm/detail/type_mat3x4.hpp \
+		../assignment_package/include/glm/detail/type_mat3x4.inl \
+		../assignment_package/include/glm/mat4x2.hpp \
+		../assignment_package/include/glm/detail/type_mat4x2.hpp \
+		../assignment_package/include/glm/detail/type_mat4x2.inl \
+		../assignment_package/include/glm/mat4x3.hpp \
+		../assignment_package/include/glm/detail/type_mat4x3.hpp \
+		../assignment_package/include/glm/detail/type_mat4x3.inl \
+		../assignment_package/include/glm/mat4x4.hpp \
+		../assignment_package/include/glm/detail/type_mat4x4.hpp \
+		../assignment_package/include/glm/detail/type_mat4x4.inl \
+		../assignment_package/include/glm/trigonometric.hpp \
+		../assignment_package/include/glm/detail/func_trigonometric.hpp \
+		../assignment_package/include/glm/detail/func_trigonometric.inl \
+		../assignment_package/include/glm/detail/_vectorize.hpp \
+		../assignment_package/include/glm/detail/type_vec1.hpp \
+		../assignment_package/include/glm/detail/type_vec1.inl \
+		../assignment_package/include/glm/exponential.hpp \
+		../assignment_package/include/glm/detail/func_exponential.hpp \
+		../assignment_package/include/glm/detail/func_exponential.inl \
+		../assignment_package/include/glm/detail/func_vector_relational.hpp \
+		../assignment_package/include/glm/detail/func_vector_relational.inl \
+		../assignment_package/include/glm/common.hpp \
+		../assignment_package/include/glm/detail/func_common.hpp \
+		../assignment_package/include/glm/detail/func_common.inl \
+		../assignment_package/include/glm/packing.hpp \
+		../assignment_package/include/glm/detail/func_packing.hpp \
+		../assignment_package/include/glm/detail/func_packing.inl \
+		../assignment_package/include/glm/detail/type_half.hpp \
+		../assignment_package/include/glm/detail/type_half.inl \
+		../assignment_package/include/glm/geometric.hpp \
+		../assignment_package/include/glm/detail/func_geometric.hpp \
+		../assignment_package/include/glm/detail/func_geometric.inl \
+		../assignment_package/include/glm/matrix.hpp \
+		../assignment_package/include/glm/detail/func_matrix.hpp \
+		../assignment_package/include/glm/detail/func_matrix.inl \
+		../assignment_package/include/glm/vector_relational.hpp \
+		../assignment_package/include/glm/integer.hpp \
+		../assignment_package/include/glm/detail/func_integer.hpp \
+		../assignment_package/include/glm/detail/func_integer.inl \
+		../assignment_package/include/glm/gtc/matrix_transform.hpp \
+		../assignment_package/include/glm/gtc/constants.hpp \
+		../assignment_package/include/glm/gtc/constants.inl \
+		../assignment_package/include/glm/gtc/matrix_transform.inl \
+		../assignment_package/include/glm/gtx/string_cast.hpp \
+		../assignment_package/include/glm/gtx/integer.hpp \
+		../assignment_package/include/glm/gtx/integer.inl \
+		../assignment_package/include/glm/gtx/quaternion.hpp \
+		../assignment_package/include/glm/gtc/quaternion.hpp \
+		../assignment_package/include/glm/gtx/quaternion.inl \
+		../assignment_package/include/glm/gtx/norm.hpp \
+		../assignment_package/include/glm/gtx/norm.inl \
+		../assignment_package/include/glm/gtx/string_cast.inl \
+		../assignment_package/include/glm/gtc/type_ptr.hpp \
+		../assignment_package/include/glm/gtc/type_ptr.inl \
+		../assignment_package/src/drawable.h \
+		../assignment_package/src/scene/cube.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLContext \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglcontext.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLBuffer \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglbuffer.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLShaderProgram \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglshaderprogram.h \
+		../assignment_package/src/scene/worldaxes.h \
+		../assignment_package/src/camera.h \
+		../assignment_package/src/scene/terrain.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QList \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qevent.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLVertexArrayObject \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglvertexarrayobject.h \
+		../assignment_package/src/smartpointerhelp.h \
+		../assignment_package/src/player.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QKeyEvent \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QMouseEvent
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mainwindow.o ../assignment_package/src/mainwindow.cpp
 
 mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/mygl.h \
@@ -1113,9 +1248,13 @@ mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/mygl.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLVertexArrayObject \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglvertexarrayobject.h \
 		../assignment_package/src/smartpointerhelp.h \
+		../assignment_package/src/player.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QKeyEvent \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QMouseEvent \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/QApplication \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/qapplication.h \
-		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QKeyEvent
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtCore.framework/Headers/QDateTime \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtCore.framework/Headers/qdatetime.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o mygl.o ../assignment_package/src/mygl.cpp
 
 shaderprogram.o: ../assignment_package/src/shaderprogram.cpp ../assignment_package/src/shaderprogram.h \
@@ -1752,7 +1891,6 @@ terrain.o: ../assignment_package/src/scene/terrain.cpp ../assignment_package/src
 		../assignment_package/include/glm/gtx/string_cast.inl \
 		../assignment_package/include/glm/gtc/type_ptr.hpp \
 		../assignment_package/include/glm/gtc/type_ptr.inl \
-		../assignment_package/src/scene/cube.h \
 		../assignment_package/src/drawable.h \
 		../assignment_package/src/openglcontext.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtWidgets.framework/Headers/QOpenGLWidget \
@@ -1761,6 +1899,7 @@ terrain.o: ../assignment_package/src/scene/terrain.cpp ../assignment_package/src
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglfunctions_3_2_core.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtCore.framework/Headers/QTimer \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtCore.framework/Headers/qtimer.h \
+		../assignment_package/src/scene/cube.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLContext \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglcontext.h \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLBuffer \
@@ -1877,6 +2016,106 @@ worldaxes.o: ../assignment_package/src/scene/worldaxes.cpp ../assignment_package
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QOpenGLShaderProgram \
 		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qopenglshaderprogram.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o worldaxes.o ../assignment_package/src/scene/worldaxes.cpp
+
+player.o: ../assignment_package/src/player.cpp ../assignment_package/src/player.h \
+		../assignment_package/src/la.h \
+		../assignment_package/include/glm/glm.hpp \
+		../assignment_package/include/glm/detail/_fixes.hpp \
+		../assignment_package/include/glm/fwd.hpp \
+		../assignment_package/include/glm/detail/type_int.hpp \
+		../assignment_package/include/glm/detail/setup.hpp \
+		../assignment_package/include/glm/detail/type_float.hpp \
+		../assignment_package/include/glm/detail/type_vec.hpp \
+		../assignment_package/include/glm/detail/precision.hpp \
+		../assignment_package/include/glm/detail/type_mat.hpp \
+		../assignment_package/include/glm/vec2.hpp \
+		../assignment_package/include/glm/detail/type_vec2.hpp \
+		../assignment_package/include/glm/detail/_swizzle.hpp \
+		../assignment_package/include/glm/detail/_swizzle_func.hpp \
+		../assignment_package/include/glm/detail/type_vec2.inl \
+		../assignment_package/include/glm/vec3.hpp \
+		../assignment_package/include/glm/detail/type_vec3.hpp \
+		../assignment_package/include/glm/detail/type_vec3.inl \
+		../assignment_package/include/glm/vec4.hpp \
+		../assignment_package/include/glm/detail/type_vec4.hpp \
+		../assignment_package/include/glm/detail/type_vec4.inl \
+		../assignment_package/include/glm/mat2x2.hpp \
+		../assignment_package/include/glm/detail/type_mat2x2.hpp \
+		../assignment_package/include/glm/detail/type_mat2x2.inl \
+		../assignment_package/include/glm/mat2x3.hpp \
+		../assignment_package/include/glm/detail/type_mat2x3.hpp \
+		../assignment_package/include/glm/detail/type_mat2x3.inl \
+		../assignment_package/include/glm/mat2x4.hpp \
+		../assignment_package/include/glm/detail/type_mat2x4.hpp \
+		../assignment_package/include/glm/detail/type_mat2x4.inl \
+		../assignment_package/include/glm/mat3x2.hpp \
+		../assignment_package/include/glm/detail/type_mat3x2.hpp \
+		../assignment_package/include/glm/detail/type_mat3x2.inl \
+		../assignment_package/include/glm/mat3x3.hpp \
+		../assignment_package/include/glm/detail/type_mat3x3.hpp \
+		../assignment_package/include/glm/detail/type_mat3x3.inl \
+		../assignment_package/include/glm/mat3x4.hpp \
+		../assignment_package/include/glm/detail/type_mat3x4.hpp \
+		../assignment_package/include/glm/detail/type_mat3x4.inl \
+		../assignment_package/include/glm/mat4x2.hpp \
+		../assignment_package/include/glm/detail/type_mat4x2.hpp \
+		../assignment_package/include/glm/detail/type_mat4x2.inl \
+		../assignment_package/include/glm/mat4x3.hpp \
+		../assignment_package/include/glm/detail/type_mat4x3.hpp \
+		../assignment_package/include/glm/detail/type_mat4x3.inl \
+		../assignment_package/include/glm/mat4x4.hpp \
+		../assignment_package/include/glm/detail/type_mat4x4.hpp \
+		../assignment_package/include/glm/detail/type_mat4x4.inl \
+		../assignment_package/include/glm/trigonometric.hpp \
+		../assignment_package/include/glm/detail/func_trigonometric.hpp \
+		../assignment_package/include/glm/detail/func_trigonometric.inl \
+		../assignment_package/include/glm/detail/_vectorize.hpp \
+		../assignment_package/include/glm/detail/type_vec1.hpp \
+		../assignment_package/include/glm/detail/type_vec1.inl \
+		../assignment_package/include/glm/exponential.hpp \
+		../assignment_package/include/glm/detail/func_exponential.hpp \
+		../assignment_package/include/glm/detail/func_exponential.inl \
+		../assignment_package/include/glm/detail/func_vector_relational.hpp \
+		../assignment_package/include/glm/detail/func_vector_relational.inl \
+		../assignment_package/include/glm/common.hpp \
+		../assignment_package/include/glm/detail/func_common.hpp \
+		../assignment_package/include/glm/detail/func_common.inl \
+		../assignment_package/include/glm/packing.hpp \
+		../assignment_package/include/glm/detail/func_packing.hpp \
+		../assignment_package/include/glm/detail/func_packing.inl \
+		../assignment_package/include/glm/detail/type_half.hpp \
+		../assignment_package/include/glm/detail/type_half.inl \
+		../assignment_package/include/glm/geometric.hpp \
+		../assignment_package/include/glm/detail/func_geometric.hpp \
+		../assignment_package/include/glm/detail/func_geometric.inl \
+		../assignment_package/include/glm/matrix.hpp \
+		../assignment_package/include/glm/detail/func_matrix.hpp \
+		../assignment_package/include/glm/detail/func_matrix.inl \
+		../assignment_package/include/glm/vector_relational.hpp \
+		../assignment_package/include/glm/integer.hpp \
+		../assignment_package/include/glm/detail/func_integer.hpp \
+		../assignment_package/include/glm/detail/func_integer.inl \
+		../assignment_package/include/glm/gtc/matrix_transform.hpp \
+		../assignment_package/include/glm/gtc/constants.hpp \
+		../assignment_package/include/glm/gtc/constants.inl \
+		../assignment_package/include/glm/gtc/matrix_transform.inl \
+		../assignment_package/include/glm/gtx/string_cast.hpp \
+		../assignment_package/include/glm/gtx/integer.hpp \
+		../assignment_package/include/glm/gtx/integer.inl \
+		../assignment_package/include/glm/gtx/quaternion.hpp \
+		../assignment_package/include/glm/gtc/quaternion.hpp \
+		../assignment_package/include/glm/gtx/quaternion.inl \
+		../assignment_package/include/glm/gtx/norm.hpp \
+		../assignment_package/include/glm/gtx/norm.inl \
+		../assignment_package/include/glm/gtx/string_cast.inl \
+		../assignment_package/include/glm/gtc/type_ptr.hpp \
+		../assignment_package/include/glm/gtc/type_ptr.inl \
+		../assignment_package/src/camera.h \
+		../assignment_package/src/smartpointerhelp.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QKeyEvent \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/qevent.h \
+		../../../Qt5.9.1/5.9.1/clang_64/lib/QtGui.framework/Headers/QMouseEvent
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o player.o ../assignment_package/src/player.cpp
 
 qrc_glsl.o: qrc_glsl.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_glsl.o qrc_glsl.cpp

@@ -14,7 +14,8 @@ SOURCES += \
     $$PWD/scene/transform.cpp \
     $$PWD/openglcontext.cpp \
     $$PWD/scene/terrain.cpp \
-    $$PWD/scene/worldaxes.cpp
+    $$PWD/scene/worldaxes.cpp \
+    $$PWD/player.cpp
 
 HEADERS += \
     $$PWD/la.h \
@@ -30,4 +31,5 @@ HEADERS += \
     $$PWD/openglcontext.h \
     $$PWD/scene/terrain.h \
     $$PWD/scene/worldaxes.h \
-    $$PWD/smartpointerhelp.h
+    $$PWD/smartpointerhelp.h \
+    $$PWD/player.h
