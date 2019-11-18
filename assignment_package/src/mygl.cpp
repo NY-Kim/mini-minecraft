@@ -271,6 +271,7 @@ void MyGL::timerUpdate()
     std::vector<int> regenCase = mp_terrain->checkRegenerate(player->position);
     if (regenCase.size() != 0) {
         mp_terrain->regenerateTerrain(regenCase, player->position);
+        mp_terrain->destroy();
         mp_terrain->create();
     }
     update();
@@ -325,10 +326,12 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
     player->mouseEventUpdate(m);
     if (m->button() == Qt::LeftButton) {
         mp_terrain->deleteBlock(player->camera->eye, player->camera->look);
+        mp_terrain->destroy();
         mp_terrain->create();
         update();
     } else if (m->button() == Qt::RightButton) {
         mp_terrain->addBlock(player->camera->eye, player->camera->look);
+        mp_terrain->destroy();
         mp_terrain->create();
         update();
     }

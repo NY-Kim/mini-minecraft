@@ -43,6 +43,7 @@ public:
 
     void CreateTestScene();
     void create();
+    void destroy();
 
     glm::ivec3 dimensions;
 

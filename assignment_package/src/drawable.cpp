@@ -15,9 +15,6 @@ Drawable::~Drawable()
 void Drawable::destroy()
 {
     context->glDeleteBuffers(1, &bufIdx);
-//    context->glDeleteBuffers(1, &bufPos);
-//    context->glDeleteBuffers(1, &bufNor);
-//    context->glDeleteBuffers(1, &bufCol);
     context->glDeleteBuffers(1, &bufPNC);
 }
 

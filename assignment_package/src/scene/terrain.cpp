@@ -88,6 +88,13 @@ void Terrain::create() {
     }
 }
 
+void Terrain::destroy() {
+    for (std::map<std::pair<int, int>, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+        i->second.destroy();
+    }
+}
+
+
 //fbm functions=============================================================
 //noise basis function
 float Terrain::noise2D(glm::vec2 n)
