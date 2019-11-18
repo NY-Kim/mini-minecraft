@@ -1,0 +1,16 @@
+Nayeong Kim 
+
+Milestone 1: Terrain Rendering and Chunking
+
+2019-11-16 1:12AM 
+Looked up how to iterate std::map
+https://thispointer.com/how-to-iterate-over-a-map-in-c/
+
+2019-11-17 1:36PM
+Blocks in negative-x or negative-z values won't draw correctly. Made a several fixes.
+- updated all my functions to support negative values (find correct origin of chunk)
+- changed my key structure of Terrain::m_chunks to be std::pair<int, int> instead of int64_t (std::pair is hashable) 
+
+2019 11-17 1:38PM 
+Looked up how to remove DS_Store files
+https://stackoverflow.com/questions/107701/how-can-i-remove-ds-store-files-from-a-git-repository
