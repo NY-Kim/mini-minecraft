@@ -127,8 +127,9 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         }
 
         // Move position to next block
-        currPos += ray * minT;
         currT += minT;
+        currPos += ray * minT;
+
 
         // Offset block coord by -1 along the axis we hit IF AND ONLY IF the ray's direction
         // along that axis is negative.
@@ -139,7 +140,7 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         // Check if there will be a collision
         glm::vec3 blockCoords = glm::floor(currPos) + offset;
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
-            return std::max(currT - 0.01f, 0.f);
+            return std::max(currT, 0.f);
         }
         currCell = blockCoords;
     }
@@ -251,7 +252,7 @@ void MyGL::timerUpdate()
                 }
             }
         }
-        minT -= 0.01f;
+        minT = std::max(minT - 0.01f, 0.f);
         ray = glm::normalize(ray) * minT;
         player->camera->eye += ray;
         player->camera->ref += ray;
@@ -259,7 +260,7 @@ void MyGL::timerUpdate()
     }
 
     // Gravity only affects player if not in god mode or not on ground
-    glm::ivec3 currPos(player->position + glm::vec3(-0.5, 0.5f, 0.f));
+    glm::ivec3 currPos(player->position);
     player->onGround = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
                         mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
                         mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
