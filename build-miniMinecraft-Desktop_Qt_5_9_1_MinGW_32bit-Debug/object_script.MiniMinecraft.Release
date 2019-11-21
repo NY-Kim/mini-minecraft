@@ -13,6 +13,7 @@ INPUT(
 ./release\terrain.o
 ./release\worldaxes.o
 ./release\player.o
+./release\chunkloader.o
 ./release\qrc_glsl.o
 ./release\moc_mainwindow.o
 ./release\moc_mygl.o

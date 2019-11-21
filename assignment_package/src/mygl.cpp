@@ -140,7 +140,12 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         // Check if there will be a collision
         glm::vec3 blockCoords = glm::floor(currPos) + offset;
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
-            return std::max(currT, 0.f);
+            if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == LAVA ||
+                mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == WATER) {
+
+                player->inLiquid = true;
+            }
+            else return std::max(currT, 0.f);
         }
         currCell = blockCoords;
     }
@@ -180,7 +185,7 @@ void MyGL::timerUpdate()
         player->mouseMoved = false;
     }
 
-    if (player->spacebarPressed) {
+    if (player->spacebarPressed && (player->onGround || player->inLiquid)) {
         player->velocity[1] = 2.f;
         player->spacebarPressed = false;
     }
@@ -209,20 +214,20 @@ void MyGL::timerUpdate()
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
     if (glm::length(player->velocity) > 0.f) {
-        glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
-                        player->velocity[1] * deltaT / 100.f,
-                        player->velocity[2] * deltaT / 100.f);
+        glm::vec3 trans(player->velocity[0] * deltaT / 200.f,
+                        player->velocity[1] * deltaT / 200.f,
+                        player->velocity[2] * deltaT / 200.f);
 
         glm::vec3 updatedPos(player->position);
 
         if (player->godMode) {
             updatedPos += player->camera->look * trans[0];
+            updatedPos += player->camera->up * trans[1];
         } else {
             glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
             updatedPos += grounded * trans[0];
+            updatedPos += player->camera->world_up * trans[1];
         }
-
-        updatedPos += player->camera->up * trans[1];
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
@@ -252,7 +257,10 @@ void MyGL::timerUpdate()
                 }
             }
         }
-        minT = std::max(minT - 0.01f, 0.f);
+        minT = std::max(minT - 0.02f, 0.f);
+        if (player->inLiquid) {
+            minT = minT * 2.f / 3.f;
+        }
         ray = glm::normalize(ray) * minT;
         player->camera->eye += ray;
         player->camera->ref += ray;
@@ -261,11 +269,21 @@ void MyGL::timerUpdate()
 
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position);
-    player->onGround = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
+    player->inLiquid = ((mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA &&
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA &&
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA &&
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA) ||
+                        (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER &&
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER &&
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER &&
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER));
+    player->onGround = !player->inLiquid &&
+                        (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
                         mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
                         mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
                         mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
-    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -2.0);
+
+    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
 
     // Step 5. Process all renderable entities and draw them
 

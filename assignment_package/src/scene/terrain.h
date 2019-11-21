@@ -3,6 +3,9 @@
 #include <la.h>
 #include <drawable.h>
 #include <array>
+#include <memory>
+
+#define uPtr std::unique_ptr
 
 // C++ 11 allows us to define the size of an enum. This lets us use only one byte
 // of memory to store our different block types. By default, the size of a C++ enum
@@ -10,7 +13,7 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, LAVA
+    EMPTY, GRASS, DIRT, STONE, LAVA, WATER
 };
 
 class Chunk : public Drawable
@@ -70,6 +73,9 @@ public:
     void regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye);
     //helper function for getting current 4X4 chunk origin
     glm::ivec2 terrOrigin(glm::vec3 eye);
+
+
+    std::vector<uPtr<Chunk>> chunksToAdd;
 };
 
 std::pair<int, int> getOrigin(int x, int z);
