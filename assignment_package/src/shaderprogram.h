@@ -47,7 +47,7 @@ public:
 
     QString qTextFileRead(const char*);
 
-private:
+protected:
     OpenGLContext* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,
                             // we need to pass our OpenGL context to the Drawable in order to call GL functions
                             // from within this class.

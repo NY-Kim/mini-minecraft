@@ -16,7 +16,9 @@ SOURCES += \
     $$PWD/scene/terrain.cpp \
     $$PWD/scene/worldaxes.cpp \
     $$PWD/player.cpp \
-    $$PWD/chunkloader.cpp
+    $$PWD/chunkloader.cpp \
+    $$PWD/scene/quad.cpp \
+    $$PWD/postprocessshader.cpp
 
 HEADERS += \
     $$PWD/la.h \
@@ -34,4 +36,6 @@ HEADERS += \
     $$PWD/scene/worldaxes.h \
     $$PWD/smartpointerhelp.h \
     $$PWD/player.h \
-    $$PWD/chunkloader.h
+    $$PWD/chunkloader.h \
+    $$PWD/scene/quad.h \
+    $$PWD/postprocessshader.h

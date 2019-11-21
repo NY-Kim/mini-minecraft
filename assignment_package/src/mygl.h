@@ -4,6 +4,7 @@
 #include <openglcontext.h>
 #include <utils.h>
 #include <shaderprogram.h>
+#include "postprocessshader.h"
 #include <scene/cube.h>
 #include <scene/worldaxes.h>
 #include "camera.h"
@@ -14,6 +15,7 @@
 #include <smartpointerhelp.h>
 
 #include "player.h"
+#include "scene/quad.h"
 
 class MyGL : public OpenGLContext
 {
@@ -23,9 +25,28 @@ private:
     uPtr<WorldAxes> mp_worldAxes; // A wireframe representation of the world axes. It is hard-coded to sit centered at (32, 128, 32).
     uPtr<ShaderProgram> mp_progLambert;// A shader program that uses lambertian reflection
     uPtr<ShaderProgram> mp_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
+    uPtr<PostProcessShader> mp_onLand;
+    uPtr<PostProcessShader> mp_inWater;
+    uPtr<PostProcessShader> mp_inLava;
+    PostProcessShader* currPostShader;
 
     GLuint vao; // A handle for our vertex array object. This will store the VBOs created in our geometry classes.
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
+
+    /// Required for post-processing
+    // A collection of handles to the five frame buffers we've given
+    // ourselves to perform render passes. The 0th frame buffer is always
+    // written to by the render pass that uses the currently bound surface shader.
+    GLuint m_frameBuffer;
+    // A collection of handles to the textures used by the frame buffers.
+    // m_frameBuffers[i] writes to m_renderedTextures[i].
+    GLuint m_renderedTexture;
+    // A collection of handles to the depth buffers used by our frame buffers.
+    // m_frameBuffers[i] writes to m_depthRenderBuffers[i].
+    GLuint m_depthRenderBuffer;
+    // Screen space quadrangle for post-processing (i.e. swimming effect)
+    Quad m_geomQuad;
+
 
     uPtr<Terrain> mp_terrain;
 
@@ -61,6 +82,12 @@ protected:
     void mouseMoveEvent(QMouseEvent *m);
     void mousePressEvent(QMouseEvent *m);
     void mouseReleaseEvent(QMouseEvent *m);
+
+private:
+    // Sets up the arrays of frame buffers
+    // used to store render passes. Invoked
+    // once in initializeGL().
+    void createRenderBuffers();
 
 private slots:
     /// Slot that gets called ~60 times per second

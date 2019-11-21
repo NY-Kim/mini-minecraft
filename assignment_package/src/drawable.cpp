@@ -3,8 +3,8 @@
 #include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(), bufPNC(),
-      idxBound(false), posBound(false), norBound(false), colBound(false), pncBound(false),
+    : bufIdx(), bufPos(), bufNor(), bufCol(), bufPNC(), bufUV(),
+      idxBound(false), posBound(false), norBound(false), colBound(false), pncBound(false), uvBound(false),
       context(context)
 {}
 
@@ -69,6 +69,13 @@ void Drawable::generatePNC()
     context->glGenBuffers(1, &bufPNC);
 }
 
+void Drawable::generateUV()
+{
+    uvBound = true;
+    // Create a VBO on our GPU and store its handle in bufCol
+    context->glGenBuffers(1, &bufUV);
+}
+
 bool Drawable::bindIdx()
 {
     if(idxBound) {
@@ -107,4 +114,12 @@ bool Drawable::bindPNC()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufPNC);
     }
     return pncBound;
+}
+
+bool Drawable::bindUV()
+{
+    if(uvBound){
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufUV);
+    }
+    return uvBound;
 }
