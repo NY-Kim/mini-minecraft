@@ -13,12 +13,13 @@
 class ChunkLoader : public QRunnable
 {
 private:
+    int regenCase;
     std::vector<uPtr<Chunk>>* toWriteTo;
     QString name;
     QMutex* mutex;
 
 public:
-    ChunkLoader(std::vector<uPtr<Chunk>>* chunks, QString name, QMutex* mutex);
+    ChunkLoader(int regenCase, std::vector<uPtr<Chunk>>* chunks, QString name, QMutex* mutex);
     void run() override;
 };
 

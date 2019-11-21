@@ -73,6 +73,8 @@ public:
     void GLDrawScene();
 
     float rayMarch(glm::vec3 ray, glm::vec3 currPos);
+    glm::ivec2 getNewOrigin(glm::ivec2 curr, int regenCase);
+    void setNeighbors(Chunk* chunk, glm::ivec2 key);
 
 protected:
     void keyPressEvent(QKeyEvent *e);
@@ -88,6 +90,12 @@ private:
     // used to store render passes. Invoked
     // once in initializeGL().
     void createRenderBuffers();
+
+    // A helper function that iterates through
+    // each of the render passes required by the
+    // currently bound post-process shader and
+    // invokes them.
+    void performPostprocessRenderPass();
 
 private slots:
     /// Slot that gets called ~60 times per second

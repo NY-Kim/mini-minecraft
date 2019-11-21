@@ -675,4 +675,3 @@ glm::ivec2 getWorldCoordinates(glm::ivec2 position, int x, int z) {
     return glm::ivec2(position[0] + x, position[1] + z);
 }
 
-

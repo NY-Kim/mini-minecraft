@@ -13,7 +13,7 @@ MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       mp_worldAxes(mkU<WorldAxes>(this)),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
-      mp_onLand(mkU<PostProcessShader(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader(this)), currPostShader(nullptr),
+      mp_onLand(mkU<PostProcessShader>(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader>(this)), currPostShader(nullptr),
       m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
 {
@@ -54,6 +54,10 @@ void MyGL::initializeGL()
     glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    //Allow for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // Set the size with which points should be rendered
     glPointSize(5);
     // Set the color with which the screen is filled at the start of each render call.
@@ -79,7 +83,9 @@ void MyGL::initializeGL()
     mp_onLand->create(":/glsl/passthrough.vert.glsl", ":glsl/noOp.frag.glsl");
     mp_inWater->create(":/glsl/passthrough.vert.glsl", ":glsl/water.frag.glsl");
     mp_inLava->create(":/glsl/passthrough.vert.glsl", ":glsl/lava.frag.glsl");
+    currPostShader = mp_onLand.get();
 
+    m_geomQuad.create();
     // Set a color with which to draw geometry since you won't have one
     // defined until you implement the Node classes.
     // This makes your geometry render green.
@@ -281,11 +287,11 @@ void MyGL::timerUpdate()
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position);
     player->inLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) &&
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
                        (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) &&
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) ||
                        (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) &&
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) ||
                        (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
                         mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
     player->onGround = !player->inLiquid &&
@@ -304,6 +310,14 @@ void MyGL::timerUpdate()
         mp_terrain->destroy();
         mp_terrain->create();
     }
+
+    // Check which post-process buffer to use
+    glm::ivec3 camPos(player->camera->eye);
+    if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == LAVA) {
+        currPostShader = mp_inLava.get();
+    } else if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == WATER) {
+        currPostShader = mp_inWater.get();
+    } else currPostShader = mp_onLand.get();
     update();
 }
 
@@ -312,6 +326,11 @@ void MyGL::timerUpdate()
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL()
 {
+    // Render the 3D scene to our frame buffer
+
+    // Render to our framebuffer rather than the viewport
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -323,6 +342,8 @@ void MyGL::paintGL()
     glDisable(GL_DEPTH_TEST);
     mp_progFlat->setModelMatrix(glm::mat4());
     mp_progFlat->draw(*mp_worldAxes);
+
+    performPostprocessRenderPass();
     glEnable(GL_DEPTH_TEST);
 
 }
@@ -409,4 +430,21 @@ void MyGL::createRenderBuffers()
         std::cout << "Frame buffer did not initialize correctly..." << std::endl;
         printGLErrorLog();
     }
+}
+
+void MyGL::performPostprocessRenderPass()
+{
+    // Render the frame buffer as a texture on a screen-size quad
+
+    // Tell OpenGL to render to the viewport's frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+    // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Bind our texture in Texture Unit 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+
+    currPostShader->draw(m_geomQuad, 0);
 }

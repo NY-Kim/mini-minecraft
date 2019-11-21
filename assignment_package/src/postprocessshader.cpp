@@ -1,4 +1,5 @@
 #include "postprocessshader.h"
+#include <iostream>
 
 PostProcessShader::PostProcessShader(OpenGLContext *context)
     : ShaderProgram(context),
@@ -8,6 +9,55 @@ PostProcessShader::PostProcessShader(OpenGLContext *context)
 
 PostProcessShader::~PostProcessShader()
 {}
+
+void PostProcessShader::create(const char *vertfile, const char *fragfile)
+{
+    std::cout << "Setting up shader from " << vertfile << " and " << fragfile << std::endl;
+    // Allocate space on our GPU for a vertex shader and a fragment shader and a shader program to manage the two
+    vertShader = context->glCreateShader(GL_VERTEX_SHADER);
+    fragShader = context->glCreateShader(GL_FRAGMENT_SHADER);
+    prog = context->glCreateProgram();
+    // Get the body of text stored in our two .glsl files
+    QString qVertSource = qTextFileRead(vertfile);
+    QString qFragSource = qTextFileRead(fragfile);
+
+    char* vertSource = new char[qVertSource.size()+1];
+    strcpy(vertSource, qVertSource.toStdString().c_str());
+    char* fragSource = new char[qFragSource.size()+1];
+    strcpy(fragSource, qFragSource.toStdString().c_str());
+
+
+    // Send the shader text to OpenGL and store it in the shaders specified by the handles vertShader and fragShader
+    context->glShaderSource(vertShader, 1, &vertSource, 0);
+    context->glShaderSource(fragShader, 1, &fragSource, 0);
+    // Tell OpenGL to compile the shader text stored above
+    context->glCompileShader(vertShader);
+    context->glCompileShader(fragShader);
+    // Check if everything compiled OK
+    GLint compiled;
+    context->glGetShaderiv(vertShader, GL_COMPILE_STATUS, &compiled);
+    if (!compiled) {
+        printShaderInfoLog(vertShader);
+    }
+    context->glGetShaderiv(fragShader, GL_COMPILE_STATUS, &compiled);
+    if (!compiled) {
+        printShaderInfoLog(fragShader);
+    }
+
+    // Tell prog that it manages these particular vertex and fragment shaders
+    context->glAttachShader(prog, vertShader);
+    context->glAttachShader(prog, fragShader);
+    context->glLinkProgram(prog);
+
+    // Check for linking success
+    GLint linked;
+    context->glGetProgramiv(prog, GL_LINK_STATUS, &linked);
+    if (!linked) {
+        printLinkInfoLog(prog);
+    }
+
+    setupMemberVars();
+}
 
 void PostProcessShader::setupMemberVars()
 {

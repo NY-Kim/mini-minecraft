@@ -7,11 +7,11 @@
 
 in vec2 fs_UV;
 
-out vec3 color;
+out vec4 color;
 
 uniform sampler2D u_RenderedTexture;
 
 void main()
 {
-    color = texture(u_RenderedTexture, fs_UV).rgb;
+    color = texture(u_RenderedTexture, fs_UV).rgba;
 }
