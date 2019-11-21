@@ -269,14 +269,14 @@ void MyGL::timerUpdate()
 
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position);
-    player->inLiquid = ((mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA &&
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA &&
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA &&
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA) ||
-                        (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER &&
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER &&
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER &&
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER));
+    player->inLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) &&
+                       (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) &&
+                       (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) &&
+                       (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
     player->onGround = !player->inLiquid &&
                         (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
                         mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
