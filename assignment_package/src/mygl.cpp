@@ -317,26 +317,25 @@ void MyGL::timerUpdate()
 
         else {
             for (int dir : regenCase) {
-                // a) Add a chunk to the map and set its neighbors
+                // a) Create a chunk and set its neighbors
                 glm::ivec2 currOrigin = mp_terrain->terrOrigin(player->position);
                 glm::ivec2 chunkOrigin = getNewOrigin(currOrigin, dir);
                 uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin);
                 mp_terrain->setNeighbors(chunk.get());
-                mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])] = std::move(chunk);
 
                 // b) Make worker to handle the chunk and start it
                 QString name("Worker ");
                 name.append(QString::number(dir));
-                Chunk* toModify = mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])].get();
-                ChunkLoader* worker = new ChunkLoader(dir, toModify, &chunksToCreate, name, mutex.get());
+                ChunkLoader* worker = new ChunkLoader(dir, std::move(chunk), &chunksToCreate, name, mutex.get());
                 QThreadPool::globalInstance()->start(worker);
 
                 // c) Lock mutex, create all the chunks, then clear the vector and unlock
                 std::cout << "Main is attempting to lock mutex." << std::endl;
                 mutex->lock();
                 std::cout << "Main has locked the mutex." << std::endl;
-                for (Chunk* c : chunksToCreate) {
+                for (auto& c : chunksToCreate) {
                     c->create();
+                    mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])] = std::move(c);
                 }
                 chunksToCreate.clear();
                 mutex->unlock();
@@ -384,8 +383,8 @@ void MyGL::paintGL()
 
 void MyGL::GLDrawScene()
 {
-    for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
-        Chunk c = *(i->second.get());
+    for (const auto& map : mp_terrain->m_chunks) {
+        auto c = *(map.second.get());
         mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
         mp_progLambert->draw(c);
     }

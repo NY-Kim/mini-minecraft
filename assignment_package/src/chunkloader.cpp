@@ -1,8 +1,8 @@
 #include "chunkloader.h"
 #include <iostream>
 
-ChunkLoader::ChunkLoader(int regenCase, Chunk* toModify, std::vector<Chunk*> *chunks, QString name, QMutex *mutex)
-    : regenCase(regenCase), chunk(toModify), toWriteTo(chunks), name(name), mutex(mutex)
+ChunkLoader::ChunkLoader(int regenCase, uPtr<Chunk> toModify, std::vector<uPtr<Chunk>> *chunks, QString name, QMutex *mutex)
+    : regenCase(regenCase), chunk(std::move(toModify)), toWriteTo(chunks), name(name), mutex(mutex)
 {}
 
 void ChunkLoader::run() {
@@ -40,7 +40,7 @@ void ChunkLoader::run() {
     mutex->lock();
     std::cout << name.toStdString() << " has locked the mutex." << std::endl;
     std::cout << name.toStdString() << " is pushing back to vector." << std::endl;
-    toWriteTo->push_back(chunk);
+    toWriteTo->push_back(std::move(chunk));
     mutex->unlock();
     std::cout << name.toStdString() << " is finished." << std::endl;
 }

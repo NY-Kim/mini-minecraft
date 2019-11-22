@@ -58,7 +58,7 @@ private:
     // Additional variables for project
     uPtr<Player> player;
     int64_t lastUpdate;
-    std::vector<Chunk*> chunksToCreate;
+    std::vector<uPtr<Chunk>> chunksToCreate;
     uPtr<QMutex> mutex;
     bool init;
 
