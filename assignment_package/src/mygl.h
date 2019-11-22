@@ -17,6 +17,8 @@
 #include "player.h"
 #include "scene/quad.h"
 
+#include <QMutex>
+
 class MyGL : public OpenGLContext
 {
     Q_OBJECT
@@ -56,6 +58,9 @@ private:
     // Additional variables for project
     uPtr<Player> player;
     int64_t lastUpdate;
+    std::vector<Chunk*> chunksToCreate;
+    uPtr<QMutex> mutex;
+    bool init;
 
     void MoveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that

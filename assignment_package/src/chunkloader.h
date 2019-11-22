@@ -14,13 +14,18 @@ class ChunkLoader : public QRunnable
 {
 private:
     int regenCase;
-    std::vector<uPtr<Chunk>>* toWriteTo;
+    Chunk* chunk;
+    std::vector<Chunk*>* toWriteTo;
     QString name;
     QMutex* mutex;
 
 public:
-    ChunkLoader(int regenCase, std::vector<uPtr<Chunk>>* chunks, QString name, QMutex* mutex);
+    ChunkLoader(int regenCase, Chunk* toModify, std::vector<Chunk*>* chunks, QString name, QMutex* mutex);
     void run() override;
+
+    float noise2D(glm::vec2 n);
+    float interpNoise2D(float x, float y);
+    float fbm(float x, float y);
 };
 
 #endif // CHUNKLOADER_H

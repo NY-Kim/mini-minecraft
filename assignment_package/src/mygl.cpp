@@ -1,12 +1,14 @@
 #include "mygl.h"
 #include "la.h"
 #include "scene/cube.h"
+#include "chunkloader.h"
 
 #include <iostream>
 #include <algorithm>
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDateTime>
+#include <QThreadPool>
 
 
 MyGL::MyGL(QWidget *parent)
@@ -15,7 +17,8 @@ MyGL::MyGL(QWidget *parent)
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
       mp_onLand(mkU<PostProcessShader>(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader>(this)), currPostShader(nullptr),
       m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this),
-      mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
+      mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
+      chunksToCreate(), mutex(mkU<QMutex>()), init(true)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -260,28 +263,28 @@ void MyGL::timerUpdate()
             player->camera->eye += ray;
             player->camera->ref += ray;
             player->position += ray;
-            update();
-            return;
         }
-        glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
+        else {
+            glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
-        float minT = glm::length(ray);
-        for (int x = 0; x <= 1; ++x) {
-            for (int y = 0; y <= 2; ++y) {
-                for (int z = 0; z >= -1; --z) {
-                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
-                    minT = std::min(minT, rayMarch(ray, currVertPos));
+            float minT = glm::length(ray);
+            for (int x = 0; x <= 1; ++x) {
+                for (int y = 0; y <= 2; ++y) {
+                    for (int z = 0; z >= -1; --z) {
+                        glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
+                        minT = std::min(minT, rayMarch(ray, currVertPos));
+                    }
                 }
             }
+            minT = std::max(minT - 0.02f, 0.f);
+            if (player->inLiquid) {
+                minT = minT * 2.f / 3.f;
+            }
+            ray = glm::normalize(ray) * minT;
+            player->camera->eye += ray;
+            player->camera->ref += ray;
+            player->position += ray;
         }
-        minT = std::max(minT - 0.02f, 0.f);
-        if (player->inLiquid) {
-            minT = minT * 2.f / 3.f;
-        }
-        ray = glm::normalize(ray) * minT;
-        player->camera->eye += ray;
-        player->camera->ref += ray;
-        player->position += ray;
     }
 
     // Gravity only affects player if not in god mode or not on ground
@@ -306,9 +309,42 @@ void MyGL::timerUpdate()
 
     std::vector<int> regenCase = mp_terrain->checkRegenerate(player->position);
     if (regenCase.size() != 0) {
-        mp_terrain->regenerateTerrain(regenCase, player->position);
-        mp_terrain->destroy();
-        mp_terrain->create();
+        // Initial load-in
+        if (init) {
+            mp_terrain->regenerateTerrain(regenCase, player->position);
+            mp_terrain->destroy();
+            mp_terrain->create();
+            init = false;
+        }
+
+        else {
+            for (int dir : regenCase) {
+                // a) Add a chunk to the map and set its neighbors
+                glm::ivec2 currOrigin = mp_terrain->terrOrigin(player->position);
+                glm::ivec2 chunkOrigin = getNewOrigin(currOrigin, dir);
+                uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin);
+                mp_terrain->setNeighbors(chunk.get());
+                mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])] = std::move(chunk);
+
+                // b) Make worker to handle the chunk and start it
+                QString name("Worker ");
+                name.append(QString::number(dir));
+                Chunk* toModify = mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])].get();
+                ChunkLoader* worker = new ChunkLoader(dir, toModify, &chunksToCreate, name, mutex.get());
+                QThreadPool::globalInstance()->start(worker);
+
+                // c) Lock mutex, create all the chunks, then clear the vector and unlock
+                std::cout << "Main is attempting to lock mutex." << std::endl;
+                mutex->lock();
+                std::cout << "Main has locked the mutex." << std::endl;
+                for (Chunk* c : chunksToCreate) {
+                    c->create();
+                }
+                chunksToCreate.clear();
+                mutex->unlock();
+                std::cout << "Main has unlocked mutex." << std::endl;
+            }
+        }
     }
 
     // Check which post-process buffer to use
@@ -448,4 +484,13 @@ void MyGL::performPostprocessRenderPass()
     glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 
     currPostShader->draw(m_geomQuad, 0);
+}
+
+glm::ivec2 MyGL::getNewOrigin(glm::ivec2 curr, int regenCase) {
+    int xOffset = (regenCase == 2 || regenCase == 3 || regenCase == 4) ? 64 :
+                  (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
+    int zOffset = (regenCase == 1 || regenCase == 2 || regenCase == 8) ? 64 :
+                  (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
+
+    return curr + glm::ivec2(xOffset, zOffset);
 }

@@ -26,11 +26,15 @@ public:
     Chunk* posX_chunk; // pointer to adjacent chunk in the positive-x direction
     Chunk* negZ_chunk; // pointer to adjacent chunk in the negative-z direction
     Chunk* posZ_chunk; // pointer to adjacent chunk in the positive-z direction
+    std::vector<GLuint> idx;
+    std::vector<glm::vec4> pnc; // vector that stores position, normal, and color
+
 
     Chunk();
     Chunk(OpenGLContext* context, glm::ivec2 origin);
     ~Chunk();
 
+    void createVBOs();
     void create() override;
     GLenum drawMode() override;
     BlockType getBlockAt(int x, int y, int z) const;
@@ -75,8 +79,7 @@ public:
     //helper function for getting current 4X4 chunk origin
     glm::ivec2 terrOrigin(glm::vec3 eye);
 
-
-    std::vector<uPtr<Chunk>> chunksToAdd;
+    void setNeighbors(Chunk* chunk);
 };
 
 std::pair<int, int> getOrigin(int x, int z);

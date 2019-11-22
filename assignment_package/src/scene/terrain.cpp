@@ -84,6 +84,7 @@ void Terrain::CreateTestScene()
 
 void Terrain::create() {
     for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+        i->second->createVBOs();
         i->second->create();
     }
 }
@@ -422,21 +423,46 @@ glm::ivec2 Terrain::terrOrigin(glm::vec3 eye)
     return terrOrigin;
 }
 
+void Terrain::setNeighbors(Chunk *chunk) {
+    std::pair<int, int> key(chunk->position[0], chunk->position[1]);
+    if (m_chunks.find(std::pair<int, int>(key.first - 16, key.second)) != m_chunks.end()) {
+        Chunk* negX = m_chunks[std::pair<int, int>(key.first - 16, key.second)].get();
+        chunk->negX_chunk = negX;
+        negX->posX_chunk = m_chunks[key].get();
+    }
+
+    if (m_chunks.find(std::pair<int, int>(key.first + 16, key.second)) != m_chunks.end()) {
+        Chunk* posX = m_chunks[std::pair<int, int>(key.first + 16, key.second)].get();
+        chunk->posX_chunk = posX;
+        posX->negX_chunk = m_chunks[key].get();
+    }
+
+    if (m_chunks.find(std::pair<int, int>(key.first, key.second - 16)) != m_chunks.end()) {
+        Chunk* negZ = m_chunks[std::pair<int, int>(key.first, key.second - 16)].get();
+        chunk->negZ_chunk = negZ;
+        negZ->posZ_chunk = m_chunks[key].get();
+    }
+
+    if (m_chunks.find(std::pair<int, int>(key.first, key.second + 16)) != m_chunks.end()) {
+        Chunk* posZ = m_chunks[std::pair<int, int>(key.first, key.second + 16)].get();
+        chunk->posZ_chunk = posZ;
+        posZ->negZ_chunk = m_chunks[key].get();
+    }
+}
+
 Chunk::Chunk() : Drawable(nullptr) {}
 
 Chunk::Chunk(OpenGLContext *context, glm::ivec2 origin)
     : Drawable(context), position(glm::ivec2(origin[0], origin[1])),
-      negX_chunk(nullptr), posX_chunk(nullptr), negZ_chunk(nullptr), posZ_chunk(nullptr)
+      negX_chunk(nullptr), posX_chunk(nullptr), negZ_chunk(nullptr), posZ_chunk(nullptr),
+      idx(), pnc()
 {
     m_blocks.fill(EMPTY);
 }
 
 Chunk::~Chunk() {}
 
-void Chunk::create() {
-    std::vector<GLuint> idx;
-    std::vector<glm::vec4> pnc; // vector that stores position, normal, and color
-
+void Chunk::createVBOs() {
     std::map<BlockType, glm::vec4> color_map;
     color_map[DIRT] = glm::vec4(121.f, 85.f, 58.f, 255.f) / 255.f;
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
@@ -617,6 +643,9 @@ void Chunk::create() {
         }
     }
 
+}
+
+void Chunk::create() {
     count = idx.size();
 
     generateIdx();
