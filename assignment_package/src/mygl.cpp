@@ -320,6 +320,9 @@ void MyGL::timerUpdate()
                 // a) Create a chunk and set its neighbors
                 glm::ivec2 currOrigin = mp_terrain->terrOrigin(player->position);
                 glm::ivec2 chunkOrigin = getNewOrigin(currOrigin, dir);
+                if (mp_terrain->m_chunks.find(std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])) != mp_terrain->m_chunks.end()) {
+                    continue;
+                }
                 uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin);
                 mp_terrain->setNeighbors(chunk.get());
 
