@@ -6,6 +6,7 @@
 #include <memory>
 
 #define uPtr std::unique_ptr
+#define mkU std::make_unique
 
 // C++ 11 allows us to define the size of an enum. This lets us use only one byte
 // of memory to store our different block types. By default, the size of a C++ enum
@@ -42,7 +43,7 @@ public:
     Terrain(OpenGLContext* context);
     OpenGLContext* context;
 
-    std::map<std::pair<int, int>, Chunk> m_chunks;
+    std::map<std::pair<int, int>, uPtr<Chunk>> m_chunks;
 
     void CreateTestScene();
     void create();

@@ -350,9 +350,10 @@ void MyGL::paintGL()
 
 void MyGL::GLDrawScene()
 {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
+    for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
+        Chunk c = *(i->second.get());
         mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
-        mp_progLambert->draw(i->second);
+        mp_progLambert->draw(c);
     }
 }
 

@@ -5,7 +5,7 @@
 #include <iostream>
 
   Terrain::Terrain(OpenGLContext* context)
-      : context(context), m_chunks(std::map<std::pair<int, int>, Chunk>()), dimensions(64, 256, 64)
+      : context(context), m_chunks(std::map<std::pair<int, int>, uPtr<Chunk>>()), dimensions(64, 256, 64)
   {}
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
@@ -14,7 +14,7 @@ BlockType Terrain::getBlockAt(int x, int y, int z) const
   glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
   if (m_chunks.find(key) != m_chunks.end()) {
-      return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
+      return m_chunks.at(key)->getBlockAt(chunk_xz[0], y, chunk_xz[1]);
   } else {
       return EMPTY;
   }
@@ -26,35 +26,35 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
     if (m_chunks.find(key) != m_chunks.end()) {
-        m_chunks[key].getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
+        m_chunks[key]->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
     } else {
         glm::ivec2 origin = glm::ivec2(key.first, key.second);
-        Chunk chunk = Chunk(context, origin);
-        chunk.getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
-        m_chunks[key] = chunk;
+        uPtr<Chunk> chunk = mkU<Chunk>(context, origin);
+        chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
+        m_chunks[key] = std::move(chunk);
 
         if (m_chunks.find(std::pair<int, int>(key.first - 16, key.second)) != m_chunks.end()) {
-            Chunk* negX = &m_chunks[std::pair<int, int>(key.first - 16, key.second)];
-            chunk.negX_chunk = negX;
-            negX->posX_chunk = &m_chunks[key];
+            Chunk* negX = m_chunks[std::pair<int, int>(key.first - 16, key.second)].get();
+            chunk->negX_chunk = negX;
+            negX->posX_chunk = m_chunks[key].get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first + 16, key.second)) != m_chunks.end()) {
-            Chunk* posX = &m_chunks[std::pair<int, int>(key.first + 16, key.second)];
-            chunk.posX_chunk = posX;
-            posX->negX_chunk = &m_chunks[key];
+            Chunk* posX = m_chunks[std::pair<int, int>(key.first + 16, key.second)].get();
+            chunk->posX_chunk = posX;
+            posX->negX_chunk = m_chunks[key].get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first, key.second - 16)) != m_chunks.end()) {
-            Chunk* negZ = &m_chunks[std::pair<int, int>(key.first, key.second - 16)];
-            chunk.negZ_chunk = negZ;
-            negZ->posZ_chunk = &m_chunks[key];
+            Chunk* negZ = m_chunks[std::pair<int, int>(key.first, key.second - 16)].get();
+            chunk->negZ_chunk = negZ;
+            negZ->posZ_chunk = m_chunks[key].get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first, key.second + 16)) != m_chunks.end()) {
-            Chunk* posZ = &m_chunks[std::pair<int, int>(key.first, key.second + 16)];
-            chunk.posZ_chunk = posZ;
-            posZ->negZ_chunk = &m_chunks[key];
+            Chunk* posZ = m_chunks[std::pair<int, int>(key.first, key.second + 16)].get();
+            chunk->posZ_chunk = posZ;
+            posZ->negZ_chunk = m_chunks[key].get();
         }
     }
 }
@@ -83,14 +83,14 @@ void Terrain::CreateTestScene()
 }
 
 void Terrain::create() {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
-        i->second.Chunk::create();
+    for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+        i->second->create();
     }
 }
 
 void Terrain::destroy() {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
-        i->second.destroy();
+    for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+        i->second->destroy();
     }
 }
 
