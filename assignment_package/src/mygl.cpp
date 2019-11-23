@@ -317,27 +317,35 @@ void MyGL::timerUpdate()
 
         else {
             for (int dir : regenCase) {
-                // a) Create a chunk and set its neighbors
+                // a) Create 4x4 chunks and set its neighbors
                 glm::ivec2 currOrigin = mp_terrain->terrOrigin(player->position);
                 glm::ivec2 chunkOrigin = getNewOrigin(currOrigin, dir);
                 if (mp_terrain->m_chunks.find(std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])) != mp_terrain->m_chunks.end()) {
                     continue;
                 }
-                uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin);
-                Chunk* currChunk = chunk.get();
-                mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])] = std::move(chunk);
-                mp_terrain->setNeighbors(currChunk);
 
-                // b) Make worker to handle the chunk and start it
+                std::vector<Chunk*> threadChunks;
+                for (int x = 0; x < 4; ++x) {
+                    for (int z = 0; z < 4; ++z) {
+                        uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin + glm::ivec2(x * 16, z * 16));
+                        Chunk* currChunk = chunk.get();
+                        mp_terrain->m_chunks[std::pair<int, int>(currChunk->position[0], currChunk->position[1])] = std::move(chunk);
+                        mp_terrain->setNeighbors(currChunk);
+                        threadChunks.push_back(currChunk);
+                    }
+                }
+
+                // b) Make worker to handle the chunks and start it
                 QString name("Worker ");
                 name.append(QString::number(dir));
-                ChunkLoader* worker = new ChunkLoader(dir, currChunk, &chunksToCreate, name, mutex.get());
+                ChunkLoader* worker = new ChunkLoader(dir, threadChunks, &chunksToCreate, name, mutex.get());
                 QThreadPool::globalInstance()->start(worker);
 
                 // c) Lock mutex, create all the chunks, then clear the vector and unlock
                 std::cout << "Main is attempting to lock mutex." << std::endl;
                 mutex->lock();
                 std::cout << "Main has locked the mutex." << std::endl;
+                std::cout << chunksToCreate.size() << std::endl;
                 for (Chunk* c : chunksToCreate) {
                     c->create();
 
@@ -389,9 +397,11 @@ void MyGL::paintGL()
 void MyGL::GLDrawScene()
 {
     for (const auto& map : mp_terrain->m_chunks) {
-        auto c = *(map.second.get());
-        mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
-        mp_progLambert->draw(c);
+        Chunk* cPtr = map.second.get();
+        if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
+            mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+            mp_progLambert->draw(*cPtr);
+        }
     }
 }
 

@@ -1,44 +1,45 @@
 #include "chunkloader.h"
 #include <iostream>
 
-ChunkLoader::ChunkLoader(int regenCase, Chunk* toModify, std::vector<Chunk*> *chunks, QString name, QMutex *mutex)
-    : regenCase(regenCase), chunk(toModify), toWriteTo(chunks), name(name), mutex(mutex)
+ChunkLoader::ChunkLoader(int regenCase, std::vector<Chunk*> toModify, std::vector<Chunk*> *chunks, QString name, QMutex *mutex)
+    : regenCase(regenCase), chunks(toModify), toWriteTo(chunks), name(name), mutex(mutex)
 {}
 
 void ChunkLoader::run() {
+    for (Chunk* chunk : chunks) {
     // Step 1. Build FBM blocks
-    std::cout << name.toStdString() << " is creating FBM data." << std::endl;
-    int originX = chunk->position[0];
-    int originZ = chunk->position[1];
+        int originX = chunk->position[0];
+        int originZ = chunk->position[1];
 
-    for(int x = 0; x < 64; ++x) {
-        for(int z = 0; z < 64; ++z) {
-            float height = fbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
-            height = pow(height, 3.f) * 52.0 + 128.0;
+        for(int x = 0; x < 16; ++x) {
+            for(int z = 0; z < 16; ++z) {
+                float height = fbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
+                height = pow(height, 3.f) * 52.0 + 128.0;
 
-            glm::ivec2 chunk_xz = getChunkCoordinates(originX + x, originZ + z);
-            for (int y = 127; y < height; y++) {
-                if (y <= 128) {
-                    chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = STONE;
-                } else {
-                    chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = DIRT;
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        chunk->getBlockAt(x, y, z) = STONE;
+                    } else {
+                        chunk->getBlockAt(x, y, z) = DIRT;
+                    }
                 }
+                int y = (int)glm::floor(height);
+                chunk->getBlockAt(x, y, z) = GRASS;
             }
-            int y = (int)glm::floor(height);
-            chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = GRASS;
         }
-    }
 
-    // Step 2. Build VBO vectors without passing to GPU
-    std::cout << name.toStdString() << " is creating VBOs." << std::endl;
-    chunk->createVBOs();
+        // Step 2. Build VBO vectors without passing to GPU
+        chunk->createVBOs();
+    }
 
     // Step 3. Lock mutex, push chunk onto MyGL vector, then unlock
     std::cout << name.toStdString() << " is attempting to lock mutex." << std::endl;
     mutex->lock();
     std::cout << name.toStdString() << " has locked the mutex." << std::endl;
     std::cout << name.toStdString() << " is pushing back to vector." << std::endl;
-    toWriteTo->push_back(chunk);
+    for (Chunk* chunk : chunks) {
+        toWriteTo->push_back(chunk);
+    }
     mutex->unlock();
     std::cout << name.toStdString() << " is finished." << std::endl;
 }
