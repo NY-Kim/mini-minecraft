@@ -324,21 +324,23 @@ void MyGL::timerUpdate()
                     continue;
                 }
                 uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin);
-                mp_terrain->setNeighbors(chunk.get());
+                Chunk* currChunk = chunk.get();
+                mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])] = std::move(chunk);
+                mp_terrain->setNeighbors(currChunk);
 
                 // b) Make worker to handle the chunk and start it
                 QString name("Worker ");
                 name.append(QString::number(dir));
-                ChunkLoader* worker = new ChunkLoader(dir, std::move(chunk), &chunksToCreate, name, mutex.get());
+                ChunkLoader* worker = new ChunkLoader(dir, currChunk, &chunksToCreate, name, mutex.get());
                 QThreadPool::globalInstance()->start(worker);
 
                 // c) Lock mutex, create all the chunks, then clear the vector and unlock
                 std::cout << "Main is attempting to lock mutex." << std::endl;
                 mutex->lock();
                 std::cout << "Main has locked the mutex." << std::endl;
-                for (auto& c : chunksToCreate) {
+                for (Chunk* c : chunksToCreate) {
                     c->create();
-                    mp_terrain->m_chunks[std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])] = std::move(c);
+
                 }
                 chunksToCreate.clear();
                 mutex->unlock();
