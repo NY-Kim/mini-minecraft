@@ -10,24 +10,21 @@ void ChunkLoader::run() {
     std::cout << name.toStdString() << " is creating FBM data." << std::endl;
     int originX = chunk->position[0];
     int originZ = chunk->position[1];
-    int xOffset = (regenCase == 2 || regenCase == 3 || regenCase == 4) ? 64 :
-                  (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
-    int zOffset = (regenCase == 1 || regenCase == 2 || regenCase == 8) ? 64 :
-                  (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
 
     for(int x = 0; x < 64; ++x) {
         for(int z = 0; z < 64; ++z) {
-            float height = fbm(((originX + xOffset + x) / (64.0)), ((originZ + zOffset + z) / (64.0)));
+            float height = fbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
             height = pow(height, 3.f) * 52.0 + 128.0;
+            glm::ivec2 chunk_xz = getChunkCoordinates(originX + x, originZ + z);
             for (int y = 127; y < height; y++) {
                 if (y <= 128) {
-                    chunk->m_blocks[(originX + xOffset + x) + 16 * (originZ + zOffset + z) + 256 * y] = STONE;
+                    chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = STONE;
                 } else {
-                    chunk->m_blocks[(originX + xOffset + x) + 16 * (originZ + zOffset + z) + 256 * y] = DIRT;
+                    chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = DIRT;
                 }
             }
             int y = (int)glm::floor(height);
-            chunk->m_blocks[(originX + xOffset + x) + 16 * (originZ + zOffset + z) + 256 * y] = GRASS;
+            chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = GRASS;
         }
     }
 
