@@ -1,4 +1,4 @@
-#Procedural Terrain - Ray DongHo Kim
+#L-System Rivers - Ray DongHo Kim
 
 Additionally, in your readme, briefly describe how you implemented your chosen features. Discuss any difficulties you encountered when coding the project, and explain the approach you took to implementing each feature (e.g. "I chose to cast rays from the corners of my player's bounding box for collision detection because I thought it might be an easier approach than overlap checking.")
 
