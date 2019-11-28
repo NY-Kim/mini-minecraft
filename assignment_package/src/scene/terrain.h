@@ -3,6 +3,9 @@
 #include <la.h>
 #include <drawable.h>
 #include <array>
+#include "lsystem.h"
+
+class LSystem;
 
 // C++ 11 allows us to define the size of an enum. This lets us use only one byte
 // of memory to store our different block types. By default, the size of a C++ enum
@@ -10,7 +13,7 @@
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, LAVA
+    EMPTY, GRASS, DIRT, STONE, LAVA, WATER
 };
 
 class Chunk : public Drawable

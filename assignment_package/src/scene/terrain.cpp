@@ -63,9 +63,9 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 void Terrain::CreateTestScene()
 {
     //Create the basic terrain floor
-    for(int x = 0; x < 64; ++x)
+    for(int x = -256; x < 256; ++x)
     {
-        for(int z = 0; z < 64; ++z)
+        for(int z = -256; z < 256; ++z)
         {
             float height = fbm((x / 64.0), (z / 64.0));
             height = pow(height, 3.f) * 52.0 + 128.0;
@@ -80,6 +80,14 @@ void Terrain::CreateTestScene()
             setBlockAt(x, y, z, GRASS);
         }
     }
+//    for (int x = 0; x < 30; x++) {
+//        float height = fbm((x / 64.0), (10 / 64.0));
+//        height = pow(height, 3.f) * 52.0 + 128.0;
+//        int y = (int)glm::floor(height);
+//        setBlockAt(x, y, 10, WATER);
+//    }
+    LSystem river = LSystem(this);
+    river.generateRiver();
 }
 
 void Terrain::create() {
@@ -93,6 +101,7 @@ void Terrain::destroy() {
         i->second.destroy();
     }
 }
+
 
 
 //fbm functions=============================================================
@@ -442,6 +451,7 @@ void Chunk::create() {
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
     color_map[STONE] = glm::vec4(0.5f);
     color_map[LAVA] = glm::vec4(1.f, 0.f, 0.f, 1.f);
+    color_map[WATER] = glm::vec4(0.f, 0.f, 1.f, 1.f);
 
     int index = 0;
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
