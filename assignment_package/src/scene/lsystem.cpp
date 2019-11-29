@@ -26,9 +26,10 @@ void LSystem::generateRiver()
         expandStr = expanding;
     }
     Turtle newTurtle = Turtle();
+//    newTurtle.position = glm::vec2(8, 6);
     newTurtle.position = glm::vec2(-100, -120);
     newTurtle.orientation = 20.f;
-    //std::cout << expandStr.toStdString() << std::endl;
+    newTurtle.riverWidth = 8.0f;
     runOperations(newTurtle, expandStr);
 }
 
@@ -51,32 +52,22 @@ void LSystem::runOperations(Turtle turtle, QString instruction)
         if (currChar != 'X') {
             turtle = (this->*charToDrawingOperation[currChar])(turtle);
         }
-
-//        if (currChar == 'F') {
-//            turtle = drawLineMoveForward(turtle);
-//        } else if (currChar == '-') {
-//            turtle = rotateLeft(turtle);
-//        } else if (currChar == '+') {
-//            turtle = rotateRight(turtle);
-//        } else if (currChar == '[') {
-//            turtle = saveState(turtle);
-//        } else if (currChar == ']') {
-//            turtle = storeState(turtle);
-//        }
     }
 }
 
 void LSystem::carveTerrain(int x, int z)
 {
+    //std::cout << "carving : " << x << ", " << z << std::endl;
     int currX = x;
     int currY = 128;
     int currZ = z;
     //increase X
-    while((mp_terrain->getBlockAt(currX+1, currY, currZ) != EMPTY) && (mp_terrain->getBlockAt(currX+1, currY, currZ) != WATER)) {
-        //mp_terrain->setBlockAt(currX+1, currY, currZ, EMPTY);
-        mp_terrain->setBlockAt(currX+1, currY, currZ, GRASS);
-        for (int i = currY + 1; i < 256; i++) {
-            mp_terrain->setBlockAt(currX+1, i, currZ, EMPTY);
+    while((mp_terrain->getBlockAt(currX + 1, currY, currZ) != EMPTY)
+          && (mp_terrain->getBlockAt(currX + 1, currY, currZ) != WATER)
+          && (mp_terrain->getBlockAt(currX + 1, currY, currZ) != GRASS)) {
+        mp_terrain->setBlockAt(currX + 1, currY + 1, currZ, GRASS);
+        for (int i = currY + 2; i < 256; i++) {
+            mp_terrain->setBlockAt(currX + 1, i, currZ, EMPTY);
         }
         currX++;
         currY++;
@@ -85,11 +76,12 @@ void LSystem::carveTerrain(int x, int z)
     currY = 128;
     currZ = z;
     //decrease X
-    while((mp_terrain->getBlockAt(currX-1, currY, currZ) != EMPTY) && (mp_terrain->getBlockAt(currX-1, currY, currZ) != WATER)) {
-        //mp_terrain->setBlockAt(currX, currY, currZ, EMPTY);
-        mp_terrain->setBlockAt(currX-1, currY, currZ, GRASS);
-        for (int i = currY + 1; i < 256; i++) {
-            mp_terrain->setBlockAt(currX-1, i, currZ, EMPTY);
+    while((mp_terrain->getBlockAt(currX - 1, currY, currZ) != EMPTY)
+          && (mp_terrain->getBlockAt(currX - 1, currY, currZ) != WATER)
+          && (mp_terrain->getBlockAt(currX - 1, currY, currZ) != GRASS)) {
+        mp_terrain->setBlockAt(currX - 1, currY + 1, currZ, GRASS);
+        for (int i = currY + 2; i < 256; i++) {
+            mp_terrain->setBlockAt(currX - 1, i, currZ, EMPTY);
         }
         currX--;
         currY++;
@@ -98,11 +90,12 @@ void LSystem::carveTerrain(int x, int z)
     currY = 128;
     currZ = z;
     //increase Z
-    while((mp_terrain->getBlockAt(currX, currY, currZ+1) != EMPTY) && (mp_terrain->getBlockAt(currX+1, currY, currZ+1) != WATER)) {
-        //mp_terrain->setBlockAt(currX, currY, currZ, EMPTY);
-        mp_terrain->setBlockAt(currX, currY, currZ+1, GRASS);
-        for (int i = currY + 1; i < 256; i++) {
-            mp_terrain->setBlockAt(currX, i, currZ+1, EMPTY);
+    while((mp_terrain->getBlockAt(currX, currY, currZ + 1) != EMPTY)
+          && (mp_terrain->getBlockAt(currX, currY, currZ + 1) != WATER)
+          && (mp_terrain->getBlockAt(currX, currY, currZ + 1) != GRASS)) {
+        mp_terrain->setBlockAt(currX, currY + 1, currZ + 1, GRASS);
+        for (int i = currY + 2; i < 256; i++) {
+            mp_terrain->setBlockAt(currX, i, currZ + 1, EMPTY);
         }
         currZ++;
         currY++;
@@ -111,12 +104,13 @@ void LSystem::carveTerrain(int x, int z)
     currY = 128;
     currZ = z;
     //decrease Z
-    while((mp_terrain->getBlockAt(currX, currY, currZ-1) != EMPTY) && (mp_terrain->getBlockAt(currX, currY, currZ-1) != WATER)) {
-        //mp_terrain->setBlockAt(currX, currY, currZ, EMPTY);
-        mp_terrain->setBlockAt(currX, currY, currZ-1, GRASS);
+    while((mp_terrain->getBlockAt(currX, currY, currZ - 1) != EMPTY)
+          && (mp_terrain->getBlockAt(currX, currY, currZ - 1) != WATER)
+          && (mp_terrain->getBlockAt(currX, currY, currZ - 1) != GRASS)) {
+        mp_terrain->setBlockAt(currX, currY + 1, currZ - 1, GRASS);
 
-        for (int i = currY + 1; i < 256; i++) {
-            mp_terrain->setBlockAt(currX, i, currZ-1, EMPTY);
+        for (int i = currY + 2; i < 256; i++) {
+            mp_terrain->setBlockAt(currX, i, currZ - 1, EMPTY);
         }
         currZ--;
         currY++;
@@ -129,7 +123,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     float streamLength = 20.0f;
     turtle.orientation = turtle.orientation;// + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
-    int streamWidth = (int)glm::floor((turtle.riverWidth / 2.0f));
+    int streamWidth = (int)glm::floor((fmax(2, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
 
     glm::vec2 moveDir = glm::vec2(cos(angRadian) * streamLength,
                                   sin(angRadian) * streamLength);
@@ -141,25 +135,44 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
         int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
         int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
 
-        for (int j = -streamWidth; j < streamWidth; j++) {
-            float height = mp_terrain->fbm((x / 64.0), (z / 64.0));
-            height = pow(height, 3.f) * 52.0 + 128.0;
-            mp_terrain->setBlockAt(x, 128, z + j, WATER);
-            mp_terrain->setBlockAt(x + j, 128, z + j, WATER);
-            mp_terrain->setBlockAt(x + j, 128, z, WATER);
+        //        for (int j = -streamWidth; j < streamWidth; j++) {
+        //            mp_terrain->setBlockAt(x, 128, z + j, WATER);
+        //            mp_terrain->setBlockAt(x + j, 128, z + j, WATER);
+        //            mp_terrain->setBlockAt(x + j, 128, z, WATER);
 
-            //clear the blocks above river
-            for (int y = 129; y < 256; y++) {
-                mp_terrain->setBlockAt(x, y, z + j, EMPTY);
-                mp_terrain->setBlockAt(x + j, y, z + j, EMPTY);
-                mp_terrain->setBlockAt(x + j, y, z, EMPTY);
+        //            //clear the blocks above river
+        //            for (int y = 129; y < 256; y++) {
+        //                mp_terrain->setBlockAt(x, y, z + j, EMPTY);
+        //                mp_terrain->setBlockAt(x + j, y, z + j, EMPTY);
+        //                mp_terrain->setBlockAt(x + j, y, z, EMPTY);
+        //            }
+        //        }
+        for (int j = 0; j <= streamWidth; j++) {
+            for (int k = 0; k <= (streamWidth - j); k++) {
+                mp_terrain->setBlockAt(x + j, 128, z + k, WATER);
+                mp_terrain->setBlockAt(x + j, 128, z - k, WATER);
+                mp_terrain->setBlockAt(x - j, 128, z + k, WATER);
+                mp_terrain->setBlockAt(x - j, 128, z - k, WATER);
+
+                //clear the blocks above river
+                for (int y = 129; y < 256; y++) {
+                    mp_terrain->setBlockAt(x + j, y, z + k, EMPTY);
+                    mp_terrain->setBlockAt(x + j, y, z - k, EMPTY);
+                    mp_terrain->setBlockAt(x - j, y, z + k, EMPTY);
+                    mp_terrain->setBlockAt(x - j, y, z - k, EMPTY);
+                }
+                carveTerrain(x + j, z + k);
+                carveTerrain(x + j, z - k);
+                carveTerrain(x - j, z + k);
+                carveTerrain(x - j, z - k);
             }
         }
+        // std::cout << "main : " << x << ", " << z << std::endl;
         //carve away terrain
-        carveTerrain(x - streamWidth, z);
-        carveTerrain(x + streamWidth - 1, z);
-        carveTerrain(x, z - streamWidth);
-        carveTerrain(x, z + streamWidth - 1);
+        //        carveTerrain(x, z - streamWidth);
+        //        carveTerrain(x, z + streamWidth - 1);
+        //        carveTerrain(x - streamWidth, z);
+        //        carveTerrain(x + streamWidth - 1, z);
     }
     return nextTurtle;
 }
@@ -167,7 +180,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = 40.f;//rand() % 50 + 15;
+    float rotAng = rand() % 50 + 15;
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
 }
@@ -175,7 +188,8 @@ Turtle LSystem::rotateLeft(Turtle turtle)
 Turtle LSystem::rotateRight(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = 40.f;//rand() % 50 + 15;
+    float rotAng = rand() % 50 + 15;
+
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;
 }
@@ -185,7 +199,7 @@ Turtle LSystem::saveState(Turtle turtle)
     turtleStack.push(turtle);
     Turtle newTurtle = turtle;
     newTurtle.recDepth++;
-    newTurtle.riverWidth = newTurtle.riverWidth;// /2.0f;
+    newTurtle.riverWidth = newTurtle.riverWidth;
     return newTurtle;
 }
 
@@ -196,5 +210,5 @@ Turtle LSystem::storeState(Turtle turtle)
     }
 }
 
-Turtle::Turtle() : position(glm::vec2()), orientation(0.0f), recDepth(1), riverWidth(5.0f)
+Turtle::Turtle() : position(glm::vec2()), orientation(0.0f), recDepth(1)
 {}
