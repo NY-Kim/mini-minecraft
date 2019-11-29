@@ -7,7 +7,7 @@ void LSystem::generateRiver()
 {
     setExpansionGrammar();
 
-    QString axiom = QString("F");
+    QString axiom = QString("X");//F");
     QString expandStr = axiom;
     int iterNum = 3;
 
@@ -17,22 +17,25 @@ void LSystem::generateRiver()
             QChar currChar = expandStr.at(j);
             if (currChar == 'F') {
                 expanding.append(charToRule['F']);
-            } else {
+            } else if (currChar == 'X') {
+                expanding.append(charToRule['X']);
+            }else {
                 expanding.append(currChar);
             }
         }
         expandStr = expanding;
     }
     Turtle newTurtle = Turtle();
-    newTurtle.position = glm::vec2(10, 10);
-    std::cout << expandStr.toStdString() << std::endl;
+    newTurtle.position = glm::vec2(-100, -120);
+    newTurtle.orientation = 20.f;
+    //std::cout << expandStr.toStdString() << std::endl;
     doOperations(newTurtle, expandStr);
 }
 
 void LSystem::setExpansionGrammar()
 {
     charToRule.insert({'F', "F[-F]F[+F][F]"});
-
+    charToRule.insert({'X', "F-[[X]+X]+F[+FX]-X"});
 
     charToDrawingOperation.insert({'F', &LSystem::drawLineMoveForward});
     charToDrawingOperation.insert({'-', &LSystem::rotateLeft});
@@ -45,7 +48,9 @@ void LSystem::doOperations(Turtle turtle, QString instruction)
 {
     for (int i = 0; i < instruction.size(); i++) {
         QChar currChar = instruction.at(i);
-        turtle = (this->*charToDrawingOperation[currChar])(turtle);
+        if (currChar != 'X') {
+            turtle = (this->*charToDrawingOperation[currChar])(turtle);
+        }
 
 //        if (currChar == 'F') {
 //            turtle = drawLineMoveForward(turtle);
@@ -63,10 +68,12 @@ void LSystem::doOperations(Turtle turtle, QString instruction)
 
 Turtle LSystem::drawLineMoveForward(Turtle turtle)
 {
-//    std::cout<< "drawLine called!!!!" << std::endl;
     Turtle nextTurtle = turtle;
-    float streamLength = 15.0f;
+    float streamLength = 20.0f;
+    turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
+    int streamWidth = (int)glm::floor((turtle.riverWidth / 2.0f));
+
     glm::vec2 moveDir = glm::vec2(cos(angRadian) * streamLength,
                                   sin(angRadian) * streamLength);
     glm::vec2 normalizedMoveDir = glm::normalize(moveDir);
@@ -76,12 +83,21 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     for (int i = 0; i < streamLength; i++) {
         int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
         int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
-        float height = mp_terrain->fbm((x / 64.0), (z / 64.0));
-        height = pow(height, 3.f) * 52.0 + 128.0;
-//        std::cout << int(turtle.position[0] + (normalizedMoveDir[0] * i)) << ", " << int(turtle.position[1] + (normalizedMoveDir[1] * i)) << std::endl;
-        mp_terrain->setBlockAt(x, 128, z, WATER);
-        for (int y = 129; y < 256; y++) {
-            mp_terrain->setBlockAt(x, y, z, EMPTY);
+        //carve away terrain
+
+        for (int j = -streamWidth; j < streamWidth; j++) {
+            float height = mp_terrain->fbm((x / 64.0), (z / 64.0));
+            height = pow(height, 3.f) * 52.0 + 128.0;
+            mp_terrain->setBlockAt(x, 128, z + j, WATER);
+            mp_terrain->setBlockAt(x + j, 128, z + j, WATER);
+            mp_terrain->setBlockAt(x + j, 128, z, WATER);
+
+            //clear the blocks above river
+            for (int y = 129; y < 256; y++) {
+                mp_terrain->setBlockAt(x, y, z + j, EMPTY);
+                mp_terrain->setBlockAt(x + j, y, z + j, EMPTY);
+                mp_terrain->setBlockAt(x + j, y, z, EMPTY);
+            }
         }
     }
     return nextTurtle;
@@ -89,16 +105,16 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
-    //random angle between 15 ~ 85
-    float rotAng = rand() % 70 + 15;
+    //random angle between 15 ~ 65
+    float rotAng = rand() % 50 + 15;
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
 }
 
 Turtle LSystem::rotateRight(Turtle turtle)
 {
-    //random angle between 15 ~ 35
-    float rotAng = rand() % 70 + 15;
+    //random angle between 15 ~ 65
+    float rotAng = rand() % 50 + 15;
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;
 }
@@ -108,6 +124,7 @@ Turtle LSystem::saveState(Turtle turtle)
     turtleStack.push(turtle);
     Turtle newTurtle = turtle;
     newTurtle.recDepth++;
+    newTurtle.riverWidth = newTurtle.riverWidth;// /2.0f;
     return newTurtle;
 }
 
@@ -118,5 +135,5 @@ Turtle LSystem::storeState(Turtle turtle)
     }
 }
 
-Turtle::Turtle() : position(glm::vec2()), orientation(0.0f), recDepth(1)
+Turtle::Turtle() : position(glm::vec2()), orientation(0.0f), recDepth(1), riverWidth(5.0f)
 {}

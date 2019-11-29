@@ -19,6 +19,8 @@ public:
     //recursion depth
     int recDepth;
 
+    float riverWidth;
+
     //constructor
     Turtle();
 };
