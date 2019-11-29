@@ -46,8 +46,10 @@ public:
     void generateRiver();
     //setting expansion grammar
     void setExpansionGrammar();
-    //do all the operations in the expanded string
-    void doOperations(Turtle turtle, QString instruction);
+    //run all the operations in the expanded string
+    void runOperations(Turtle turtle, QString instruction);
+    //helper function for carving out terrain around the river
+    void carveTerrain(int x, int z);
 
     //drawing operations
     Turtle drawLineMoveForward(Turtle turtle);

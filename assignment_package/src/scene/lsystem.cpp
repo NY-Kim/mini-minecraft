@@ -29,7 +29,7 @@ void LSystem::generateRiver()
     newTurtle.position = glm::vec2(-100, -120);
     newTurtle.orientation = 20.f;
     //std::cout << expandStr.toStdString() << std::endl;
-    doOperations(newTurtle, expandStr);
+    runOperations(newTurtle, expandStr);
 }
 
 void LSystem::setExpansionGrammar()
@@ -44,7 +44,7 @@ void LSystem::setExpansionGrammar()
     charToDrawingOperation.insert({']', &LSystem::storeState});
 }
 
-void LSystem::doOperations(Turtle turtle, QString instruction)
+void LSystem::runOperations(Turtle turtle, QString instruction)
 {
     for (int i = 0; i < instruction.size(); i++) {
         QChar currChar = instruction.at(i);
@@ -66,11 +66,68 @@ void LSystem::doOperations(Turtle turtle, QString instruction)
     }
 }
 
+void LSystem::carveTerrain(int x, int z)
+{
+    int currX = x;
+    int currY = 128;
+    int currZ = z;
+    //increase X
+    while((mp_terrain->getBlockAt(currX+1, currY, currZ) != EMPTY) && (mp_terrain->getBlockAt(currX+1, currY, currZ) != WATER)) {
+        //mp_terrain->setBlockAt(currX+1, currY, currZ, EMPTY);
+        mp_terrain->setBlockAt(currX+1, currY, currZ, GRASS);
+        for (int i = currY + 1; i < 256; i++) {
+            mp_terrain->setBlockAt(currX+1, i, currZ, EMPTY);
+        }
+        currX++;
+        currY++;
+    }
+    currX = x;
+    currY = 128;
+    currZ = z;
+    //decrease X
+    while((mp_terrain->getBlockAt(currX-1, currY, currZ) != EMPTY) && (mp_terrain->getBlockAt(currX-1, currY, currZ) != WATER)) {
+        //mp_terrain->setBlockAt(currX, currY, currZ, EMPTY);
+        mp_terrain->setBlockAt(currX-1, currY, currZ, GRASS);
+        for (int i = currY + 1; i < 256; i++) {
+            mp_terrain->setBlockAt(currX-1, i, currZ, EMPTY);
+        }
+        currX--;
+        currY++;
+    }
+    currX = x;
+    currY = 128;
+    currZ = z;
+    //increase Z
+    while((mp_terrain->getBlockAt(currX, currY, currZ+1) != EMPTY) && (mp_terrain->getBlockAt(currX+1, currY, currZ+1) != WATER)) {
+        //mp_terrain->setBlockAt(currX, currY, currZ, EMPTY);
+        mp_terrain->setBlockAt(currX, currY, currZ+1, GRASS);
+        for (int i = currY + 1; i < 256; i++) {
+            mp_terrain->setBlockAt(currX, i, currZ+1, EMPTY);
+        }
+        currZ++;
+        currY++;
+    }
+    currX = x;
+    currY = 128;
+    currZ = z;
+    //decrease Z
+    while((mp_terrain->getBlockAt(currX, currY, currZ-1) != EMPTY) && (mp_terrain->getBlockAt(currX, currY, currZ-1) != WATER)) {
+        //mp_terrain->setBlockAt(currX, currY, currZ, EMPTY);
+        mp_terrain->setBlockAt(currX, currY, currZ-1, GRASS);
+
+        for (int i = currY + 1; i < 256; i++) {
+            mp_terrain->setBlockAt(currX, i, currZ-1, EMPTY);
+        }
+        currZ--;
+        currY++;
+    }
+}
+
 Turtle LSystem::drawLineMoveForward(Turtle turtle)
 {
     Turtle nextTurtle = turtle;
     float streamLength = 20.0f;
-    turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
+    turtle.orientation = turtle.orientation;// + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
     int streamWidth = (int)glm::floor((turtle.riverWidth / 2.0f));
 
@@ -83,7 +140,6 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     for (int i = 0; i < streamLength; i++) {
         int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
         int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
-        //carve away terrain
 
         for (int j = -streamWidth; j < streamWidth; j++) {
             float height = mp_terrain->fbm((x / 64.0), (z / 64.0));
@@ -99,6 +155,11 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
                 mp_terrain->setBlockAt(x + j, y, z, EMPTY);
             }
         }
+        //carve away terrain
+        carveTerrain(x - streamWidth, z);
+        carveTerrain(x + streamWidth - 1, z);
+        carveTerrain(x, z - streamWidth);
+        carveTerrain(x, z + streamWidth - 1);
     }
     return nextTurtle;
 }
@@ -106,7 +167,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = rand() % 50 + 15;
+    float rotAng = 40.f;//rand() % 50 + 15;
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
 }
@@ -114,7 +175,7 @@ Turtle LSystem::rotateLeft(Turtle turtle)
 Turtle LSystem::rotateRight(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = rand() % 50 + 15;
+    float rotAng = 40.f;//rand() % 50 + 15;
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;
 }
