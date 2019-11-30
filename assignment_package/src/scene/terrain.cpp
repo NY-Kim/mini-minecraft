@@ -4,20 +4,20 @@
 #include <array>
 #include <iostream>
 
-  Terrain::Terrain(OpenGLContext* context)
-      : context(context), m_chunks(std::map<std::pair<int, int>, Chunk>()), dimensions(64, 256, 64)
-  {}
+Terrain::Terrain(OpenGLContext* context)
+    : context(context), m_chunks(std::map<std::pair<int, int>, Chunk>()), dimensions(64, 256, 64)
+{}
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
 {
-  std::pair<int, int> key = getOrigin(x, z);
-  glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
+    std::pair<int, int> key = getOrigin(x, z);
+    glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
-  if (m_chunks.find(key) != m_chunks.end()) {
-      return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
-  } else {
-      return EMPTY;
-  }
+    if (m_chunks.find(key) != m_chunks.end()) {
+        return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
+    } else {
+        return EMPTY;
+    }
 }
 
 void Terrain::setBlockAt(int x, int y, int z, BlockType t)
@@ -81,8 +81,11 @@ void Terrain::CreateTestScene()
         }
     }
 
-    LSystem river = LSystem(this);
-    river.generateRiver();
+    LSystem linearRiver = LSystem(this, QString("linear"));
+    linearRiver.generateRiver();
+
+//    LSystem deltaRiver = LSystem(this, QString("delta"));
+//    deltaRiver.generateRiver();
 }
 
 void Terrain::create() {

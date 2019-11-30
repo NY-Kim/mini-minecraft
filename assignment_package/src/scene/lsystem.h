@@ -30,6 +30,8 @@ class LSystem
 public:
     Terrain* mp_terrain;
 
+    QString mode;
+
     //save and restore turtle states as traversing the grammar string
     QStack<Turtle> turtleStack;
 
@@ -40,7 +42,7 @@ public:
     typedef Turtle (LSystem::*Rule)(Turtle);
     std::map<QChar, Rule> charToDrawingOperation;
 
-    LSystem(Terrain* terrain);
+    LSystem(Terrain* terrain, QString riverMode);
 
     //generating river
     void generateRiver();
