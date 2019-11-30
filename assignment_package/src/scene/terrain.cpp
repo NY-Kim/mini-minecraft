@@ -443,11 +443,40 @@ void Chunk::create() {
     color_map[STONE] = glm::vec4(0.5f);
     color_map[LAVA] = glm::vec4(1.f, 0.f, 0.f, 1.f);
 
+    std::map<std::pair<BlockType, int>, glm::vec2> uv_map; // 0 - top, 1 - side, 2 - bottom
+    uv_map[std::pair<BlockType, int>(DIRT, 0)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(DIRT, 1)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(DIRT, 2)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(GRASS, 0)] = glm::vec2(8, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(GRASS, 1)] = glm::vec2(3, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(GRASS, 2)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(STONE, 0)] = glm::vec2(1, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(STONE, 1)] = glm::vec2(1, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(STONE, 2)] = glm::vec2(1, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 0)] = glm::vec2(13, 1) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 1)] = glm::vec2(13, 1) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 2)] = glm::vec2(13, 1) / 16.f;
+
+    std::map<BlockType, float> cos_pow_map;
+    cos_pow_map[DIRT] = 30;
+    cos_pow_map[GRASS] = 30;
+    cos_pow_map[STONE] = 70;
+    cos_pow_map[LAVA] = 30;
+
+    std::map<BlockType, float> ani_flag_map;
+    ani_flag_map[DIRT] = 0;
+    ani_flag_map[GRASS] = 0;
+    ani_flag_map[STONE] = 0;
+    ani_flag_map[LAVA] = 0;
+
     int index = 0;
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
                                                std::pair<int, int>(1, 0),
                                                std::pair<int, int>(1, 1),
                                                std::pair<int, int>(0, 1)};
+    std::vector<glm::vec2> offset1 = {glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1)};
+    std::vector<glm::vec2> offset2 = {glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0)};
+
     for (int x = 0; x < 16; x++)
     {
         for (int y = 0; y < 256; y++)
@@ -461,6 +490,7 @@ void Chunk::create() {
 
                 glm::ivec2 world_xz = getWorldCoordinates(position, x, z);
                 BlockType adj_block;
+                int i = 0;
 
                 // check face to the negative-x directoin
                 if (x == 0) {
@@ -480,6 +510,8 @@ void Chunk::create() {
                         pnc.push_back(glm::vec4(world_xz[0], y + offset.first, world_xz[1] + offset.second, 1));
                         pnc.push_back(glm::vec4(-1, 0, 0, 0));
                         pnc.push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + offset2[i++] / 16.f;
+                        pnc.push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
@@ -491,6 +523,7 @@ void Chunk::create() {
                     index += 4;
                 }
 
+                i = 0;
                 // check face to the positive-x direction
                 if (x == 15) {
                     Chunk* adj_chunk = posX_chunk;
@@ -509,6 +542,8 @@ void Chunk::create() {
                         pnc.push_back(glm::vec4(world_xz[0] + 1, y + offset.first, world_xz[1] + offset.second, 1));
                         pnc.push_back(glm::vec4(1, 0, 0, 0));
                         pnc.push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + offset2[i++] / 16.f;
+                        pnc.push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
@@ -538,6 +573,8 @@ void Chunk::create() {
                         pnc.push_back(glm::vec4(world_xz[0] + offset.first, y + offset.second, world_xz[1], 1));
                         pnc.push_back(glm::vec4(0, 0, -1, 0));
                         pnc.push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc.push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
@@ -567,6 +604,8 @@ void Chunk::create() {
                         pnc.push_back(glm::vec4(world_xz[0] + offset.first, y + offset.second, world_xz[1] + 1, 1));
                         pnc.push_back(glm::vec4(0, 0, 1, 0));
                         pnc.push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc.push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
@@ -585,6 +624,8 @@ void Chunk::create() {
                         pnc.push_back(glm::vec4(world_xz[0] + offset.first, y, world_xz[1] + offset.second, 1));
                         pnc.push_back(glm::vec4(0, -1, 0, 0));
                         pnc.push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 2)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc.push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
@@ -603,6 +644,8 @@ void Chunk::create() {
                         pnc.push_back(glm::vec4(world_xz[0] + offset.first, y + 1, world_xz[1] + offset.second, 1));
                         pnc.push_back(glm::vec4(0, 1, 0, 0));
                         pnc.push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 0)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc.push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {

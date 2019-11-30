@@ -11,7 +11,7 @@
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      mp_worldAxes(mkU<WorldAxes>(this)),
+      mp_worldAxes(mkU<WorldAxes>(this)), mp_texture(mkU<Texture>(this)),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
 {
@@ -74,6 +74,9 @@ void MyGL::initializeGL()
     // This makes your geometry render green.
     mp_progLambert->setGeometryColor(glm::vec4(0,1,0,1));
 
+    mp_texture->create(":/minecraft_textures_all.png");
+    mp_texture->load(0);
+
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
     //    vao.bind();
@@ -96,6 +99,7 @@ void MyGL::resizeGL(int w, int h)
 
     mp_progLambert->setViewProjMatrix(viewproj);
     mp_progFlat->setViewProjMatrix(viewproj);
+    mp_progLambert->setCameraPosition(player->camera->eye);
 
     printGLErrorLog();
 }
@@ -289,6 +293,7 @@ void MyGL::paintGL()
     mp_progLambert->setViewProjMatrix(player->camera->getViewProj());
 
     GLDrawScene();
+    mp_texture->bind(0);
 
     glDisable(GL_DEPTH_TEST);
     mp_progFlat->setModelMatrix(glm::mat4());

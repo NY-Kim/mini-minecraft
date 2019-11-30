@@ -8,6 +8,7 @@
 #include <scene/worldaxes.h>
 #include "camera.h"
 #include <scene/terrain.h>
+#include "texture.h"
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
@@ -28,6 +29,7 @@ private:
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
 
     uPtr<Terrain> mp_terrain;
+    uPtr<Texture> mp_texture;
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
