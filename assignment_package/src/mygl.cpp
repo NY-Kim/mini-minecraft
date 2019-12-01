@@ -268,12 +268,12 @@ void MyGL::timerUpdate()
 
     // Step 5. Process all renderable entities and draw them
 
-//    std::vector<int> regenCase = mp_terrain->checkRegenerate(player->position);
-//    if (regenCase.size() != 0) {
-//        mp_terrain->regenerateTerrain(regenCase, player->position);
-//        mp_terrain->destroy();
-//        mp_terrain->create();
-//    }
+    std::vector<int> regenCase = mp_terrain->checkRegenerate(player->position);
+    if (regenCase.size() != 0) {
+        mp_terrain->regenerateTerrain(regenCase, player->position);
+        mp_terrain->destroy();
+        mp_terrain->create();
+    }
     update();
 }
 

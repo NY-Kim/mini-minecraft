@@ -28,18 +28,17 @@ void LSystem::generateRiver()
         expandStr = expanding;
     }
     Turtle newTurtle = Turtle();
-    //    newTurtle.position = glm::vec2(8, 6);
     //linear river
     if (mode == QString("linear")) {
         newTurtle.position = glm::vec2(10, 10);
         newTurtle.orientation = 170.f;
-        newTurtle.riverWidth = 0.0f;
+        newTurtle.riverWidth = 10.0f;
     } else { //delta river
         newTurtle.position = glm::vec2(-100, -120);
         newTurtle.orientation = 20.f;
         newTurtle.riverWidth = 6.0f;
     }
-    runOperations(newTurtle, "F+FF-F");// expandStr);
+    runOperations(newTurtle, expandStr);
 }
 
 void LSystem::setExpansionGrammar()
@@ -64,7 +63,7 @@ void LSystem::runOperations(Turtle turtle, QString instruction)
 {
     for (int i = 0; i < instruction.size(); i++) {
         QChar currChar = instruction.at(i);
-        if (currChar != 'X') {
+        if (currChar != 'X' && currChar != 'Z') {
             turtle = (this->*charToDrawingOperation[currChar])(turtle);
         }
     }
@@ -76,24 +75,13 @@ void LSystem::carveTerrain(int x, int z)
     int currY = 128;
     int currZ = z;
 
-    for (int p = 1; p <= 8; p++) {
+    for (int p = 1; p <= 4; p++) {
         currX = x;
         currY = 128;
         currZ = z;
         int offsetX = 0;
         int offsetZ = 0;
-//        if ((p == 1) || (p == 2) || (p == 8)) {
-//            offsetZ = 1;
-//        }
-//        if ((p == 2) || (p == 3) || (p == 4)) {
-//            offsetX = 1;
-//        }
-//        if ((p == 4) || (p == 5) || (p == 6)) {
-//            offsetZ = -1;
-//        }
-//        if ((p == 6) || (p == 7) || (p == 8)) {
-//            offsetX = -1;
-//        }
+
         if (p == 1) {
             offsetZ = 1;
         } else if (p == 2) {
@@ -104,7 +92,13 @@ void LSystem::carveTerrain(int x, int z)
             offsetX = -1;
         }
 
+        //check if terrain exists to carve-out. If not, create 64x64 terrain first
+        if (mp_terrain->m_chunks.find(getOrigin(currX + offsetX, currZ + offsetZ))
+                == mp_terrain->m_chunks.end()) {
+            extendTerrain(currX + offsetX, currZ + offsetZ);
+        }
 
+        //carve out the terrain in x,z directions near river
         while((mp_terrain->getBlockAt(currX + offsetX, currY, currZ + offsetZ) != EMPTY)
               && (mp_terrain->getBlockAt(currX + offsetX, currY, currZ + offsetZ) != WATER)
               && (mp_terrain->getBlockAt(currX + offsetX, currY, currZ + offsetZ) != GRASS)) {
@@ -120,13 +114,39 @@ void LSystem::carveTerrain(int x, int z)
     }
 }
 
+void LSystem::extendTerrain(int x, int z)
+{
+    glm::ivec2 origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
+    int originX = int(origin[0]);
+    int originZ = int(origin[1]);
+
+    //create 64x64 terrain from the given coordinate
+    for(int tempX = 0; tempX < 64; ++tempX)
+    {
+        for(int tempZ = 0; tempZ < 64; ++tempZ)
+        {
+            float height = mp_terrain->fbm(((originX + tempX) / (64.0)), ((originZ + tempZ) / (64.0)));
+            height = pow(height, 3.f) * 32.0 + 128.0;
+            for (int y = 127; y < height; y++) {
+                if (y <= 128) {
+                    mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, STONE);
+                } else {
+                    mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, DIRT);
+                }
+            }
+            int y = (int)glm::floor(height);
+            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, GRASS);
+        }
+    }
+}
+
 Turtle LSystem::drawLineMoveForward(Turtle turtle)
 {
     Turtle nextTurtle = turtle;
-    float streamLength = 100.0f;
-    //turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
+    float streamLength = 10.0f;
+    turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
-    int streamWidth = (int)glm::floor((fmax(0, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
+    int streamWidth = (int)glm::floor((fmax(2, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
 
     glm::vec2 moveDir = glm::vec2(cos(angRadian) * streamLength,
                                   sin(angRadian) * streamLength);
@@ -137,49 +157,62 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     for (int i = 0; i < streamLength; i++) {
         int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
         int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
-        glm::ivec2 origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
-        int originX = int(origin[0]);
-        int originZ = int(origin[1]);
-        std::cout<<"origin : " << x << ", " << z << std::endl;
-        std::cout<< mp_terrain->m_chunks.size() << std::endl;
+        //std::cout<<"origin : " << x << ", " << z << std::endl;
+        //std::cout<< mp_terrain->m_chunks.size() << std::endl;
 
         //check if chunk exists already
         //if not, create the terrain first
-        if (mp_terrain->m_chunks.find(getOrigin(x, z)) == mp_terrain->m_chunks.end()) {
-            std::cout<< "I'm INNNNNNNNNNNNNNNN" << std::endl;
+       // if (mp_terrain->m_chunks.find(getOrigin(x, z)) == mp_terrain->m_chunks.end()) {
+           // extendTerrain(x, z);
+//            //std::cout<< "I'm INNNNNNNNNNNNNNNN" << std::endl;
 
-            origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
-            originX = int(origin[0]);
-            originZ = int(origin[1]);
+//            origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
+//            originX = int(origin[0]);
+//            originZ = int(origin[1]);
 
-            std::cout<<"chunk coord : " << originX << ", " << originZ << std::endl;
+//            //std::cout<<"chunk coord : " << originX << ", " << originZ << std::endl;
 
-            for(int tempX = 0; tempX < 64; ++tempX)
-            {
-                for(int tempZ = 0; tempZ < 64; ++tempZ)
-                {
-                    //std::cout<<"origin : " << originX << ", " << originZ << std::endl;
-                    float height = mp_terrain->fbm(((originX + tempX) / (64.0)), ((originZ + tempZ) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
-                        if (y <= 128) {
-                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, STONE);
-                        } else {
-                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, GRASS);
-                }
-            }
-        }
+//            for(int tempX = 0; tempX < 64; ++tempX)
+//            {
+//                for(int tempZ = 0; tempZ < 64; ++tempZ)
+//                {
+//                    //std::cout<<"origin : " << originX << ", " << originZ << std::endl;
+//                    float height = mp_terrain->fbm(((originX + tempX) / (64.0)), ((originZ + tempZ) / (64.0)));
+//                    height = pow(height, 3.f) * 32.0 + 128.0;
+//                    for (int y = 127; y < height; y++) {
+//                        if (y <= 128) {
+//                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, STONE);
+//                        } else {
+//                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, DIRT);
+//                        }
+//                    }
+//                    int y = (int)glm::floor(height);
+//                    mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, GRASS);
+//                }
+//            }
+       // }
 
         //draw river
         for (int j = 0; j <= streamWidth; j++) {
             for (int k = 0; k <= (streamWidth - j); k++) {
+                if (mp_terrain->m_chunks.find(getOrigin(x + j, z + k)) == mp_terrain->m_chunks.end()) {
+                    extendTerrain(x + j, z + k);
+                }
                 mp_terrain->setBlockAt(x + j, 128, z + k, WATER);
+
+                if (mp_terrain->m_chunks.find(getOrigin(x + j, z - k)) == mp_terrain->m_chunks.end()) {
+                    extendTerrain(x + j, z - k);
+                }
                 mp_terrain->setBlockAt(x + j, 128, z - k, WATER);
+
+                if (mp_terrain->m_chunks.find(getOrigin(x - j, z + k)) == mp_terrain->m_chunks.end()) {
+                    extendTerrain(x - j, z + k);
+                }
                 mp_terrain->setBlockAt(x - j, 128, z + k, WATER);
+
+                if (mp_terrain->m_chunks.find(getOrigin(x - j, z - k)) == mp_terrain->m_chunks.end()) {
+                    extendTerrain(x - j, z - k);
+                }
                 mp_terrain->setBlockAt(x - j, 128, z - k, WATER);
 
                 //clear the blocks above river
@@ -189,6 +222,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
                     mp_terrain->setBlockAt(x - j, y, z + k, EMPTY);
                     mp_terrain->setBlockAt(x - j, y, z - k, EMPTY);
                 }
+                //carve-out the terrain near river
                 carveTerrain(x + j, z + k);
                 carveTerrain(x + j, z - k);
                 carveTerrain(x - j, z + k);
@@ -202,7 +236,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = 40.0f;//rand() % 50 + 15;
+    float rotAng = rand() % 50 + 15;
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
 }
@@ -210,8 +244,7 @@ Turtle LSystem::rotateLeft(Turtle turtle)
 Turtle LSystem::rotateRight(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = 40.0f;//rand() % 50 + 15;
-
+    float rotAng = rand() % 50 + 15;
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;
 }

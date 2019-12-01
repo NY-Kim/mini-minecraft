@@ -52,6 +52,8 @@ public:
     void runOperations(Turtle turtle, QString instruction);
     //helper function for carving out terrain around the river
     void carveTerrain(int x, int z);
+    //helper function for generating terrain when creating river and carving-out
+    void extendTerrain(int x, int z);
 
     //drawing operations
     Turtle drawLineMoveForward(Turtle turtle);
