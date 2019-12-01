@@ -1,4 +1,5 @@
-#L-System Rivers - Ray DongHo Kim
+# Milestone 1
+## Procedural Terrain - Ray DongHo Kim
 
 Additionally, in your readme, briefly describe how you implemented your chosen features. Discuss any difficulties you encountered when coding the project, and explain the approach you took to implementing each feature (e.g. "I chose to cast rays from the corners of my player's bounding box for collision detection because I thought it might be an easier approach than overlap checking.")
 
@@ -11,7 +12,7 @@ Additionally, in your readme, briefly describe how you implemented your chosen f
 - Keeping track of correct coordinate value was confusing in the beginning, which is critical to give smooth terrain throughout the chunks, without any obvious boundaries between chunks.
 - Adding block initially caused diagonal addition sometimes, which is not allowed. So I had to use extra logic of getting the midpoint of the cube and determining the face that the ray is hitting to properly add a new block by the face, not by edge/corner of a cube.
 
-#Terrain Rendering and Chunking - Nayeong Kim
+## Terrain Rendering and Chunking - Nayeong Kim
 
 **Terrain class:**
 - Instead of m_blocks, I have m_chunk which is a map from the chunk's origin coordinate (x, z values) to the Chunk
@@ -24,8 +25,7 @@ Additionally, in your readme, briefly describe how you implemented your chosen f
 - When creating chunks, we iterate through all blocks and check if each the 6 adjacent blocks (left, right, front, back, top, bottom) are empty. When each of them are empty, we compute the position, normal, and color the corresponding face and store them in a single vector pnc.
 - pnc is divided into position, normal, color data in shaderprogram.cpp, and each populates vs_pos, vs_nor, vs_col of the shader file
 
-
-#Game Engine Update Function and Physics - Alexander Do
+## Game Engine Update Function and Physics - Alexander Do
 
 **Player class:**
 
@@ -48,6 +48,23 @@ Additionally, in your readme, briefly describe how you implemented your chosen f
 
 **Difficulties:** Collision detection was by far the most difficult portion of this section, especially before grid marching was introduced in lecture. Even afterwards, there were some sneaky bugs that arose (e.g. not checking all four vertices of the "feet" when updating the onGround boolean variable). Many hours and trips to office hours were spent trying to get the player to properly collide with the world and debugging problems such as the player transporting to <NAN, NAN, NAN> or not walking off edges properly.  
 
-#Things to point out
+## Things to point out
 - When the player is too close to the cube(right in front of it), the player cannot jump. Has to be at least a step back to jump.
 - When key is pressed, without releasing, the terrain does not generate. When the key is released and the player is near the boundary by fixed amount, then the additional terrain gets generated.
+
+# Milestone 2
+
+## Texturing and Texture Animation
+
+For texturing, I modified my interleaving VBO to include uv, cosine power, and animation flag, along with position, normal, and color. So in Terrain.cpp, I compute the UV, and set the cosine power and animation flag depending on the type of block.
+
+To generate animation, I created a new variable in MyGL called u_Time, which increments whenever paintGL is called. Depending on the u_Time variable, I change the UV by either shifting it to the right or up. The variation was made to make all the animation in the side of the blocks look like its falling down. 
+
+In the Lambert shader, I modified it to a Blinn-Phong shader by referencing my code from HW 4, 5. Then I added the animation part at the end.
+
+**Difficulties:**
+At first, it took a while to come up with how to do the animation since 5 blocks were given accross 2 rows in the texture map. I ended up only using 4 blocks (2 column blocks when I shift down, and 2 row blocks when I shift to the right).
+
+
+## Things to point out
+- Once we merge, our terrain loses texture and gets toned to a blue color. However, if we comment out either post-processing part or the lambert shading part, it works fine.
