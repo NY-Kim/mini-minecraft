@@ -63,9 +63,9 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 void Terrain::CreateTestScene()
 {
     //Create the basic terrain floor
-    for(int x = -128; x < 128; ++x)
+    for(int x = 0; x < 64; ++x)
     {
-        for(int z = -128; z < 128; ++z)
+        for(int z = 0; z < 64; ++z)
         {
             float height = fbm((x / 64.0), (z / 64.0));
             height = pow(height, 3.f) * 32.0 + 128.0;
@@ -79,6 +79,12 @@ void Terrain::CreateTestScene()
             int y = (int)glm::floor(height);
             setBlockAt(x, y, z, GRASS);
         }
+    }
+
+    for(std::map<std::pair<int, int>, Chunk>::const_iterator it = m_chunks.begin();
+        it != m_chunks.end(); ++it)
+    {
+        std::cout << it->first.first << ", " << it->first.second << "\n";
     }
 
     LSystem linearRiver = LSystem(this, QString("linear"));
@@ -182,7 +188,7 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
         }
         blockCoord = glm::floor(blockCoord + normal);
         setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
-        //std::cout << "added at: " << (int)blockCoord[0] << ", " << (int)blockCoord[2] << std::endl;
+        std::cout << "added at: " << (int)blockCoord[0] << ", " << (int)blockCoord[2] << std::endl;
     }
 }
 

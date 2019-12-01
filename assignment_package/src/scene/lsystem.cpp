@@ -31,15 +31,15 @@ void LSystem::generateRiver()
     //    newTurtle.position = glm::vec2(8, 6);
     //linear river
     if (mode == QString("linear")) {
-        newTurtle.position = glm::vec2(100, 120);
+        newTurtle.position = glm::vec2(10, 10);
         newTurtle.orientation = 170.f;
-        newTurtle.riverWidth = 12.0f;
+        newTurtle.riverWidth = 0.0f;
     } else { //delta river
         newTurtle.position = glm::vec2(-100, -120);
         newTurtle.orientation = 20.f;
         newTurtle.riverWidth = 6.0f;
     }
-    runOperations(newTurtle, expandStr);
+    runOperations(newTurtle, "F+FF-F");// expandStr);
 }
 
 void LSystem::setExpansionGrammar()
@@ -123,10 +123,10 @@ void LSystem::carveTerrain(int x, int z)
 Turtle LSystem::drawLineMoveForward(Turtle turtle)
 {
     Turtle nextTurtle = turtle;
-    float streamLength = 20.0f;
-    turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
+    float streamLength = 100.0f;
+    //turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
-    int streamWidth = (int)glm::floor((fmax(2, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
+    int streamWidth = (int)glm::floor((fmax(0, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
 
     glm::vec2 moveDir = glm::vec2(cos(angRadian) * streamLength,
                                   sin(angRadian) * streamLength);
@@ -137,6 +137,44 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     for (int i = 0; i < streamLength; i++) {
         int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
         int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
+        glm::ivec2 origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
+        int originX = int(origin[0]);
+        int originZ = int(origin[1]);
+        std::cout<<"origin : " << x << ", " << z << std::endl;
+        std::cout<< mp_terrain->m_chunks.size() << std::endl;
+
+        //check if chunk exists already
+        //if not, create the terrain first
+        if (mp_terrain->m_chunks.find(getOrigin(x, z)) == mp_terrain->m_chunks.end()) {
+            std::cout<< "I'm INNNNNNNNNNNNNNNN" << std::endl;
+
+            origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
+            originX = int(origin[0]);
+            originZ = int(origin[1]);
+
+            std::cout<<"chunk coord : " << originX << ", " << originZ << std::endl;
+
+            for(int tempX = 0; tempX < 64; ++tempX)
+            {
+                for(int tempZ = 0; tempZ < 64; ++tempZ)
+                {
+                    //std::cout<<"origin : " << originX << ", " << originZ << std::endl;
+                    float height = mp_terrain->fbm(((originX + tempX) / (64.0)), ((originZ + tempZ) / (64.0)));
+                    height = pow(height, 3.f) * 32.0 + 128.0;
+                    for (int y = 127; y < height; y++) {
+                        if (y <= 128) {
+                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, STONE);
+                        } else {
+                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, DIRT);
+                        }
+                    }
+                    int y = (int)glm::floor(height);
+                    mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, GRASS);
+                }
+            }
+        }
+
+        //draw river
         for (int j = 0; j <= streamWidth; j++) {
             for (int k = 0; k <= (streamWidth - j); k++) {
                 mp_terrain->setBlockAt(x + j, 128, z + k, WATER);
@@ -164,7 +202,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = rand() % 50 + 15;
+    float rotAng = 40.0f;//rand() % 50 + 15;
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
 }
@@ -172,7 +210,7 @@ Turtle LSystem::rotateLeft(Turtle turtle)
 Turtle LSystem::rotateRight(Turtle turtle)
 {
     //random angle between 15 ~ 65
-    float rotAng = rand() % 50 + 15;
+    float rotAng = 40.0f;//rand() % 50 + 15;
 
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;
