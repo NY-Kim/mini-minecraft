@@ -271,7 +271,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                         }
                     }
                     int y = (int)glm::floor(height);
-                    setBlockAt(originX + x, y, originZ + 64 + z, LAVA);
+                    setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
                 }
             }
         } else if (regenCase == 2) {
@@ -289,7 +289,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                         }
                     }
                     int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ + 64 + z, LAVA);
+                    setBlockAt(originX + 64 + x, y, originZ + 64 + z, GRASS);
                 }
             }
         } else if (regenCase == 3) {
@@ -307,7 +307,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                         }
                     }
                     int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ + z, LAVA);
+                    setBlockAt(originX + 64 + x, y, originZ + z, GRASS);
                 }
             }
         }
@@ -442,6 +442,7 @@ void Chunk::create() {
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
     color_map[STONE] = glm::vec4(0.5f);
     color_map[LAVA] = glm::vec4(1.f, 0.f, 0.f, 1.f);
+    color_map[WATER] = glm::vec4(0.f, 0.f, 1.f, 1.f);
 
     std::map<std::pair<BlockType, int>, glm::vec2> uv_map; // 0 - top, 1 - side, 2 - bottom
     uv_map[std::pair<BlockType, int>(DIRT, 0)] = glm::vec2(2, 15) / 16.f;
@@ -456,18 +457,23 @@ void Chunk::create() {
     uv_map[std::pair<BlockType, int>(LAVA, 0)] = glm::vec2(13, 1) / 16.f;
     uv_map[std::pair<BlockType, int>(LAVA, 1)] = glm::vec2(14, 0) / 16.f;
     uv_map[std::pair<BlockType, int>(LAVA, 2)] = glm::vec2(13, 1) / 16.f;
+    uv_map[std::pair<BlockType, int>(WATER, 0)] = glm::vec2(13, 3) / 16.f;
+    uv_map[std::pair<BlockType, int>(WATER, 1)] = glm::vec2(14, 2) / 16.f;
+    uv_map[std::pair<BlockType, int>(WATER, 2)] = glm::vec2(13, 3) / 16.f;
 
     std::map<BlockType, float> cos_pow_map;
-    cos_pow_map[DIRT] = 30;
-    cos_pow_map[GRASS] = 30;
+    cos_pow_map[DIRT] = 20;
+    cos_pow_map[GRASS] = 20;
     cos_pow_map[STONE] = 70;
-    cos_pow_map[LAVA] = 30;
+    cos_pow_map[LAVA] = 50;
+    cos_pow_map[WATER] = 80;
 
     std::map<BlockType, float> ani_flag_map;
     ani_flag_map[DIRT] = 0;
     ani_flag_map[GRASS] = 0;
     ani_flag_map[STONE] = 0;
     ani_flag_map[LAVA] = 1;
+    ani_flag_map[WATER] = 1;
 
     int index = 0;
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
