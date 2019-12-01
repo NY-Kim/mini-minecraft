@@ -91,8 +91,8 @@ void PostProcessShader::draw(Drawable& d, int textureSlot = 0)
 
     // Bind the index buffer and then draw shapes from it.
     // This invokes the shader program, which accesses the vertex buffers.
-    d.bindIdx();
-    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+    d.bindIdxTrans();
+    context->glDrawElements(d.drawMode(), d.elemCountTrans(), GL_UNSIGNED_INT, 0);
 
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);

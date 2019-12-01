@@ -15,11 +15,17 @@ protected:
     GLuint bufIdxTrans;
     GLuint bufPNCOpaque;
     GLuint bufPNCTrans;
+    GLuint bufPos;
+    GLuint bufUV;
 
     bool idxOpaqueBound; // Set to TRUE by generateIdx(), returned by bindIdx().
     bool idxTransBound;
     bool pncOpaqueBound;
     bool pncTransBound;
+    bool posBound;
+    bool uvBound;
+
+
 
 
 
@@ -50,5 +56,10 @@ public:
     bool bindIdxTrans();
     bool bindPNCOpaque();
     bool bindPNCTrans();
+
+    void generatePos();
+    void generateUV();
+    bool bindPos();
+    bool bindUV();
 
 };

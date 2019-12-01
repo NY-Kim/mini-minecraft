@@ -24,38 +24,37 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     std::pair<int, int> key = getOrigin(x, z);
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
-    if (m_chunks.find(key) != m_chunks.end()) {
+    if (m_chunks.find(key) != m_chunks.end() && m_chunks[key] != nullptr) {
         m_chunks[key]->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
     } else {
         glm::ivec2 origin = glm::ivec2(key.first, key.second);
         uPtr<Chunk> chunk = mkU<Chunk>(context, origin);
         chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
-        m_chunks[key] = std::move(chunk);
 
         if (m_chunks.find(std::pair<int, int>(key.first - 16, key.second)) != m_chunks.end()) {
             Chunk* negX = m_chunks[std::pair<int, int>(key.first - 16, key.second)].get();
             chunk->negX_chunk = negX;
-            negX->posX_chunk = m_chunks[key].get();
+            negX->posX_chunk = chunk.get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first + 16, key.second)) != m_chunks.end()) {
             Chunk* posX = m_chunks[std::pair<int, int>(key.first + 16, key.second)].get();
             chunk->posX_chunk = posX;
-            posX->negX_chunk = m_chunks[key].get();
+            posX->negX_chunk = chunk.get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first, key.second - 16)) != m_chunks.end()) {
             Chunk* negZ = m_chunks[std::pair<int, int>(key.first, key.second - 16)].get();
             chunk->negZ_chunk = negZ;
-            negZ->posZ_chunk = m_chunks[key].get();
+            negZ->posZ_chunk = chunk.get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first, key.second + 16)) != m_chunks.end()) {
             Chunk* posZ = m_chunks[std::pair<int, int>(key.first, key.second + 16)].get();
             chunk->posZ_chunk = posZ;
-            posZ->negZ_chunk = m_chunks[key].get();
+            posZ->negZ_chunk = chunk.get();
         }
-        m_chunks[key] = chunk;
+        m_chunks[key] = std::move(chunk);
     }
 }
 
@@ -462,7 +461,7 @@ Chunk::Chunk() : Drawable(nullptr) {}
 Chunk::Chunk(OpenGLContext *context, glm::ivec2 origin)
     : Drawable(context), position(glm::ivec2(origin[0], origin[1])),
       negX_chunk(nullptr), posX_chunk(nullptr), negZ_chunk(nullptr), posZ_chunk(nullptr),
-      idx(), pnc()
+      idxOpaque(), idxTrans(), pncOpaque(), pncTrans()
 {
     m_blocks.fill(EMPTY);
 }

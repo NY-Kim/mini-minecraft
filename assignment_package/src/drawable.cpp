@@ -3,9 +3,10 @@
 #include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(),
+    : bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(), bufPos(), bufUV(),
       idxOpaqueBound(false), idxTransBound(false),
       pncOpaqueBound(false), pncTransBound(false),
+      posBound(false), uvBound(false),
 
       context(context)
 {}
@@ -101,6 +102,28 @@ bool Drawable::bindPNCTrans()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCTrans);
     }
     return pncTransBound;
+}
+
+void Drawable::generatePos()
+{
+    posBound = true;
+    // Create a VBO on our GPU and store its handle in bufPos
+    context->glGenBuffers(1, &bufPos);
+}
+
+void Drawable::generateUV()
+{
+    uvBound = true;
+    // Create a VBO on our GPU and store its handle in bufCol
+    context->glGenBuffers(1, &bufUV);
+}
+
+bool Drawable::bindPos()
+{
+    if(posBound){
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPos);
+    }
+    return posBound;
 }
 
 bool Drawable::bindUV()

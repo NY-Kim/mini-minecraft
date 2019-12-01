@@ -36,7 +36,7 @@ HEADERS += \
     $$PWD/smartpointerhelp.h \
     $$PWD/player.h \
     $$PWD/texture.h \
-    $$PWD/scene/lsystem.h
+    $$PWD/scene/lsystem.h \
     $$PWD/chunkloader.h \
     $$PWD/scene/quad.h \
     $$PWD/postprocessshader.h
