@@ -105,7 +105,7 @@ void MyGL::resizeGL(int w, int h)
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
     *player->camera = Camera(w, h, glm::vec3(19.f, 200.f, 8.f),
-                            glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
+                             glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
     player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 
     glm::mat4 viewproj = player->camera->getViewProj();
@@ -159,7 +159,7 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         glm::vec3 blockCoords = glm::floor(currPos) + offset;
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
             if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == LAVA ||
-                mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == WATER) {
+                    mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == WATER) {
 
                 player->inLiquid = true;
             }
@@ -233,8 +233,8 @@ void MyGL::timerUpdate()
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
     if (glm::length(player->velocity) > 0.f) {
         glm::vec3 trans(player->velocity[0] * deltaT / 200.f,
-                        player->velocity[1] * deltaT / 200.f,
-                        player->velocity[2] * deltaT / 200.f);
+                player->velocity[1] * deltaT / 200.f,
+                player->velocity[2] * deltaT / 200.f);
 
         glm::vec3 updatedPos(player->position);
 
@@ -288,18 +288,18 @@ void MyGL::timerUpdate()
     // Gravity only affects player if not in god mode or not on ground
     glm::ivec3 currPos(player->position);
     player->inLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
-                       (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) ||
-                       (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) ||
-                       (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
     player->onGround = !player->inLiquid &&
-                        (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
 
     player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
 
@@ -341,10 +341,12 @@ void MyGL::timerUpdate()
                 ChunkLoader* worker = new ChunkLoader(dir, threadChunks, &chunksToCreate, name, mutex.get());
                 QThreadPool::globalInstance()->start(worker);
 
-                // c) Lock mutex, create all the chunks, then clear the vector and unlock
-                std::cout << "Main is attempting to lock mutex." << std::endl;
+
+            }
+            // If there exists chunk(s) to be created, lock mutex, create all the chunks, then clear the vector and unlock
+            if (chunksToCreate.size() > 0) {
+
                 mutex->lock();
-                std::cout << "Main has locked the mutex." << std::endl;
                 std::cout << chunksToCreate.size() << std::endl;
                 for (Chunk* c : chunksToCreate) {
                     c->create();
@@ -352,7 +354,6 @@ void MyGL::timerUpdate()
                 }
                 chunksToCreate.clear();
                 mutex->unlock();
-                std::cout << "Main has unlocked mutex." << std::endl;
             }
         }
     }
@@ -500,9 +501,9 @@ void MyGL::performPostprocessRenderPass()
 
 glm::ivec2 MyGL::getNewOrigin(glm::ivec2 curr, int regenCase) {
     int xOffset = (regenCase == 2 || regenCase == 3 || regenCase == 4) ? 64 :
-                  (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
+                                                                         (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
     int zOffset = (regenCase == 1 || regenCase == 2 || regenCase == 8) ? 64 :
-                  (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
+                                                                         (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
 
     return curr + glm::ivec2(xOffset, zOffset);
 }
