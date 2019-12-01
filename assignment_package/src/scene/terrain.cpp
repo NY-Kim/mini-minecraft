@@ -271,7 +271,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                         }
                     }
                     int y = (int)glm::floor(height);
-                    setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
+                    setBlockAt(originX + x, y, originZ + 64 + z, LAVA);
                 }
             }
         } else if (regenCase == 2) {
@@ -289,7 +289,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                         }
                     }
                     int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ + 64 + z, GRASS);
+                    setBlockAt(originX + 64 + x, y, originZ + 64 + z, LAVA);
                 }
             }
         } else if (regenCase == 3) {
@@ -307,7 +307,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                         }
                     }
                     int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ + z, GRASS);
+                    setBlockAt(originX + 64 + x, y, originZ + z, LAVA);
                 }
             }
         }
@@ -454,7 +454,7 @@ void Chunk::create() {
     uv_map[std::pair<BlockType, int>(STONE, 1)] = glm::vec2(1, 15) / 16.f;
     uv_map[std::pair<BlockType, int>(STONE, 2)] = glm::vec2(1, 15) / 16.f;
     uv_map[std::pair<BlockType, int>(LAVA, 0)] = glm::vec2(13, 1) / 16.f;
-    uv_map[std::pair<BlockType, int>(LAVA, 1)] = glm::vec2(13, 1) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 1)] = glm::vec2(14, 0) / 16.f;
     uv_map[std::pair<BlockType, int>(LAVA, 2)] = glm::vec2(13, 1) / 16.f;
 
     std::map<BlockType, float> cos_pow_map;
@@ -467,14 +467,13 @@ void Chunk::create() {
     ani_flag_map[DIRT] = 0;
     ani_flag_map[GRASS] = 0;
     ani_flag_map[STONE] = 0;
-    ani_flag_map[LAVA] = 0;
+    ani_flag_map[LAVA] = 1;
 
     int index = 0;
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
                                                std::pair<int, int>(1, 0),
                                                std::pair<int, int>(1, 1),
                                                std::pair<int, int>(0, 1)};
-    std::vector<glm::vec2> offset1 = {glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1)};
     std::vector<glm::vec2> offset2 = {glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0)};
 
     for (int x = 0; x < 16; x++)

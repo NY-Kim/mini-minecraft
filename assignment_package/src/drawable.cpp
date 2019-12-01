@@ -3,19 +3,21 @@
 #include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(), bufPNC(),
-      idxBound(false), posBound(false), norBound(false), colBound(false), pncBound(false),
+    : bufIdx(), bufIdxTrans(), bufPos(), bufNor(), bufCol(), bufPNC(), bufPNCTrans(),
+      idxBound(false), idxTransBound(false),
+      posBound(false), norBound(false), colBound(false), pncBound(false), pncTransPound(false),
       context(context)
 {}
 
 Drawable::~Drawable()
 {}
 
-
 void Drawable::destroy()
 {
     context->glDeleteBuffers(1, &bufIdx);
     context->glDeleteBuffers(1, &bufPNC);
+    context->glDeleteBuffers(1, &bufIdxTrans);
+    context->glDeleteBuffers(1, &bufPNCTrans);
 }
 
 GLenum Drawable::drawMode()
@@ -39,6 +41,13 @@ void Drawable::generateIdx()
     idxBound = true;
     // Create a VBO on our GPU and store its handle in bufIdx
     context->glGenBuffers(1, &bufIdx);
+}
+
+void Drawable::generateIdxTrans()
+{
+    idxTransBound = true;
+    // Create a VBO on our GPU and store its handle in bufIdx
+    context->glGenBuffers(1, &bufIdxTrans);
 }
 
 void Drawable::generatePos()
@@ -69,12 +78,27 @@ void Drawable::generatePNC()
     context->glGenBuffers(1, &bufPNC);
 }
 
+void Drawable::generatePNCTrans()
+{
+    pncTransPound = true;
+    // Create a VBO on our GPU and store its handle in bufPNC
+    context->glGenBuffers(1, &bufPNCTrans);
+}
+
 bool Drawable::bindIdx()
 {
     if(idxBound) {
         context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdx);
     }
     return idxBound;
+}
+
+bool Drawable::bindIdxTrans()
+{
+    if(idxTransBound) {
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxTrans);
+    }
+    return idxTransBound;
 }
 
 bool Drawable::bindPos()
@@ -107,4 +131,12 @@ bool Drawable::bindPNC()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufPNC);
     }
     return pncBound;
+}
+
+bool Drawable::bindPNCTrans()
+{
+    if(pncTransPound) {
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCTrans);
+    }
+    return pncTransPound;
 }

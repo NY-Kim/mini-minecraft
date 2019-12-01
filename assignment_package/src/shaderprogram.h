@@ -28,6 +28,7 @@ public:
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
     int unifCamera; // A handle for the "uniform" vec2 representing camera position in the vertex shader
     int unifSampler2D; // A handle to the "uniform" sampler2D that will be used to read the texture containing the scene render
+    int unifTime; // A handle for the "uniform" float representing time in the shader
 
 public:
     ShaderProgram(OpenGLContext* context);
@@ -52,6 +53,7 @@ public:
 
     void setCameraPosition(const glm::vec3 &cameraPos);
     QString qTextFileRead(const char*);
+    void setTime(float t);
 
 private:
     OpenGLContext* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,

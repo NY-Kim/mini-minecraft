@@ -33,6 +33,7 @@ private:
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
+    float m_time;
 
     // Additional variables for project
     uPtr<Player> player;

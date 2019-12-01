@@ -73,6 +73,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
     unifCamera     = context->glGetUniformLocation(prog, "u_Camera");
     unifSampler2D  = context->glGetUniformLocation(prog, "u_Texture");
+    unifTime       = context->glGetUniformLocation(prog, "u_Time");
 
 }
 
@@ -278,5 +279,14 @@ void ShaderProgram::setCameraPosition(const glm::vec3 &cameraPos)
 
     if (unifCamera != -1) {
         context->glUniform3fv(unifCamera, 1, &cameraPos[0]);
+    }
+}
+
+void ShaderProgram::setTime(float t)
+{
+    useMe();
+
+    if (unifTime != -1) {
+        context->glUniform1f(unifTime, t);
     }
 }

@@ -11,7 +11,7 @@
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      mp_worldAxes(mkU<WorldAxes>(this)), mp_texture(mkU<Texture>(this)),
+      mp_worldAxes(mkU<WorldAxes>(this)), mp_texture(mkU<Texture>(this)), m_time(0.0f),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
 {
@@ -291,15 +291,11 @@ void MyGL::paintGL()
 
     mp_progFlat->setViewProjMatrix(player->camera->getViewProj());
     mp_progLambert->setViewProjMatrix(player->camera->getViewProj());
+    mp_progLambert->setTime(m_time);
+    m_time++;
 
     GLDrawScene();
     mp_texture->bind(0);
-
-    glDisable(GL_DEPTH_TEST);
-    mp_progFlat->setModelMatrix(glm::mat4());
-    mp_progFlat->draw(*mp_worldAxes);
-    glEnable(GL_DEPTH_TEST);
-
 }
 
 void MyGL::GLDrawScene()
