@@ -1,6 +1,4 @@
 #include <scene/terrain.h>
-
-#include <scene/cube.h>
 #include <array>
 #include <iostream>
 
@@ -56,6 +54,7 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
             chunk.posZ_chunk = posZ;
             posZ->negZ_chunk = &m_chunks[key];
         }
+        m_chunks[key] = chunk;
     }
 }
 
@@ -182,7 +181,6 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
         }
         blockCoord = glm::floor(blockCoord + normal);
         setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
-        std::cout << "added at: " << (int)blockCoord[0] << ", " << (int)blockCoord[2] << std::endl;
     }
 }
 
@@ -442,21 +440,60 @@ Chunk::Chunk(OpenGLContext *context, glm::ivec2 origin)
 Chunk::~Chunk() {}
 
 void Chunk::create() {
-    std::vector<GLuint> idx;
-    std::vector<glm::vec4> pnc; // vector that stores position, normal, and color
+    std::vector<GLuint> idxOpaque;
+    std::vector<GLuint> idxTrans;
+    std::vector<GLuint>* idx;
+    std::vector<glm::vec4> pncOpaque; // vector that stores position, normal, and color
+    std::vector<glm::vec4> pncTrans;
+    std::vector<glm::vec4>* pnc;
+    int indexOpaque = 0;
+    int indexTrans = 0;
+    int* index;
 
     std::map<BlockType, glm::vec4> color_map;
     color_map[DIRT] = glm::vec4(121.f, 85.f, 58.f, 255.f) / 255.f;
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
-    color_map[STONE] = glm::vec4(0.5f);
-    color_map[LAVA] = glm::vec4(1.f, 0.f, 0.f, 1.f);
-    color_map[WATER] = glm::vec4(0.f, 0.f, 1.f, 1.f);
+    color_map[STONE] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    color_map[LAVA] = glm::vec4(1.f, 0.5f, 0.5f, 1.0f);
+    color_map[WATER] = glm::vec4(0.5f, 0.5f, 1.5f, 0.7f);
 
-    int index = 0;
+    std::map<std::pair<BlockType, int>, glm::vec2> uv_map; // 0 - top, 1 - side, 2 - bottom
+    uv_map[std::pair<BlockType, int>(DIRT, 0)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(DIRT, 1)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(DIRT, 2)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(GRASS, 0)] = glm::vec2(8, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(GRASS, 1)] = glm::vec2(3, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(GRASS, 2)] = glm::vec2(2, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(STONE, 0)] = glm::vec2(1, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(STONE, 1)] = glm::vec2(1, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(STONE, 2)] = glm::vec2(1, 15) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 0)] = glm::vec2(13, 1) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 1)] = glm::vec2(14, 0) / 16.f;
+    uv_map[std::pair<BlockType, int>(LAVA, 2)] = glm::vec2(13, 1) / 16.f;
+    uv_map[std::pair<BlockType, int>(WATER, 0)] = glm::vec2(13, 3) / 16.f;
+    uv_map[std::pair<BlockType, int>(WATER, 1)] = glm::vec2(14, 2) / 16.f;
+    uv_map[std::pair<BlockType, int>(WATER, 2)] = glm::vec2(13, 3) / 16.f;
+
+    std::map<BlockType, float> cos_pow_map;
+    cos_pow_map[DIRT] = 10;
+    cos_pow_map[GRASS] = 10;
+    cos_pow_map[STONE] = 60;
+    cos_pow_map[LAVA] = 50;
+    cos_pow_map[WATER] = 70;
+
+    std::map<BlockType, float> ani_flag_map;
+    ani_flag_map[DIRT] = 0;
+    ani_flag_map[GRASS] = 0;
+    ani_flag_map[STONE] = 0;
+    ani_flag_map[LAVA] = 1;
+    ani_flag_map[WATER] = 1;
+
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
                                                std::pair<int, int>(1, 0),
                                                std::pair<int, int>(1, 1),
                                                std::pair<int, int>(0, 1)};
+    std::vector<glm::vec2> offset2 = {glm::vec2(0, 0), glm::vec2(0, 1), glm::vec2(1, 1), glm::vec2(1, 0)};
+
     for (int x = 0; x < 16; x++)
     {
         for (int y = 0; y < 256; y++)
@@ -466,10 +503,19 @@ void Chunk::create() {
                 BlockType block = getBlockAt(x, y, z);
                 if (block == EMPTY) {
                     continue;
+                } else if (block == WATER) { // TODO: Add GLASS & ICE
+                    pnc = &pncTrans;
+                    idx = &idxTrans;
+                    index = &indexTrans;
+                } else {
+                    pnc = &pncOpaque;
+                    idx = &idxOpaque;
+                    index = &indexOpaque;
                 }
 
                 glm::ivec2 world_xz = getWorldCoordinates(position, x, z);
                 BlockType adj_block;
+                int i = 0;
 
                 // check face to the negative-x directoin
                 if (x == 0) {
@@ -483,24 +529,28 @@ void Chunk::create() {
                     adj_block = getBlockAt(x - 1, y, z);
                 }
 
-                if (adj_block == EMPTY) {
+                if (adj_block == EMPTY || (block != WATER && adj_block == WATER)) {
                     // draw face in negative-x direction
                     for (std::pair<int, int> offset : offsets) {
-                        pnc.push_back(glm::vec4(world_xz[0], y + offset.first, world_xz[1] + offset.second, 1));
-                        pnc.push_back(glm::vec4(-1, 0, 0, 0));
-                        pnc.push_back(color_map[block]);
+                        pnc->push_back(glm::vec4(world_xz[0], y + offset.first, world_xz[1] + offset.second, 1));
+                        pnc->push_back(glm::vec4(-1, 0, 0, 0));
+                        pnc->push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + offset2[i++] / 16.f;
+                        pnc->push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        idx.push_back(index);
-                        idx.push_back(index + i + 1);
-                        idx.push_back(index + i + 2);
+                        idx->push_back(*index);
+                        idx->push_back(*index + i + 1);
+                        idx->push_back(*index + i + 2);
                     }
 
-                    index += 4;
+
+                    *index += 4;
                 }
 
                 // check face to the positive-x direction
+                i = 0;
                 if (x == 15) {
                     Chunk* adj_chunk = posX_chunk;
                     if (adj_chunk != nullptr) {
@@ -512,21 +562,23 @@ void Chunk::create() {
                     adj_block = getBlockAt(x + 1, y, z);
                 }
 
-                if (adj_block == EMPTY) {
+                if (adj_block == EMPTY || (block != WATER && adj_block == WATER)) {
                     // draw face in positive-x direction
                     for (std::pair<int, int> offset : offsets) {
-                        pnc.push_back(glm::vec4(world_xz[0] + 1, y + offset.first, world_xz[1] + offset.second, 1));
-                        pnc.push_back(glm::vec4(1, 0, 0, 0));
-                        pnc.push_back(color_map[block]);
+                        pnc->push_back(glm::vec4(world_xz[0] + 1, y + offset.first, world_xz[1] + offset.second, 1));
+                        pnc->push_back(glm::vec4(1, 0, 0, 0));
+                        pnc->push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + offset2[i++] / 16.f;
+                        pnc->push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        idx.push_back(index);
-                        idx.push_back(index + i + 1);
-                        idx.push_back(index + i + 2);
+                        idx->push_back(*index);
+                        idx->push_back(*index + i + 1);
+                        idx->push_back(*index + i + 2);
                     }
 
-                    index += 4;
+                    *index += 4;
                 }
 
                 // check face to the negative-z directoin
@@ -541,21 +593,23 @@ void Chunk::create() {
                     adj_block = getBlockAt(x, y, z - 1);
                 }
 
-                if (adj_block == EMPTY) {
+                if (adj_block == EMPTY || (block != WATER && adj_block == WATER)) {
                     // draw face in negative-z direction
                     for (std::pair<int, int> offset : offsets) {
-                        pnc.push_back(glm::vec4(world_xz[0] + offset.first, y + offset.second, world_xz[1], 1));
-                        pnc.push_back(glm::vec4(0, 0, -1, 0));
-                        pnc.push_back(color_map[block]);
+                        pnc->push_back(glm::vec4(world_xz[0] + offset.first, y + offset.second, world_xz[1], 1));
+                        pnc->push_back(glm::vec4(0, 0, -1, 0));
+                        pnc->push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc->push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        idx.push_back(index);
-                        idx.push_back(index + i + 1);
-                        idx.push_back(index + i + 2);
+                        idx->push_back(*index);
+                        idx->push_back(*index + i + 1);
+                        idx->push_back(*index + i + 2);
                     }
 
-                    index += 4;
+                    *index += 4;
                 }
 
                 // check face to the positive-z direction
@@ -570,72 +624,95 @@ void Chunk::create() {
                     adj_block = getBlockAt(x, y, z + 1);
                 }
 
-                if (adj_block == EMPTY) {
+                if (adj_block == EMPTY || (block != WATER && adj_block == WATER)) {
                     // draw face in positive-z direction
                     for (std::pair<int, int> offset : offsets) {
-                        pnc.push_back(glm::vec4(world_xz[0] + offset.first, y + offset.second, world_xz[1] + 1, 1));
-                        pnc.push_back(glm::vec4(0, 0, 1, 0));
-                        pnc.push_back(color_map[block]);
+                        pnc->push_back(glm::vec4(world_xz[0] + offset.first, y + offset.second, world_xz[1] + 1, 1));
+                        pnc->push_back(glm::vec4(0, 0, 1, 0));
+                        pnc->push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 1)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc->push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        idx.push_back(index);
-                        idx.push_back(index + i + 1);
-                        idx.push_back(index + i + 2);
+                        idx->push_back(*index);
+                        idx->push_back(*index + i + 1);
+                        idx->push_back(*index + i + 2);
                     }
 
-                    index += 4;
+                    *index += 4;
                 }
 
                 // check face to the negative-y direction
-                if (y == 0 || getBlockAt(x, y - 1, z) == EMPTY) {
+                adj_block = getBlockAt(x, y - 1, z);
+                if (y == 0 || adj_block == EMPTY || (block != WATER && adj_block == WATER)) {
                     // draw face to the negative-y face
                     for (std::pair<int, int> offset : offsets) {
-                        pnc.push_back(glm::vec4(world_xz[0] + offset.first, y, world_xz[1] + offset.second, 1));
-                        pnc.push_back(glm::vec4(0, -1, 0, 0));
-                        pnc.push_back(color_map[block]);
+                        pnc->push_back(glm::vec4(world_xz[0] + offset.first, y, world_xz[1] + offset.second, 1));
+                        pnc->push_back(glm::vec4(0, -1, 0, 1));
+                        pnc->push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 2)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc->push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        idx.push_back(index);
-                        idx.push_back(index + i + 1);
-                        idx.push_back(index + i + 2);
+                        idx->push_back(*index);
+                        idx->push_back(*index + i + 1);
+                        idx->push_back(*index + i + 2);
                     }
 
-                    index += 4;
+                    *index += 4;
                 }
 
-               // check face to the positive-y direction
-                if (y == 255 || getBlockAt(x, y + 1, z) == EMPTY) {
+                // check face to the positive-y direction
+                adj_block = getBlockAt(x, y + 1, z);
+                if (y == 255 || adj_block == EMPTY || (block != WATER && adj_block == WATER)) {
                     // draw face to the positive-y face
                     for (std::pair<int, int> offset : offsets) {
-                        pnc.push_back(glm::vec4(world_xz[0] + offset.first, y + 1, world_xz[1] + offset.second, 1));
-                        pnc.push_back(glm::vec4(0, 1, 0, 0));
-                        pnc.push_back(color_map[block]);
+                        pnc->push_back(glm::vec4(world_xz[0] + offset.first, y + 1, world_xz[1] + offset.second, 1));
+                        pnc->push_back(glm::vec4(0, 1, 0, 1));
+                        pnc->push_back(color_map[block]);
+                        glm::vec2 uv = uv_map[std::pair<BlockType, int>(block, 0)] + glm::vec2(offset.first, offset.second) / 16.f;
+                        pnc->push_back(glm::vec4(uv[0], uv[1], cos_pow_map[block], ani_flag_map[block]));
                     }
 
                     for (int i = 0; i < 2; i++) {
-                        idx.push_back(index);
-                        idx.push_back(index + i + 1);
-                        idx.push_back(index + i + 2);
+                        idx->push_back(*index);
+                        idx->push_back(*index + i + 1);
+                        idx->push_back(*index + i + 2);
                     }
 
-                    index += 4;
+                    *index += 4;
                 }
             }
         }
     }
 
-    count = idx.size();
+    countOpaque = idxOpaque.size();
 
-    generateIdx();
-    context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdx);
-    context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idx.size() * sizeof(GLuint), idx.data(), GL_STATIC_DRAW);
+    if (countOpaque > 0) {
+        generateIdxOpaque();
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxOpaque);
+        context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idxOpaque.size() * sizeof(GLuint), idxOpaque.data(), GL_STATIC_DRAW);
 
-    generatePNC();
-    context->glBindBuffer(GL_ARRAY_BUFFER, bufPNC);
-    context->glBufferData(GL_ARRAY_BUFFER, pnc.size() * sizeof(glm::vec4), pnc.data(), GL_STATIC_DRAW);
+        generatePNCOpaque();
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCOpaque);
+        context->glBufferData(GL_ARRAY_BUFFER, pncOpaque.size() * sizeof(glm::vec4), pncOpaque.data(), GL_STATIC_DRAW);
+    }
+
+    countTrans = idxTrans.size();
+
+    if (countTrans > 0) {
+        generateIdxTrans();
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxTrans);
+        context->glBufferData(GL_ELEMENT_ARRAY_BUFFER, idxTrans.size() * sizeof(GLuint), idxTrans.data(), GL_STATIC_DRAW);
+
+        generatePNCTrans();
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCTrans);
+        context->glBufferData(GL_ARRAY_BUFFER, pncTrans.size() * sizeof(glm::vec4), pncTrans.data(), GL_STATIC_DRAW);
+    }
 }
+
 
 GLenum Chunk::drawMode() {
     return GL_TRIANGLES;

@@ -7,8 +7,8 @@
 
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
-      attrPos(-1), attrNor(-1), attrCol(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1),
+      attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrCosPow(-1), attrAniFlag(-1),
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifCamera(-1), unifSampler2D(-1),
       context(context)
 {}
 
@@ -63,11 +63,18 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     attrPos = context->glGetAttribLocation(prog, "vs_Pos");
     attrNor = context->glGetAttribLocation(prog, "vs_Nor");
     attrCol = context->glGetAttribLocation(prog, "vs_Col");
+    attrUV = context->glGetAttribLocation(prog, "vs_UV");
+    attrCosPow = context->glGetAttribLocation(prog, "vs_CosPow");
+    attrAniFlag = context->glGetAttribLocation(prog, "vs_AniFlag");
 
     unifModel      = context->glGetUniformLocation(prog, "u_Model");
     unifModelInvTr = context->glGetUniformLocation(prog, "u_ModelInvTr");
     unifViewProj   = context->glGetUniformLocation(prog, "u_ViewProj");
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
+    unifCamera     = context->glGetUniformLocation(prog, "u_Camera");
+    unifSampler2D  = context->glGetUniformLocation(prog, "u_Texture");
+    unifTime       = context->glGetUniformLocation(prog, "u_Time");
+
 }
 
 void ShaderProgram::useMe()
@@ -134,7 +141,7 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
 }
 
 //This function, as its name implies, uses the passed in GL widget
-void ShaderProgram::draw(Drawable &d)
+void ShaderProgram::drawOpaque(Drawable &d)
 {
         useMe();
 
@@ -148,31 +155,88 @@ void ShaderProgram::draw(Drawable &d)
         // meaning that glVertexAttribPointer associates vs_Pos
         // (referred to by attrPos) with that VBO
 
-    if (d.bindPNC()) {
+    if (d.bindPNCOpaque()) {
         if (attrPos != -1) {
             context->glEnableVertexAttribArray(attrPos);
-            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*)0);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)0);
         }
         if (attrNor != -1) {
             context->glEnableVertexAttribArray(attrNor);
-            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)sizeof(glm::vec4));
         }
         if (attrCol != -1) {
             context->glEnableVertexAttribArray(attrCol);
-            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 3 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
+        }
+        if (attrUV != -1) {
+            context->glEnableVertexAttribArray(attrUV);
+            context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4)));
+        }
+        if (attrCosPow != -1) {
+            context->glEnableVertexAttribArray(attrCosPow);
+            context->glVertexAttribPointer(attrCosPow, 1, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4) + 2 * sizeof(float)));
+        }
+        if (attrAniFlag != -1) {
+            context->glEnableVertexAttribArray(attrAniFlag);
+            context->glVertexAttribPointer(attrAniFlag, 1, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4) + 3 * sizeof(float)));
         }
     }
 
     // Bind the index buffer and then draw shapes from it.
     // This invokes the shader program, which accesses the vertex buffers.
-    d.bindIdx();
-    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+    d.bindIdxOpaque();
+    context->glDrawElements(d.drawMode(), d.elemCountOpaque(), GL_UNSIGNED_INT, 0);
 
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
     if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
+    if (attrCosPow != -1) context->glDisableVertexAttribArray(attrCosPow);
+    if (attrAniFlag != -1) context->glDisableVertexAttribArray(attrAniFlag);
 
-    context->printGLErrorLog();
+}
+
+void ShaderProgram::drawTrans(Drawable &d)
+{
+    useMe();
+
+    if (d.bindPNCTrans()) {
+        if (attrPos != -1) {
+            context->glEnableVertexAttribArray(attrPos);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)0);
+        }
+        if (attrNor != -1) {
+            context->glEnableVertexAttribArray(attrNor);
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+        }
+        if (attrCol != -1) {
+            context->glEnableVertexAttribArray(attrCol);
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
+        }
+        if (attrUV != -1) {
+            context->glEnableVertexAttribArray(attrUV);
+            context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4)));
+        }
+        if (attrCosPow != -1) {
+            context->glEnableVertexAttribArray(attrCosPow);
+            context->glVertexAttribPointer(attrCosPow, 1, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4) + 2 * sizeof(float)));
+        }
+        if (attrAniFlag != -1) {
+            context->glEnableVertexAttribArray(attrAniFlag);
+            context->glVertexAttribPointer(attrAniFlag, 1, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4) + 3 * sizeof(float)));
+        }
+    }
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdxTrans();
+    context->glDrawElements(d.drawMode(), d.elemCountTrans(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
+    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
+    if (attrCosPow != -1) context->glDisableVertexAttribArray(attrCosPow);
+    if (attrAniFlag != -1) context->glDisableVertexAttribArray(attrAniFlag);
 }
 
 char* ShaderProgram::textFileRead(const char* fileName) {
@@ -248,5 +312,23 @@ void ShaderProgram::printLinkInfoLog(int prog)
         context->glGetProgramInfoLog(prog, infoLogLen, &charsWritten, infoLog);
         qDebug() << "LinkInfoLog:" << endl << infoLog << endl;
         delete [] infoLog;
+    }
+}
+
+void ShaderProgram::setCameraPosition(const glm::vec3 &cameraPos)
+{
+    useMe();
+
+    if (unifCamera != -1) {
+        context->glUniform3fv(unifCamera, 1, &cameraPos[0]);
+    }
+}
+
+void ShaderProgram::setTime(float t)
+{
+    useMe();
+
+    if (unifTime != -1) {
+        context->glUniform1f(unifTime, t);
     }
 }

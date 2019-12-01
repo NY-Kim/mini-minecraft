@@ -3,19 +3,21 @@
 #include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(), bufPNC(),
-      idxBound(false), posBound(false), norBound(false), colBound(false), pncBound(false),
+    : bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(),
+      idxOpaqueBound(false), idxTransBound(false),
+      pncOpaqueBound(false), pncTransBound(false),
       context(context)
 {}
 
 Drawable::~Drawable()
 {}
 
-
 void Drawable::destroy()
 {
-    context->glDeleteBuffers(1, &bufIdx);
-    context->glDeleteBuffers(1, &bufPNC);
+    context->glDeleteBuffers(1, &bufIdxOpaque);
+    context->glDeleteBuffers(1, &bufPNCOpaque);
+    context->glDeleteBuffers(1, &bufIdxTrans);
+    context->glDeleteBuffers(1, &bufPNCTrans);
 }
 
 GLenum Drawable::drawMode()
@@ -29,82 +31,72 @@ GLenum Drawable::drawMode()
     return GL_TRIANGLES;
 }
 
-int Drawable::elemCount()
+int Drawable::elemCountOpaque()
 {
-    return count;
+    return countOpaque;
 }
 
-void Drawable::generateIdx()
+int Drawable::elemCountTrans()
 {
-    idxBound = true;
+    return countTrans;
+}
+
+void Drawable::generateIdxOpaque()
+{
+    idxOpaqueBound = true;
     // Create a VBO on our GPU and store its handle in bufIdx
-    context->glGenBuffers(1, &bufIdx);
+    context->glGenBuffers(1, &bufIdxOpaque);
 }
 
-void Drawable::generatePos()
+void Drawable::generateIdxTrans()
 {
-    posBound = true;
-    // Create a VBO on our GPU and store its handle in bufPos
-    context->glGenBuffers(1, &bufPos);
+    idxTransBound = true;
+    // Create a VBO on our GPU and store its handle in bufIdx
+    context->glGenBuffers(1, &bufIdxTrans);
 }
 
-void Drawable::generateNor()
+void Drawable::generatePNCOpaque()
 {
-    norBound = true;
-    // Create a VBO on our GPU and store its handle in bufNor
-    context->glGenBuffers(1, &bufNor);
-}
-
-void Drawable::generateCol()
-{
-    colBound = true;
-    // Create a VBO on our GPU and store its handle in bufCol
-    context->glGenBuffers(1, &bufCol);
-}
-
-void Drawable::generatePNC()
-{
-    pncBound = true;
+    pncOpaqueBound = true;
     // Create a VBO on our GPU and store its handle in bufPNC
-    context->glGenBuffers(1, &bufPNC);
+    context->glGenBuffers(1, &bufPNCOpaque);
 }
 
-bool Drawable::bindIdx()
+void Drawable::generatePNCTrans()
 {
-    if(idxBound) {
-        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdx);
-    }
-    return idxBound;
+    pncTransBound = true;
+    // Create a VBO on our GPU and store its handle in bufPNC
+    context->glGenBuffers(1, &bufPNCTrans);
 }
 
-bool Drawable::bindPos()
+bool Drawable::bindIdxOpaque()
 {
-    if(posBound){
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufPos);
+    if(bufIdxOpaque) {
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxOpaque);
     }
-    return posBound;
+    return idxOpaqueBound;
 }
 
-bool Drawable::bindNor()
+bool Drawable::bindIdxTrans()
 {
-    if(norBound){
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufNor);
+    if(idxTransBound) {
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxTrans);
     }
-    return norBound;
+    return idxTransBound;
 }
 
-bool Drawable::bindCol()
+bool Drawable::bindPNCOpaque()
 {
-    if(colBound){
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufCol);
+    if(pncOpaqueBound) {
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCOpaque);
     }
-    return colBound;
+    return pncOpaqueBound;
 }
 
-bool Drawable::bindPNC()
+bool Drawable::bindPNCTrans()
 {
-    if(pncBound) {
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNC);
+    if(pncTransBound) {
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCTrans);
     }
-    return pncBound;
+    return pncTransBound;
 }

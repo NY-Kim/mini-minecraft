@@ -18,11 +18,17 @@ public:
     int attrPos; // A handle for the "in" vec4 representing vertex position in the vertex shader
     int attrNor; // A handle for the "in" vec4 representing vertex normal in the vertex shader
     int attrCol; // A handle for the "in" vec4 representing vertex color in the vertex shader
+    int attrUV; // A handle for the "in" vec2 representing vertex color in the vertex shader
+    int attrCosPow; // A handle for the "in" float representing vertex color in the vertex shader
+    int attrAniFlag; // A handle for the "in" float representing vertex color in the vertex shader
 
     int unifModel; // A handle for the "uniform" mat4 representing model matrix in the vertex shader
     int unifModelInvTr; // A handle for the "uniform" mat4 representing inverse transpose of the model matrix in the vertex shader
     int unifViewProj; // A handle for the "uniform" mat4 representing combined projection and view matrices in the vertex shader
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
+    int unifCamera; // A handle for the "uniform" vec2 representing camera position in the vertex shader
+    int unifSampler2D; // A handle to the "uniform" sampler2D that will be used to read the texture containing the scene render
+    int unifTime; // A handle for the "uniform" float representing time in the shader
 
 public:
     ShaderProgram(OpenGLContext* context);
@@ -37,7 +43,8 @@ public:
     // Pass the given color to this shader on the GPU
     void setGeometryColor(glm::vec4 color);
     // Draw the given object to our screen using this ShaderProgram's shaders
-    void draw(Drawable &d);
+    void drawOpaque(Drawable &d);
+    void drawTrans(Drawable &d);
     // Utility function used in create()
     char* textFileRead(const char*);
     // Utility function that prints any shader compilation errors to the console
@@ -45,7 +52,9 @@ public:
     // Utility function that prints any shader linking errors to the console
     void printLinkInfoLog(int prog);
 
+    void setCameraPosition(const glm::vec3 &cameraPos);
     QString qTextFileRead(const char*);
+    void setTime(float t);
 
 private:
     OpenGLContext* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,

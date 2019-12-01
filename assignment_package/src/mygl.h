@@ -4,10 +4,9 @@
 #include <openglcontext.h>
 #include <utils.h>
 #include <shaderprogram.h>
-#include <scene/cube.h>
-#include <scene/worldaxes.h>
 #include "camera.h"
 #include <scene/terrain.h>
+#include "texture.h"
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
@@ -19,8 +18,6 @@ class MyGL : public OpenGLContext
 {
     Q_OBJECT
 private:
-    uPtr<Cube> mp_geomCube;// The instance of a unit cube we can use to render any cube. Should NOT be used in final version of your project.
-    uPtr<WorldAxes> mp_worldAxes; // A wireframe representation of the world axes. It is hard-coded to sit centered at (32, 128, 32).
     uPtr<ShaderProgram> mp_progLambert;// A shader program that uses lambertian reflection
     uPtr<ShaderProgram> mp_progFlat;// A shader program that uses "flat" reflection (no shadowing at all)
 
@@ -28,9 +25,11 @@ private:
                 // Don't worry too much about this. Just know it is necessary in order to render geometry.
 
     uPtr<Terrain> mp_terrain;
+    uPtr<Texture> mp_texture;
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;
+    float m_time;
 
     // Additional variables for project
     uPtr<Player> player;
