@@ -51,9 +51,8 @@ void main()
     vec4 light_vector = fs_LightVec;
     vec4 halfway_vector = normalize((view_vector + light_vector) / 2);
 
-    float exp = 50.0f;
     vec4 surface_normal = normalize(fs_Nor);
-    float specular_intensity = max(pow(dot(halfway_vector, surface_normal), exp), 0);
+    float specular_intensity = max(pow(dot(halfway_vector, surface_normal), fs_CosPow), 0);
 
     float light_intensity = diffuse_term + ambient_term + specular_intensity;
 

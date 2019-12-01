@@ -1,6 +1,5 @@
 #include "mygl.h"
 #include "la.h"
-#include "scene/cube.h"
 
 #include <iostream>
 #include <algorithm>
@@ -11,7 +10,7 @@
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      mp_worldAxes(mkU<WorldAxes>(this)), mp_texture(mkU<Texture>(this)), m_time(0.0f),
+      mp_texture(mkU<Texture>(this)), m_time(0.0f),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
 {
@@ -51,6 +50,9 @@ void MyGL::initializeGL()
     glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
     glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Set the size with which points should be rendered
     glPointSize(5);
     // Set the color with which the screen is filled at the start of each render call.
@@ -60,9 +62,6 @@ void MyGL::initializeGL()
 
     // Create a Vertex Attribute Object
     glGenVertexArrays(1, &vao);
-
-    //Create the instance of Cube
-    mp_worldAxes->create();
 
     // Create and set up the diffuse shader
     mp_progLambert->create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
@@ -81,6 +80,7 @@ void MyGL::initializeGL()
     // using multiple VAOs, we can just bind one once.
     //    vao.bind();
     glBindVertexArray(vao);
+
     mp_terrain->CreateTestScene();
     mp_terrain->create();
 }
@@ -302,7 +302,12 @@ void MyGL::GLDrawScene()
 {
     for (std::map<std::pair<int, int>, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
         mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
-        mp_progLambert->draw(i->second);
+        mp_progLambert->drawOpaque(i->second);
+    }
+
+    for (std::map<std::pair<int, int>, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
+        mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+        mp_progLambert->drawTrans(i->second);
     }
 }
 
