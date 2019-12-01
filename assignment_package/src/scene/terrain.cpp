@@ -141,7 +141,7 @@ float Terrain::fbm(float x, float y)
 
 //add/delete block function===================================================
 //add
-void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
+void Terrain::addBlock(glm::vec3 eye, glm::vec3 look, BlockType t)
 {
     glm::vec4 rayMarched = rayMarch(eye, look);
     if (rayMarched[3] == 1) {
@@ -177,7 +177,7 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
             normal[1] = 0;
         }
         blockCoord = glm::floor(blockCoord + normal);
-        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
+        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], t);
     }
 }
 
@@ -470,6 +470,7 @@ void Chunk::createVBOs() {
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
     color_map[STONE] = glm::vec4(0.5f);
     color_map[LAVA] = glm::vec4(1.f, 0.f, 0.f, 1.f);
+    color_map[WATER] = glm::vec4(0.f, 0.f, 1.f, 1.f);
 
     int index = 0;
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),

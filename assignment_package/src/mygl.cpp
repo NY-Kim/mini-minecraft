@@ -439,7 +439,12 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
         mp_terrain->create();
         update();
     } else if (m->button() == Qt::RightButton) {
-        mp_terrain->addBlock(player->camera->eye, player->camera->look);
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, LAVA);
+        mp_terrain->destroy();
+        mp_terrain->create();
+        update();
+    } else if (m->button() == Qt::MiddleButton) {
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, WATER);
         mp_terrain->destroy();
         mp_terrain->create();
         update();

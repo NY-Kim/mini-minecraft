@@ -66,7 +66,7 @@ public:
     float fbm(float x, float y);
 
     //add block
-    void addBlock(glm::vec3 eye, glm::vec3 look);
+    void addBlock(glm::vec3 eye, glm::vec3 look, BlockType t);
     //delete block
     void deleteBlock(glm::vec3 eye, glm::vec3 look);
     //ray marching helper function
