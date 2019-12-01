@@ -342,27 +342,26 @@ void MyGL::timerUpdate()
                 QThreadPool::globalInstance()->start(worker);
 
                 // c) Lock mutex, create all the chunks that have been processed so far, then clear the vector and unlock
+                mutex->lock();
                 if (chunksToCreate.size() > 0) {
-                    mutex->lock();
                     std::cout << chunksToCreate.size() << std::endl;
                     for (Chunk* c : chunksToCreate) {
                         c->create();
                     }
                     chunksToCreate.clear();
-                    mutex->unlock();
                 }
-
+                mutex->unlock();
 
             }
             // If there are any remaining non-created chunks, lock mutex, create all the chunks, then clear the vector and unlock
+            mutex->lock();
             if (chunksToCreate.size() > 0) {
-                mutex->lock();
                 for (Chunk* c : chunksToCreate) {
                     c->create();
                 }
-                chunksToCreate.clear();
-                mutex->unlock();
+                chunksToCreate.clear();  
             }
+            mutex->unlock();
         }
     }
 
