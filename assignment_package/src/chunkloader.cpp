@@ -33,15 +33,11 @@ void ChunkLoader::run() {
     }
 
     // Step 3. Lock mutex, push chunk onto MyGL vector, then unlock
-    std::cout << name.toStdString() << " is attempting to lock mutex." << std::endl;
     mutex->lock();
-    std::cout << name.toStdString() << " has locked the mutex." << std::endl;
-    std::cout << name.toStdString() << " is pushing back to vector." << std::endl;
     for (Chunk* chunk : chunks) {
         toWriteTo->push_back(chunk);
     }
     mutex->unlock();
-    std::cout << name.toStdString() << " is finished." << std::endl;
 }
 
 float ChunkLoader::noise2D(glm::vec2 n)
