@@ -2,20 +2,21 @@
 #include <array>
 #include <iostream>
 
-Terrain::Terrain(OpenGLContext* context)
-    : context(context), m_chunks(std::map<std::pair<int, int>, Chunk>()), dimensions(64, 256, 64)
-{}
+  Terrain::Terrain(OpenGLContext* context)
+      : context(context), m_chunks(std::map<std::pair<int, int>, uPtr<Chunk>>()), dimensions(64, 256, 64)
+  {}
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
 {
-    std::pair<int, int> key = getOrigin(x, z);
-    glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
+  std::pair<int, int> key = getOrigin(x, z);
+  glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
-    if (m_chunks.find(key) != m_chunks.end()) {
-        return m_chunks.at(key).getBlockAt(chunk_xz[0], y, chunk_xz[1]);
-    } else {
-        return EMPTY;
-    }
+  if (m_chunks.find(key) != m_chunks.end()) {
+      return m_chunks.at(key)->getBlockAt(chunk_xz[0], y, chunk_xz[1]);
+  } else {
+      return EMPTY;
+  }
+
 }
 
 void Terrain::setBlockAt(int x, int y, int z, BlockType t)
@@ -24,35 +25,35 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     glm::ivec2 chunk_xz = getChunkCoordinates(x, z);
 
     if (m_chunks.find(key) != m_chunks.end()) {
-        m_chunks[key].getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
+        m_chunks[key]->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
     } else {
         glm::ivec2 origin = glm::ivec2(key.first, key.second);
-        Chunk chunk = Chunk(context, origin);
-        chunk.getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
-        m_chunks[key] = chunk;
+        uPtr<Chunk> chunk = mkU<Chunk>(context, origin);
+        chunk->getBlockAt(chunk_xz[0], y, chunk_xz[1]) = t;
+        m_chunks[key] = std::move(chunk);
 
         if (m_chunks.find(std::pair<int, int>(key.first - 16, key.second)) != m_chunks.end()) {
-            Chunk* negX = &m_chunks[std::pair<int, int>(key.first - 16, key.second)];
-            chunk.negX_chunk = negX;
-            negX->posX_chunk = &m_chunks[key];
+            Chunk* negX = m_chunks[std::pair<int, int>(key.first - 16, key.second)].get();
+            chunk->negX_chunk = negX;
+            negX->posX_chunk = m_chunks[key].get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first + 16, key.second)) != m_chunks.end()) {
-            Chunk* posX = &m_chunks[std::pair<int, int>(key.first + 16, key.second)];
-            chunk.posX_chunk = posX;
-            posX->negX_chunk = &m_chunks[key];
+            Chunk* posX = m_chunks[std::pair<int, int>(key.first + 16, key.second)].get();
+            chunk->posX_chunk = posX;
+            posX->negX_chunk = m_chunks[key].get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first, key.second - 16)) != m_chunks.end()) {
-            Chunk* negZ = &m_chunks[std::pair<int, int>(key.first, key.second - 16)];
-            chunk.negZ_chunk = negZ;
-            negZ->posZ_chunk = &m_chunks[key];
+            Chunk* negZ = m_chunks[std::pair<int, int>(key.first, key.second - 16)].get();
+            chunk->negZ_chunk = negZ;
+            negZ->posZ_chunk = m_chunks[key].get();
         }
 
         if (m_chunks.find(std::pair<int, int>(key.first, key.second + 16)) != m_chunks.end()) {
-            Chunk* posZ = &m_chunks[std::pair<int, int>(key.first, key.second + 16)];
-            chunk.posZ_chunk = posZ;
-            posZ->negZ_chunk = &m_chunks[key];
+            Chunk* posZ = m_chunks[std::pair<int, int>(key.first, key.second + 16)].get();
+            chunk->posZ_chunk = posZ;
+            posZ->negZ_chunk = m_chunks[key].get();
         }
         m_chunks[key] = chunk;
     }
@@ -88,14 +89,15 @@ void Terrain::CreateTestScene()
 }
 
 void Terrain::create() {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
-        i->second.Chunk::create();
+    for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+        i->second->createVBOs();
+        i->second->create();
     }
 }
 
 void Terrain::destroy() {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
-        i->second.destroy();
+    for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
+        i->second->destroy();
     }
 }
 
@@ -228,28 +230,28 @@ glm::vec4 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look)
 std::vector<int> Terrain::checkRegenerate(glm::vec3 eye)
 {
     std::vector<int> cases;
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) + 500)) == m_chunks.end()) {
         cases.push_back(1);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) + 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 500, int(eye.z) + 500)) == m_chunks.end()) {
         cases.push_back(2);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z))) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 500, int(eye.z))) == m_chunks.end()) {
         cases.push_back(3);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) + 60, int(eye.z) - 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) + 500, int(eye.z) - 500)) == m_chunks.end()) {
         cases.push_back(4);
     }
-    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x), int(eye.z) - 500)) == m_chunks.end()) {
         cases.push_back(5);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) - 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 500, int(eye.z) - 500)) == m_chunks.end()) {
         cases.push_back(6);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z))) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 500, int(eye.z))) == m_chunks.end()) {
         cases.push_back(7);
     }
-    if (m_chunks.find(getOrigin(int(eye.x) - 60, int(eye.z) + 60)) == m_chunks.end()) {
+    if (m_chunks.find(getOrigin(int(eye.x) - 500, int(eye.z) + 500)) == m_chunks.end()) {
         cases.push_back(8);
     }
     return cases;
@@ -428,28 +430,52 @@ glm::ivec2 Terrain::terrOrigin(glm::vec3 eye)
     return terrOrigin;
 }
 
+void Terrain::setNeighbors(Chunk *chunk) {
+    std::pair<int, int> key(chunk->position[0], chunk->position[1]);
+    if (m_chunks.find(std::pair<int, int>(key.first - 16, key.second)) != m_chunks.end()) {
+        Chunk* negX = m_chunks[std::pair<int, int>(key.first - 16, key.second)].get();
+        chunk->negX_chunk = negX;
+        negX->posX_chunk = m_chunks[key].get();
+    }
+
+    if (m_chunks.find(std::pair<int, int>(key.first + 16, key.second)) != m_chunks.end()) {
+        Chunk* posX = m_chunks[std::pair<int, int>(key.first + 16, key.second)].get();
+        chunk->posX_chunk = posX;
+        posX->negX_chunk = m_chunks[key].get();
+    }
+
+    if (m_chunks.find(std::pair<int, int>(key.first, key.second - 16)) != m_chunks.end()) {
+        Chunk* negZ = m_chunks[std::pair<int, int>(key.first, key.second - 16)].get();
+        chunk->negZ_chunk = negZ;
+        negZ->posZ_chunk = m_chunks[key].get();
+    }
+
+    if (m_chunks.find(std::pair<int, int>(key.first, key.second + 16)) != m_chunks.end()) {
+        Chunk* posZ = m_chunks[std::pair<int, int>(key.first, key.second + 16)].get();
+        chunk->posZ_chunk = posZ;
+        posZ->negZ_chunk = m_chunks[key].get();
+    }
+}
+
 Chunk::Chunk() : Drawable(nullptr) {}
 
 Chunk::Chunk(OpenGLContext *context, glm::ivec2 origin)
     : Drawable(context), position(glm::ivec2(origin[0], origin[1])),
-      negX_chunk(nullptr), posX_chunk(nullptr), negZ_chunk(nullptr), posZ_chunk(nullptr)
+      negX_chunk(nullptr), posX_chunk(nullptr), negZ_chunk(nullptr), posZ_chunk(nullptr),
+      idx(), pnc()
 {
     m_blocks.fill(EMPTY);
 }
 
 Chunk::~Chunk() {}
 
-void Chunk::create() {
-    std::vector<GLuint> idxOpaque;
-    std::vector<GLuint> idxTrans;
+void Chunk::createVBOs() {
     std::vector<GLuint>* idx;
-    std::vector<glm::vec4> pncOpaque; // vector that stores position, normal, and color
-    std::vector<glm::vec4> pncTrans;
     std::vector<glm::vec4>* pnc;
     int indexOpaque = 0;
     int indexTrans = 0;
     int* index;
-
+    
     std::map<BlockType, glm::vec4> color_map;
     color_map[DIRT] = glm::vec4(121.f, 85.f, 58.f, 255.f) / 255.f;
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
@@ -687,6 +713,9 @@ void Chunk::create() {
             }
         }
     }
+}
+
+void Chunk::create() {
 
     countOpaque = idxOpaque.size();
 
@@ -701,7 +730,7 @@ void Chunk::create() {
     }
 
     countTrans = idxTrans.size();
-
+    
     if (countTrans > 0) {
         generateIdxTrans();
         context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxTrans);
@@ -760,5 +789,4 @@ glm::ivec2 getChunkCoordinates(int x, int z) {
 glm::ivec2 getWorldCoordinates(glm::ivec2 position, int x, int z) {
     return glm::ivec2(position[0] + x, position[1] + z);
 }
-
 

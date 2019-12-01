@@ -15,7 +15,11 @@ SOURCES += \
     $$PWD/scene/terrain.cpp \
     $$PWD/player.cpp \
     $$PWD/texture.cpp \
-    $$PWD/scene/lsystem.cpp
+    $$PWD/scene/lsystem.cpp \
+    $$PWD/chunkloader.cpp \
+    $$PWD/scene/quad.cpp \
+    $$PWD/postprocessshader.cpp
+
 
 HEADERS += \
     $$PWD/la.h \
@@ -33,3 +37,7 @@ HEADERS += \
     $$PWD/player.h \
     $$PWD/texture.h \
     $$PWD/scene/lsystem.h
+    $$PWD/chunkloader.h \
+    $$PWD/scene/quad.h \
+    $$PWD/postprocessshader.h
+

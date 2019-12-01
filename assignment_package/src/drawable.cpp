@@ -6,6 +6,7 @@ Drawable::Drawable(OpenGLContext* context)
     : bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(),
       idxOpaqueBound(false), idxTransBound(false),
       pncOpaqueBound(false), pncTransBound(false),
+
       context(context)
 {}
 
@@ -62,6 +63,7 @@ void Drawable::generatePNCOpaque()
     context->glGenBuffers(1, &bufPNCOpaque);
 }
 
+
 void Drawable::generatePNCTrans()
 {
     pncTransBound = true;
@@ -99,4 +101,12 @@ bool Drawable::bindPNCTrans()
         context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCTrans);
     }
     return pncTransBound;
+}
+
+bool Drawable::bindUV()
+{
+    if(uvBound){
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufUV);
+    }
+    return uvBound;
 }

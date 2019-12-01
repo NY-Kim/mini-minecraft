@@ -1,18 +1,23 @@
 #include "mygl.h"
 #include "la.h"
+#include "chunkloader.h"
 
 #include <iostream>
 #include <algorithm>
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDateTime>
+#include <QThreadPool>
 
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
       mp_texture(mkU<Texture>(this)), m_time(0.0f),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
-      mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
+      mp_onLand(mkU<PostProcessShader>(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader>(this)), currPostShader(nullptr),
+      m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this),
+      mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
+      chunksToCreate(), mutex(mkU<QMutex>()), init(true)
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -28,6 +33,7 @@ MyGL::~MyGL()
 {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
+    m_geomQuad.destroy();
 }
 
 
@@ -47,9 +53,9 @@ void MyGL::initializeGL()
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    //Allow for transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -63,11 +69,23 @@ void MyGL::initializeGL()
     // Create a Vertex Attribute Object
     glGenVertexArrays(1, &vao);
 
+
+
+    // Set up the post-processing pipeline
+    createRenderBuffers();
+
     // Create and set up the diffuse shader
     mp_progLambert->create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
     mp_progFlat->create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
 
+    // Create and set up the post-processing shaders
+    mp_onLand->create(":/glsl/passthrough.vert.glsl", ":glsl/noOp.frag.glsl");
+    mp_inWater->create(":/glsl/passthrough.vert.glsl", ":glsl/water.frag.glsl");
+    mp_inLava->create(":/glsl/passthrough.vert.glsl", ":glsl/lava.frag.glsl");
+    currPostShader = mp_onLand.get();
+
+    m_geomQuad.create();
     // Set a color with which to draw geometry since you won't have one
     // defined until you implement the Node classes.
     // This makes your geometry render green.
@@ -90,7 +108,7 @@ void MyGL::resizeGL(int w, int h)
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
     *player->camera = Camera(w, h, glm::vec3(19.f, 200.f, 8.f),
-                            glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
+                             glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
     player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 
     glm::mat4 viewproj = player->camera->getViewProj();
@@ -131,8 +149,9 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         }
 
         // Move position to next block
-        currPos += ray * minT;
         currT += minT;
+        currPos += ray * minT;
+
 
         // Offset block coord by -1 along the axis we hit IF AND ONLY IF the ray's direction
         // along that axis is negative.
@@ -143,7 +162,12 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         // Check if there will be a collision
         glm::vec3 blockCoords = glm::floor(currPos) + offset;
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
-            return std::max(currT - 0.01f, 0.f);
+            if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == LAVA ||
+                    mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == WATER) {
+
+                player->inLiquid = true;
+            }
+            else return std::max(currT, 0.f);
         }
         currCell = blockCoords;
     }
@@ -183,7 +207,7 @@ void MyGL::timerUpdate()
         player->mouseMoved = false;
     }
 
-    if (player->spacebarPressed) {
+    if (player->spacebarPressed && (player->onGround || player->inLiquid)) {
         player->velocity[1] = 2.f;
         player->spacebarPressed = false;
     }
@@ -212,20 +236,20 @@ void MyGL::timerUpdate()
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
     if (glm::length(player->velocity) > 0.f) {
-        glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
-                        player->velocity[1] * deltaT / 100.f,
-                        player->velocity[2] * deltaT / 100.f);
+        glm::vec3 trans(player->velocity[0] * deltaT / 200.f,
+                player->velocity[1] * deltaT / 200.f,
+                player->velocity[2] * deltaT / 200.f);
 
         glm::vec3 updatedPos(player->position);
 
         if (player->godMode) {
             updatedPos += player->camera->look * trans[0];
+            updatedPos += player->camera->up * trans[1];
         } else {
             glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
             updatedPos += grounded * trans[0];
+            updatedPos += player->camera->world_up * trans[1];
         }
-
-        updatedPos += player->camera->up * trans[1];
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
@@ -241,43 +265,118 @@ void MyGL::timerUpdate()
             player->camera->eye += ray;
             player->camera->ref += ray;
             player->position += ray;
-            update();
-            return;
         }
-        glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
+        else {
+            glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
-        float minT = glm::length(ray);
-        for (int x = 0; x <= 1; ++x) {
-            for (int y = 0; y <= 2; ++y) {
-                for (int z = 0; z >= -1; --z) {
-                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
-                    minT = std::min(minT, rayMarch(ray, currVertPos));
+            float minT = glm::length(ray);
+            for (int x = 0; x <= 1; ++x) {
+                for (int y = 0; y <= 2; ++y) {
+                    for (int z = 0; z >= -1; --z) {
+                        glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
+                        minT = std::min(minT, rayMarch(ray, currVertPos));
+                    }
                 }
             }
+            minT = std::max(minT - 0.02f, 0.f);
+            if (player->inLiquid) {
+                minT = minT * 2.f / 3.f;
+            }
+            ray = glm::normalize(ray) * minT;
+            player->camera->eye += ray;
+            player->camera->ref += ray;
+            player->position += ray;
         }
-        minT -= 0.01f;
-        ray = glm::normalize(ray) * minT;
-        player->camera->eye += ray;
-        player->camera->ref += ray;
-        player->position += ray;
     }
 
     // Gravity only affects player if not in god mode or not on ground
-    glm::ivec3 currPos(player->position + glm::vec3(-0.5, 0.5f, 0.f));
-    player->onGround = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
-    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -2.0);
+    glm::ivec3 currPos(player->position);
+    player->inLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
+    player->onGround = !player->inLiquid &&
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
+
+    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
 
     // Step 5. Process all renderable entities and draw them
 
     std::vector<int> regenCase = mp_terrain->checkRegenerate(player->position);
     if (regenCase.size() != 0) {
-        mp_terrain->regenerateTerrain(regenCase, player->position);
-        mp_terrain->destroy();
-        mp_terrain->create();
+        // Initial load-in
+        if (init) {
+            mp_terrain->regenerateTerrain(regenCase, player->position);
+            mp_terrain->destroy();
+            mp_terrain->create();
+            init = false;
+        }
+
+        else {
+            for (int dir : regenCase) {
+                // a) Create 4x4 chunks and set its neighbors
+                glm::ivec2 currOrigin = mp_terrain->terrOrigin(player->position);
+                glm::ivec2 chunkOrigin = getNewOrigin(currOrigin, dir);
+                if (mp_terrain->m_chunks.find(std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])) != mp_terrain->m_chunks.end()) {
+                    continue;
+                }
+
+                std::vector<Chunk*> threadChunks;
+                for (int x = 0; x < 4; ++x) {
+                    for (int z = 0; z < 4; ++z) {
+                        uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin + glm::ivec2(x * 16, z * 16));
+                        Chunk* currChunk = chunk.get();
+                        mp_terrain->m_chunks[std::pair<int, int>(currChunk->position[0], currChunk->position[1])] = std::move(chunk);
+                        mp_terrain->setNeighbors(currChunk);
+                        threadChunks.push_back(currChunk);
+                    }
+                }
+
+                // b) Make worker to handle the chunks and start it
+                QString name("Worker ");
+                name.append(QString::number(dir));
+                ChunkLoader* worker = new ChunkLoader(dir, threadChunks, &chunksToCreate, name, mutex.get());
+                QThreadPool::globalInstance()->start(worker);
+
+                // c) Lock mutex, create all the chunks that have been processed so far, then clear the vector and unlock
+                if (chunksToCreate.size() > 0) {
+                    mutex->lock();
+                    std::cout << chunksToCreate.size() << std::endl;
+                    for (Chunk* c : chunksToCreate) {
+                        c->create();
+                    }
+                    chunksToCreate.clear();
+                    mutex->unlock();
+                }
+
+
+            }
+            // If there are any remaining non-created chunks, lock mutex, create all the chunks, then clear the vector and unlock
+            if (chunksToCreate.size() > 0) {
+                mutex->lock();
+                for (Chunk* c : chunksToCreate) {
+                    c->create();
+                }
+                chunksToCreate.clear();
+                mutex->unlock();
+            }
+        }
     }
+
+    // Check which post-process buffer to use
+    glm::ivec3 camPos(player->camera->eye);
+    if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == LAVA) {
+        currPostShader = mp_inLava.get();
+    } else if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == WATER) {
+        currPostShader = mp_inWater.get();
+    } else currPostShader = mp_onLand.get();
     update();
 }
 
@@ -286,6 +385,11 @@ void MyGL::timerUpdate()
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL()
 {
+    // Render the 3D scene to our frame buffer
+
+    // Render to our framebuffer rather than the viewport
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -296,18 +400,28 @@ void MyGL::paintGL()
 
     GLDrawScene();
     mp_texture->bind(0);
+
+    glDisable(GL_DEPTH_TEST);
+    performPostprocessRenderPass();
+    glEnable(GL_DEPTH_TEST);
 }
 
 void MyGL::GLDrawScene()
 {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
-        mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
-        mp_progLambert->drawOpaque(i->second);
+    for (const auto& map : mp_terrain->m_chunks) {
+        Chunk* cPtr = map.second.get();
+        if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
+            mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+            mp_progLambert->drawOpaque(*cPtr);
+        }
     }
-
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
-        mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
-        mp_progLambert->drawTrans(i->second);
+      
+    for (const auto& map : mp_terrain->m_chunks) {
+        Chunk* cPtr = map.second.get();
+        if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
+            mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+            mp_progLambert->drawTrans(*cPtr);
+        }
     }
 }
 
@@ -345,4 +459,70 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
 
 void MyGL::mouseReleaseEvent(QMouseEvent *m) {
     player->mouseEventUpdate(m);
+}
+
+void MyGL::createRenderBuffers()
+{
+    // Initialize the frame buffers and render textures
+    glGenFramebuffers(1, &m_frameBuffer);
+    glGenTextures(1, &m_renderedTexture);
+    glGenRenderbuffers(1, &m_depthRenderBuffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+    // Bind our texture so that all functions that deal with textures will interact with this one
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)0);
+
+    // Set the render settings for the texture we've just created.
+    // Essentially zero filtering on the "texture" so it appears exactly as rendered
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // Clamp the colors at the edge of our texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Initialize our depth buffer
+    glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
+
+    // Set m_renderedTexture as the color output of our frame buffer
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture, 0);
+
+    // Sets the color output of the fragment shader to be stored in GL_COLOR_ATTACHMENT0, which we previously set to m_renderedTextures[i]
+    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, drawBuffers); // "1" is the size of drawBuffers
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "Frame buffer did not initialize correctly..." << std::endl;
+        printGLErrorLog();
+    }
+}
+
+void MyGL::performPostprocessRenderPass()
+{
+    // Render the frame buffer as a texture on a screen-size quad
+
+    // Tell OpenGL to render to the viewport's frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+    // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Bind our texture in Texture Unit 0
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+
+    currPostShader->draw(m_geomQuad, 0);
+}
+
+glm::ivec2 MyGL::getNewOrigin(glm::ivec2 curr, int regenCase) {
+    int xOffset = (regenCase == 2 || regenCase == 3 || regenCase == 4) ? 64 :
+                                                                         (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
+    int zOffset = (regenCase == 1 || regenCase == 2 || regenCase == 8) ? 64 :
+                                                                         (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
+
+    return curr + glm::ivec2(xOffset, zOffset);
 }

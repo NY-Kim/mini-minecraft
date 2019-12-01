@@ -3,7 +3,12 @@
 #include <la.h>
 #include <drawable.h>
 #include <array>
+
 #include "lsystem.h"
+#include <memory>
+
+#define uPtr std::unique_ptr
+#define mkU std::make_unique
 
 class LSystem;
 
@@ -25,11 +30,17 @@ public:
     Chunk* posX_chunk; // pointer to adjacent chunk in the positive-x direction
     Chunk* negZ_chunk; // pointer to adjacent chunk in the negative-z direction
     Chunk* posZ_chunk; // pointer to adjacent chunk in the positive-z direction
+    std::vector<GLuint> idxOpaque;
+    std::vector<GLuint> idxTrans;
+    std::vector<glm::vec4> pncOpaque; // vector that stores position, normal, and color
+    std::vector<glm::vec4> pncTrans;
+
 
     Chunk();
     Chunk(OpenGLContext* context, glm::ivec2 origin);
     ~Chunk();
 
+    void createVBOs();
     void create() override;
     GLenum drawMode() override;
     BlockType getBlockAt(int x, int y, int z) const;
@@ -42,7 +53,7 @@ public:
     Terrain(OpenGLContext* context);
     OpenGLContext* context;
 
-    std::map<std::pair<int, int>, Chunk> m_chunks;
+    std::map<std::pair<int, int>, uPtr<Chunk>> m_chunks;
 
     void CreateTestScene();
     void create();
@@ -73,6 +84,8 @@ public:
     void regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye);
     //helper function for getting current 4X4 chunk origin
     glm::ivec2 terrOrigin(glm::vec3 eye);
+
+    void setNeighbors(Chunk* chunk);
 };
 
 std::pair<int, int> getOrigin(int x, int z);
