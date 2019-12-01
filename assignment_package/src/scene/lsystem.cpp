@@ -34,7 +34,7 @@ void LSystem::generateRiver()
         newTurtle.orientation = 170.f;
         newTurtle.riverWidth = 10.0f;
     } else { //delta river
-        newTurtle.position = glm::vec2(-100, -120);
+        newTurtle.position = glm::vec2(100, 15);
         newTurtle.orientation = 20.f;
         newTurtle.riverWidth = 6.0f;
     }
@@ -44,12 +44,15 @@ void LSystem::generateRiver()
 void LSystem::setExpansionGrammar()
 {
     if (mode == QString("linear")) {
+        charToRule.insert({'F', "FF+X-Z"});
+        charToRule.insert({'X', "F-FZ[+F]F[-F]F"});
+        charToRule.insert({'Z', "F+FF-Z+F"});
+//        charToRule.insert({'F', "FF+X-Z"});
+//        charToRule.insert({'X', "F-FX+[F]-F"});
+//        charToRule.insert({'Z', "F+FF-Z-F"});
+    } else {
         charToRule.insert({'F', "F[-F]F[+F]"});
         charToRule.insert({'X', "F-[[X]+X]+F[+FX]-X"});
-    } else {
-        charToRule.insert({'F', "FF+X-Z"});
-        charToRule.insert({'X', "F-FX+[F]-F"});
-        charToRule.insert({'Z', "F+FF-Z-F"});
     }
 
     charToDrawingOperation.insert({'F', &LSystem::drawLineMoveForward});
@@ -143,7 +146,12 @@ void LSystem::extendTerrain(int x, int z)
 Turtle LSystem::drawLineMoveForward(Turtle turtle)
 {
     Turtle nextTurtle = turtle;
-    float streamLength = 10.0f;
+    float streamLength;
+    if (mode == QString("linear")) {
+        streamLength = 5.0f;
+    } else {
+        streamLength = 10.0f;
+    }
     turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
     int streamWidth = (int)glm::floor((fmax(2, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
@@ -157,40 +165,6 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     for (int i = 0; i < streamLength; i++) {
         int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
         int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
-        //std::cout<<"origin : " << x << ", " << z << std::endl;
-        //std::cout<< mp_terrain->m_chunks.size() << std::endl;
-
-        //check if chunk exists already
-        //if not, create the terrain first
-       // if (mp_terrain->m_chunks.find(getOrigin(x, z)) == mp_terrain->m_chunks.end()) {
-           // extendTerrain(x, z);
-//            //std::cout<< "I'm INNNNNNNNNNNNNNNN" << std::endl;
-
-//            origin = mp_terrain->terrOrigin(glm::vec3(x, 1.0f, z));
-//            originX = int(origin[0]);
-//            originZ = int(origin[1]);
-
-//            //std::cout<<"chunk coord : " << originX << ", " << originZ << std::endl;
-
-//            for(int tempX = 0; tempX < 64; ++tempX)
-//            {
-//                for(int tempZ = 0; tempZ < 64; ++tempZ)
-//                {
-//                    //std::cout<<"origin : " << originX << ", " << originZ << std::endl;
-//                    float height = mp_terrain->fbm(((originX + tempX) / (64.0)), ((originZ + tempZ) / (64.0)));
-//                    height = pow(height, 3.f) * 32.0 + 128.0;
-//                    for (int y = 127; y < height; y++) {
-//                        if (y <= 128) {
-//                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, STONE);
-//                        } else {
-//                            mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, DIRT);
-//                        }
-//                    }
-//                    int y = (int)glm::floor(height);
-//                    mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, GRASS);
-//                }
-//            }
-       // }
 
         //draw river
         for (int j = 0; j <= streamWidth; j++) {
@@ -235,16 +209,26 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
-    //random angle between 15 ~ 65
-    float rotAng = rand() % 50 + 15;
+    float rotAng;
+    //random angle between 15 ~ 35 for linear, 15 ~ 65 for delta
+    if (mode == QString("linear")) {
+        rotAng = rand() % 20 + 15;
+    } else {
+        rotAng = rand() % 50 + 15;
+    }
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
 }
 
 Turtle LSystem::rotateRight(Turtle turtle)
 {
-    //random angle between 15 ~ 65
-    float rotAng = rand() % 50 + 15;
+    float rotAng;
+    //random angle between 15 ~ 35 for linear, 15 ~ 65 for delta
+    if (mode == QString("linear")) {
+        rotAng = rand() % 20 + 15;
+    } else {
+        rotAng = rand() % 50 + 15;
+    }
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;
 }

@@ -81,12 +81,6 @@ void Terrain::CreateTestScene()
         }
     }
 
-    for(std::map<std::pair<int, int>, Chunk>::const_iterator it = m_chunks.begin();
-        it != m_chunks.end(); ++it)
-    {
-        std::cout << it->first.first << ", " << it->first.second << "\n";
-    }
-
     LSystem linearRiver = LSystem(this, QString("linear"));
     linearRiver.generateRiver();
 
