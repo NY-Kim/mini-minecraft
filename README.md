@@ -1,3 +1,34 @@
+# Milestone 2
+
+## Texturing and Texture Animation
+
+For texturing, I modified my interleaving VBO to include uv, cosine power, and animation flag, along with position, normal, and color. So in Terrain.cpp, I compute the UV, and set the cosine power and animation flag depending on the type of block.
+
+To generate animation, I created a new variable in MyGL called u_Time, which increments whenever paintGL is called. Depending on the u_Time variable, I change the UV by either shifting it to the right or up. The variation was made to make all the animation in the side of the blocks look like its falling down. 
+
+In the Lambert shader, I modified it to a Blinn-Phong shader by referencing my code from HW 4, 5. Then I added the animation part at the end.
+
+**Difficulties:**
+At first, it took a while to come up with how to do the animation since 5 blocks were given accross 2 rows in the texture map. I ended up only using 4 blocks (2 column blocks when I shift down, and 2 row blocks when I shift to the right).
+
+
+## Things to point out
+- Once we merge, our terrain loses texture and gets toned to a blue color. However, if we comment out either post-processing part or the lambert shading part, it works fine.
+
+
+## Swimming and Multithreaded Terrain Generation - Alexander Do
+
+For swimming, I created a inLiquid boolean variable that keeps track of if the play is inside of a WATER or LAVA block. If the boolean is true, then the physics are updated accordingly. Overlays are done by using the post-processing shader method detailed in HW04/05. We first render the terrain and map it to a texture which is then passed into the post-processing pipeline. The texture information is passed directly through the vertex shader to either a NoOP fragment shader if the player's "eyes" are not in liquid, or a lava or water fragment shader which creates the overlay effect depending on if the player's "eyes" are in lava or water respectively. For the overlay, we simply LERP the texture color with either red or blue.
+
+For multithreading, I created a member variable for a mutex in MyGL. Whenever the player reaches a certain distance (500 units) from a border, threads are created to generate the FBM and VBO data for each necessary chunk. For these threads, I created a new class called "ChunkLoader" which inherits QRunnable and performs the necessary operations. Inside MyGL, there is a vector for chunks to be created whose memory address is given to the thread. These threads are started using QThreadPool::globalInstance()->start(). The mutex is locked either when a thread is adding the preprocessed chunks into that vector or the chunks in the vector are being created in MyGL.
+
+**Difficulties:**
+The primary difficulty came with figuring out how to use the threads to preprocess the chunk information. This required me to refactor the code from MS1 into various helper functions in order to properly do this. For example, each chunk's data is processed individually, and 4x4 chunk groups are done per thread, rather than the 4x4 chunk groups being processed in one pass. I also had to make sure that chunks that were added to the terrain but were not yet fully created were not being drawn yet.
+
+
+## Things to point out
+- Once we merge, the multithreading no longer works. This must have to do with how the code was refactored to distinguish between opaque and transparent blocks, but we were not able to figure out what was causing the issue. Please refer to the multithread branch to confirm that my implementation does work.
+
 # Milestone 1
 ## Procedural Terrain - Ray DongHo Kim
 
@@ -52,19 +83,3 @@ Additionally, in your readme, briefly describe how you implemented your chosen f
 - When the player is too close to the cube(right in front of it), the player cannot jump. Has to be at least a step back to jump.
 - When key is pressed, without releasing, the terrain does not generate. When the key is released and the player is near the boundary by fixed amount, then the additional terrain gets generated.
 
-# Milestone 2
-
-## Texturing and Texture Animation
-
-For texturing, I modified my interleaving VBO to include uv, cosine power, and animation flag, along with position, normal, and color. So in Terrain.cpp, I compute the UV, and set the cosine power and animation flag depending on the type of block.
-
-To generate animation, I created a new variable in MyGL called u_Time, which increments whenever paintGL is called. Depending on the u_Time variable, I change the UV by either shifting it to the right or up. The variation was made to make all the animation in the side of the blocks look like its falling down. 
-
-In the Lambert shader, I modified it to a Blinn-Phong shader by referencing my code from HW 4, 5. Then I added the animation part at the end.
-
-**Difficulties:**
-At first, it took a while to come up with how to do the animation since 5 blocks were given accross 2 rows in the texture map. I ended up only using 4 blocks (2 column blocks when I shift down, and 2 row blocks when I shift to the right).
-
-
-## Things to point out
-- Once we merge, our terrain loses texture and gets toned to a blue color. However, if we comment out either post-processing part or the lambert shading part, it works fine.
