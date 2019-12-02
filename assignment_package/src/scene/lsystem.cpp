@@ -7,7 +7,7 @@ void LSystem::generateRiver()
 {
     setExpansionGrammar();
 
-    QString axiom = QString("X");//F");
+    QString axiom = QString("X");
     QString expandStr = axiom;
     int iterNum = 3;
 
@@ -34,7 +34,7 @@ void LSystem::generateRiver()
         newTurtle.orientation = 170.f;
         newTurtle.riverWidth = 10.0f;
     } else { //delta river
-        newTurtle.position = glm::vec2(100, 15);
+        newTurtle.position = glm::vec2(40, 15);
         newTurtle.orientation = 20.f;
         newTurtle.riverWidth = 6.0f;
     }
@@ -44,15 +44,12 @@ void LSystem::generateRiver()
 void LSystem::setExpansionGrammar()
 {
     if (mode == QString("linear")) {
-        charToRule.insert({'F', "FF+X-Z"});
-        charToRule.insert({'X', "F-FZ[+F]F[-F]F"});
-        charToRule.insert({'Z', "F+FF-Z+F"});
-//        charToRule.insert({'F', "FF+X-Z"});
-//        charToRule.insert({'X', "F-FX+[F]-F"});
-//        charToRule.insert({'Z', "F+FF-Z-F"});
+        charToRule.insert({'F', "F[-F]+FX-Z"});
+        charToRule.insert({'X', "F[-F]Z[+F]X[-F]F"});
+        charToRule.insert({'Z', "F[+F]F-Z+F"});
     } else {
         charToRule.insert({'F', "F[-F]F[+F]"});
-        charToRule.insert({'X', "F-[[X]+X]+F[+FX]-X"});
+        charToRule.insert({'X', "F-[[X]+FX]+F[+FX]-X"});
     }
 
     charToDrawingOperation.insert({'F', &LSystem::drawLineMoveForward});
@@ -148,7 +145,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     Turtle nextTurtle = turtle;
     float streamLength;
     if (mode == QString("linear")) {
-        streamLength = 5.0f;
+        streamLength = 8.0f;
     } else {
         streamLength = 10.0f;
     }
