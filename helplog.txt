@@ -15,6 +15,14 @@ Helen explained to me how to avoid diagonally adding block and determine the fac
 2019 11-17 5:00PM 
 I was inefficiently creating chunks and setting blocks for generating additional terrain. Jake suggested me to just iterate to the blocks of "new terrain", instead of initializing the chunks first then setting blocks for each of them.
 
+Milestone 2: L-System Rivers
+
+2019-11-27 2:50PM 
+Adam explained to me, where the random number should come in in the river generation. I was not understanding the instructions 100%. Also, he told me how to call the functions from map with function pointers(syntax).
+
+2019-11-27 3:20PM 
+Ryan gave me an insight for generating river and also smooth transition between terrains. Also he told me about using hemisphere for better looking carving out effect.
+
 *Nayeong Kim 
 
 Milestone 1: Terrain Rendering and Chunking
