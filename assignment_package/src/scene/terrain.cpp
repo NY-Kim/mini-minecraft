@@ -474,7 +474,7 @@ void Chunk::createVBOs() {
     int indexOpaque = 0;
     int indexTrans = 0;
     int* index;
-    
+
     std::map<BlockType, glm::vec4> color_map;
     color_map[DIRT] = glm::vec4(121.f, 85.f, 58.f, 255.f) / 255.f;
     color_map[GRASS] = glm::vec4(95.f, 159.f, 53.f, 255.f) / 255.f;
@@ -729,7 +729,7 @@ void Chunk::create() {
     }
 
     countTrans = idxTrans.size();
-    
+
     if (countTrans > 0) {
         generateIdxTrans();
         context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxTrans);
