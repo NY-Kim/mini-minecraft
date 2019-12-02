@@ -1,5 +1,22 @@
 # Milestone 2
 
+## L-System Rivers - Ray DongHo Kim
+
+**LSystem class:**
+- For creating rivers(linear river and delta river), I used l-system, writing grammar for how the axiom should expand. In order to create two types of rivers, a member variable "mode" kept which type of river is being created now, and that determined which expansion rules to use.
+- Also, random number for orientaion was generated to give randomness to how the rivers expand and branch out.
+- When the river gets created, it check if that chunk exists already, and if it does not, 64x64 blocks(terrain) gets created first using fbm function to keep the smooth transition between terrains(4x4(total 16) chunks). After creating the terrain, then it proceeds to create the river, so the river does not get cut off by new terrain later. To avoid that, terrain's existence had to be checked first, then create river on top of it.
+- This checking was also done when carving the terrain near the river. In the process of carving out the terrain, if the next block to be carved out is lying on the chunk that is not created yet, then the terrain, including that chunk, gets created, then proceeds to carve out the terrain, so the carved out terrain is smooth in terms of the transition between the terrains.
+**Turtle class:**
+- Turtle class kept information of orientation, recursion depth, position, and river width. This information was used to create each stream of the rivers.
+
+**Difficulties:** 
+- First, I was unsure how to make rivers that is continuous, even though it goes over from already-created terrain to coordinates where nothing exists. Initially river was being created, without the terrain around that area, and when the camera gets closer, terrain was regenerated on top of it, causing the river to be cut off.
+- After solving that issue, same thing happened in the process of carving out. Sometimes carving was stopped only until the already-generated terrain. And when new neighboring terrain was generated afterwards, there were obvious spikes, because part of the mountain in already-generated side was carved, while the other part was just generated now, without the influence of carving out.
+
+## Things to point out
+- After our final merge, our terrain loses texture and gets toned to a blue color. However, if we comment out either post-processing part or the lambert shading part, it works fine. Branch named "lsystemWithTexture" is a version with lsystem and texturing merged, which works fine, just without the multi-thread. To check river generation and terrain generation, please check that version(lsystemWithTexture), which is easier visually.
+
 ## Texturing and Texture Animation
 
 For texturing, I modified my interleaving VBO to include uv, cosine power, and animation flag, along with position, normal, and color. So in Terrain.cpp, I compute the UV, and set the cosine power and animation flag depending on the type of block.
@@ -31,8 +48,6 @@ The primary difficulty came with figuring out how to use the threads to preproce
 
 # Milestone 1
 ## Procedural Terrain - Ray DongHo Kim
-
-Additionally, in your readme, briefly describe how you implemented your chosen features. Discuss any difficulties you encountered when coding the project, and explain the approach you took to implementing each feature (e.g. "I chose to cast rays from the corners of my player's bounding box for collision detection because I thought it might be an easier approach than overlap checking.")
 
 **Terrain class:**
 - For procedurally generated terrain, I used FBM function to generate seemingly-random terrain with smooth curves along the surface.
