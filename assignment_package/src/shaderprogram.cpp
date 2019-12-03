@@ -145,6 +145,10 @@ void ShaderProgram::drawOpaque(Drawable &d)
 {
         useMe();
 
+        if(unifSampler2D != -1) {
+            context->glUniform1i(unifSampler2D, 0);
+        }
+
     // Each of the following blocks checks that:
     //   * This shader has this attribute, and
     //   * This Drawable has a vertex buffer for this attribute.
@@ -199,6 +203,10 @@ void ShaderProgram::drawOpaque(Drawable &d)
 void ShaderProgram::drawTrans(Drawable &d)
 {
     useMe();
+
+    if(unifSampler2D != -1) {
+        context->glUniform1i(unifSampler2D, 0);
+    }
 
     if (d.bindPNCTrans()) {
         if (attrPos != -1) {

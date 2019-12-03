@@ -9,6 +9,9 @@
 #include <QDateTime>
 #include <QThreadPool>
 
+#define MINECRAFT_TEXTURE_SLOT 0
+#define POSTPROCESS_TEXTURE_SLOT 1
+
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
@@ -92,7 +95,7 @@ void MyGL::initializeGL()
     mp_progLambert->setGeometryColor(glm::vec4(0,1,0,1));
 
     mp_texture->create(":/minecraft_textures_all.png");
-    mp_texture->load(0);
+    mp_texture->load(MINECRAFT_TEXTURE_SLOT);
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
@@ -236,9 +239,9 @@ void MyGL::timerUpdate()
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
     if (glm::length(player->velocity) > 0.f) {
-        glm::vec3 trans(player->velocity[0] * deltaT / 200.f,
-                player->velocity[1] * deltaT / 200.f,
-                player->velocity[2] * deltaT / 200.f);
+        glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
+                player->velocity[1] * deltaT / 100.f,
+                player->velocity[2] * deltaT / 100.f);
 
         glm::vec3 updatedPos(player->position);
 
@@ -389,7 +392,7 @@ void MyGL::paintGL()
 
     // Render to our framebuffer rather than the viewport
     glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
-
+    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -399,7 +402,6 @@ void MyGL::paintGL()
     m_time++;
 
     GLDrawScene();
-    mp_texture->bind(0);
 
     glDisable(GL_DEPTH_TEST);
     performPostprocessRenderPass();
@@ -408,6 +410,7 @@ void MyGL::paintGL()
 
 void MyGL::GLDrawScene()
 {
+    mp_texture->bind(MINECRAFT_TEXTURE_SLOT);
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
         if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
@@ -512,10 +515,10 @@ void MyGL::performPostprocessRenderPass()
     // Clear the screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Bind our texture in Texture Unit 0
-    glActiveTexture(GL_TEXTURE0);
+    glActiveTexture(GL_TEXTURE0 + POSTPROCESS_TEXTURE_SLOT);
     glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
 
-    currPostShader->draw(m_geomQuad, 0);
+    currPostShader->draw(m_geomQuad, POSTPROCESS_TEXTURE_SLOT);
 }
 
 glm::ivec2 MyGL::getNewOrigin(glm::ivec2 curr, int regenCase) {
