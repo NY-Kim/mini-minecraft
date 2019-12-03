@@ -137,7 +137,7 @@ void LSystem::extendTerrain(int x, int z)
         {
             float height = mp_terrain->fbm(((originX + tempX) / (64.0)), ((originZ + tempZ) / (64.0)));
             height = pow(height, 3.f) * 32.0 + 128.0;
-            for (int y = 127; y < height; y++) {
+            for (int y = 0; y < height; y++) {
                 if (y <= 128) {
                     mp_terrain->setBlockAt(originX + tempX, y, originZ + tempZ, STONE);
                 } else {
