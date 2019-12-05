@@ -130,25 +130,28 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
     float currT = 0.f;
     float length = glm::length(ray);
     ray = glm::normalize(ray);
-    glm::ivec3 currCell(currPos);
+    glm::ivec3 currCell(glm::floor(currPos));
 
     // March to find blocks that the vertex (position: currPos) will intersect with
+    // Do this for each cardinal axis respectively and use corresponding minT to scale velocity
     while (currT < length) {
         minT = std::sqrt(3);
         int axisOfIntersection = -1;
         for (int i = 0; i < 3; i++) {
             if (ray[i] != 0) {
                 int signOffset = std::max(0.f, glm::sign(ray[i]));
+                // If the player is *exactly* on an interface then
+                // they'll never move if they're looking in a negative direction
+                if(currCell[i] == ray[i] && signOffset == 0) {
+                    signOffset = -1;
+                }
+
                 float axisT = (currCell[i] + signOffset - currPos[i]) / ray[i];
                 if(axisT < minT && axisT > 0) {
                     minT = axisT;
                     axisOfIntersection = i;
                 }
             }
-        }
-
-        if (axisOfIntersection == -1) {
-            return 0.f;
         }
 
         // Move position to next block
@@ -167,7 +170,6 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
             if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == LAVA ||
                     mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == WATER) {
-
                 player->inLiquid = true;
             }
             else return std::max(currT, 0.f);
@@ -183,8 +185,7 @@ void MyGL::timerUpdate()
 {
     // Step 1. Computer time elapsed since last update call
     int64_t prev = lastUpdate;
-    lastUpdate = QDateTime::currentMSecsSinceEpoch();
-    int64_t deltaT = lastUpdate - prev;
+    int64_t deltaT = QDateTime::currentMSecsSinceEpoch() - prev;
 
     // Step 2. Iterate over all entities that are capable of receiving input
     // and read their present controller state
@@ -349,27 +350,29 @@ void MyGL::timerUpdate()
                 QThreadPool::globalInstance()->start(worker);
 
                 // c) Lock mutex, create all the chunks that have been processed so far, then clear the vector and unlock
+
+                mutex->lock();
                 if (chunksToCreate.size() > 0) {
-                    mutex->lock();
-                    std::cout << chunksToCreate.size() << std::endl;
+                    std::cout << chunksToCreate.size() << "in the loop" << std::endl;
                     for (Chunk* c : chunksToCreate) {
                         c->create();
                     }
                     chunksToCreate.clear();
-                    mutex->unlock();
                 }
+                mutex->unlock();
 
 
             }
             // If there are any remaining non-created chunks, lock mutex, create all the chunks, then clear the vector and unlock
+            mutex->lock();
             if (chunksToCreate.size() > 0) {
-                mutex->lock();
+                std::cout << chunksToCreate.size() << " out of the loop " << std::endl;
                 for (Chunk* c : chunksToCreate) {
                     c->create();
                 }
                 chunksToCreate.clear();
-                mutex->unlock();
             }
+            mutex->unlock();
         }
     }
 
@@ -381,6 +384,9 @@ void MyGL::timerUpdate()
         currPostShader = mp_inWater.get();
     } else currPostShader = mp_onLand.get();
     update();
+
+    // Potential fix for deltaT, don't update lastUpdate counter until finished
+    lastUpdate = QDateTime::currentMSecsSinceEpoch();
 }
 
 // This function is called whenever update() is called.
@@ -403,6 +409,7 @@ void MyGL::paintGL()
 
     GLDrawScene();
 
+
     glDisable(GL_DEPTH_TEST);
     performPostprocessRenderPass();
     glEnable(GL_DEPTH_TEST);
@@ -411,6 +418,7 @@ void MyGL::paintGL()
 void MyGL::GLDrawScene()
 {
     mp_texture->bind(MINECRAFT_TEXTURE_SLOT);
+    std::cout << glGetError() << " in bind" << std::endl;
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
         if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
@@ -418,7 +426,8 @@ void MyGL::GLDrawScene()
             mp_progLambert->drawOpaque(*cPtr);
         }
     }
-      
+    std::cout << glGetError() << " in opaque draw" << std::endl;
+
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
         if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
@@ -426,6 +435,7 @@ void MyGL::GLDrawScene()
             mp_progLambert->drawTrans(*cPtr);
         }
     }
+    std::cout << glGetError() << " in transparent draw" << std::endl;
 }
 
 

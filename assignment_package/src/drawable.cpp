@@ -3,7 +3,7 @@
 #include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(), bufPos(), bufUV(),
+    : countOpaque(0), countTrans(0), bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(), bufPos(), bufUV(),
       idxOpaqueBound(false), idxTransBound(false),
       pncOpaqueBound(false), pncTransBound(false),
       posBound(false), uvBound(false),

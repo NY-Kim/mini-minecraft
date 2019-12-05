@@ -97,6 +97,10 @@ void Terrain::create() {
 void Terrain::destroy() {
     for (std::map<std::pair<int, int>, uPtr<Chunk>>::iterator i = m_chunks.begin(); i != m_chunks.end(); i++) {
         i->second->destroy();
+        i->second->idxOpaque.clear();
+        i->second->idxTrans.clear();
+        i->second->pncOpaque.clear();
+        i->second->pncTrans.clear();
     }
 }
 
