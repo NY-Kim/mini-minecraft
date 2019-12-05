@@ -294,7 +294,7 @@ void MyGL::timerUpdate()
     }
 
     // Gravity only affects player if not in god mode or not on ground
-    glm::ivec3 currPos(player->position);
+    glm::ivec3 currPos(glm::floor(player->position));
     player->inLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
             mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
             (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
@@ -353,7 +353,6 @@ void MyGL::timerUpdate()
 
                 mutex->lock();
                 if (chunksToCreate.size() > 0) {
-                    std::cout << chunksToCreate.size() << "in the loop" << std::endl;
                     for (Chunk* c : chunksToCreate) {
                         c->create();
                     }
@@ -366,7 +365,6 @@ void MyGL::timerUpdate()
             // If there are any remaining non-created chunks, lock mutex, create all the chunks, then clear the vector and unlock
             mutex->lock();
             if (chunksToCreate.size() > 0) {
-                std::cout << chunksToCreate.size() << " out of the loop " << std::endl;
                 for (Chunk* c : chunksToCreate) {
                     c->create();
                 }
@@ -377,7 +375,7 @@ void MyGL::timerUpdate()
     }
 
     // Check which post-process buffer to use
-    glm::ivec3 camPos(player->camera->eye);
+    glm::ivec3 camPos(glm::floor(player->camera->eye));
     if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == LAVA) {
         currPostShader = mp_inLava.get();
     } else if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == WATER) {
@@ -405,7 +403,10 @@ void MyGL::paintGL()
     mp_progFlat->setViewProjMatrix(player->camera->getViewProj());
     mp_progLambert->setViewProjMatrix(player->camera->getViewProj());
     mp_progLambert->setTime(m_time);
+    currPostShader->setTime(m_time);
     m_time++;
+
+    currPostShader->setDimensions(glm::ivec2(this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio()));
 
     GLDrawScene();
 
@@ -418,7 +419,6 @@ void MyGL::paintGL()
 void MyGL::GLDrawScene()
 {
     mp_texture->bind(MINECRAFT_TEXTURE_SLOT);
-    std::cout << glGetError() << " in bind" << std::endl;
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
         if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
@@ -426,7 +426,6 @@ void MyGL::GLDrawScene()
             mp_progLambert->drawOpaque(*cPtr);
         }
     }
-    std::cout << glGetError() << " in opaque draw" << std::endl;
 
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
@@ -435,7 +434,6 @@ void MyGL::GLDrawScene()
             mp_progLambert->drawTrans(*cPtr);
         }
     }
-    std::cout << glGetError() << " in transparent draw" << std::endl;
 }
 
 
@@ -463,7 +461,12 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
         mp_terrain->create();
         update();
     } else if (m->button() == Qt::RightButton) {
-        mp_terrain->addBlock(player->camera->eye, player->camera->look);
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, LAVA);
+        mp_terrain->destroy();
+        mp_terrain->create();
+        update();
+    } else if (m->button() == Qt::MiddleButton) {
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, WATER);
         mp_terrain->destroy();
         mp_terrain->create();
         update();

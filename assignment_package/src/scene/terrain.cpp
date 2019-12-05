@@ -149,7 +149,7 @@ float Terrain::fbm(float x, float y)
 
 //add/delete block function===================================================
 //add
-void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
+void Terrain::addBlock(glm::vec3 eye, glm::vec3 look, BlockType t)
 {
     glm::vec4 rayMarched = rayMarch(eye, look);
     if (rayMarched[3] == 1) {
@@ -185,7 +185,7 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
             normal[1] = 0;
         }
         blockCoord = glm::floor(blockCoord + normal);
-        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
+        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], t);
     }
 }
 

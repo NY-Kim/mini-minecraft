@@ -9,7 +9,7 @@ void LSystem::generateRiver()
 
     QString axiom = QString("X");//F");
     QString expandStr = axiom;
-    int iterNum = 3;
+    int iterNum = 1;
 
     for (int i = 0; i < iterNum; i++) {
         QString expanding = QString("");
@@ -150,7 +150,7 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
     if (mode == QString("linear")) {
         streamLength = 5.0f;
     } else {
-        streamLength = 10.0f;
+        streamLength = 1.0f;
     }
     turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;

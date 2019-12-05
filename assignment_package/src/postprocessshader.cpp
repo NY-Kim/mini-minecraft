@@ -66,6 +66,7 @@ void PostProcessShader::setupMemberVars()
 
     unifSampler2D = context->glGetUniformLocation(prog, "u_RenderedTexture");
     unifDimensions = context->glGetUniformLocation(prog, "u_Dimensions");
+    unifTime = context->glGetUniformLocation(prog, "u_Time");
 }
 
 void PostProcessShader::draw(Drawable& d, int textureSlot = 0)
