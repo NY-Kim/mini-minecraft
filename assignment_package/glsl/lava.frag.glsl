@@ -12,43 +12,52 @@ float coeff = 0.156 * cos(u_Time / 360.f) + 0.643 * sin(u_Time / 180.f) +
            0.733 * cos(u_Time / 240.f) + 0.239 * sin(u_Time / 90.f);
 
 
-// Worley noise implementation as per Noise Functions slide deck
+// Perlin noise implementation as per Noise Functions slide deck
 // Modified by adding coefficient
 
 vec2 random2(vec2 p) {
     return fract(sin(vec2(dot(p, vec2(112.3, 581.3)),
                           dot(p, vec2(213.4, 558.9))))
-                 * 14423.3377 + coeff);
+                 * 14423.3377);
+}
+
+float surflet(vec2 p , vec2 gridPoint) {
+    // Compute the distance between p and the grid point along each axis, and warp it with a
+    // quintic function so we can smooth our cells
+    vec2 diff = abs(p - gridPoint);
+    vec2 t = vec2(1.f) - 6.f * pow(diff, vec2(5.f)) + 15.f * pow(diff, vec2(4.f)) - 10.f * pow(diff, vec2(3.f));
+
+    // Get the random vector for the grid point (assume we wrote a function random2)
+    vec2 gradient = random2(gridPoint);
+
+    // Get the vector from the grid point to P
+    vec2 diff2 = p - gridPoint;
+
+    // Get the value of our height field by dotting grid->P with our gradient
+    float height = dot(diff2, gradient);
+
+    // Scale our height field (i.e. reduce it) by our polynomial falloff function
+    return height * t.x * t.y;
+
 }
 
 float worleyNoise(vec2 uv) {
-    uv *= 12.5;
-    vec2 uvInt = floor(uv);
-    vec2 uvFract = fract(uv);
-    float minDist = 1.0;
-    for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
-            vec2 neighbor = vec2(float(x), float(y));
-            vec2 point = random2(uvInt + neighbor);
-            vec2 diff = neighbor + point - uvFract;
-            float dist = length(diff);
-            minDist = min(minDist, dist);
+    float surfletSum = 0.f;
+
+    // Iterate over four integer corners surrounding uv
+    for (int dx = 0; dx <= 1; ++dx) {
+        for (int dy = 0; dy <= 1; ++dy) {
+            surfletSum += surflet(uv, floor(uv) + vec2(dx, dy));
         }
     }
 
-    return minDist;
+    return surfletSum;
 }
 
 void main()
 {
     // Use worley noise to displace the UV coordinates
-    float minDistX1 = worleyNoise(fs_UV - vec2(1.f/u_Dimensions[0], 0));
-    float minDistX2 = worleyNoise(fs_UV + vec2(1.f/u_Dimensions[0], 0));
-    float minDistY1 = worleyNoise(fs_UV - vec2(0, 1.f/u_Dimensions[1]));
-    float minDistY2 = worleyNoise(fs_UV + vec2(0, 1.f/u_Dimensions[1]));
-
-    vec2 grad = vec2(minDistX2 - minDistX1, minDistY2 - minDistY1);
-
-    vec4 textureColor = texture(u_RenderedTexture, grad + fs_UV);
-    color = mix(textureColor, vec4(1.f, 0.f, 0.f, textureColor.a), 0.3);
+    vec2 grad = vec2(worleyNoise(fs_UV));
+    vec4 textureColor = texture(u_RenderedTexture, coeff * grad + fs_UV);
+    color = mix(textureColor, vec4(1.f, 0.f, 0.f, textureColor.a), 0.3f);
 }
