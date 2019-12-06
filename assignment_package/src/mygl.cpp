@@ -443,7 +443,7 @@ void MyGL::timerUpdate()
                 break;
             }
             for (int z = -10; z <= 10; z++) {
-                if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == WATER) {
+                if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == WATER) {
                     if (!waterSFX->isPlaying()) {
                         waterSFX->play();
                     }
