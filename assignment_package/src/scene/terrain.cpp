@@ -68,7 +68,7 @@ void Terrain::CreateTestScene()
         {
             float height = fbm((x / 64.0), (z / 64.0));
             height = pow(height, 3.f) * 32.0 + 128.0;
-            for (int y = 127; y < height; y++) {
+            for (int y = 0; y < height; y++) {
                 if (y <= 128) {
                     setBlockAt(x, y, z, STONE);
                 } else {
@@ -185,7 +185,7 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look)
             normal[1] = 0;
         }
         blockCoord = glm::floor(blockCoord + normal);
-        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], LAVA);
+        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], STONE);
     }
 }
 
@@ -196,8 +196,15 @@ void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
     if (rayMarched[3] == 1) {
         glm::vec3 blockCoord = glm::vec3(rayMarched);
         blockCoord = glm::floor(blockCoord);
-        setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], EMPTY);
-
+        if (getBlockAt((int)blockCoord[0] - 1, (int)blockCoord[1], (int)blockCoord[2]) == WATER ||
+                getBlockAt((int)blockCoord[0] + 1, (int)blockCoord[1], (int)blockCoord[2]) == WATER ||
+                getBlockAt((int)blockCoord[0], (int)blockCoord[1] + 1, (int)blockCoord[2]) == WATER ||
+                getBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2] + 1) == WATER ||
+                getBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2] - 1) == WATER) {
+            setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], WATER);
+        } else {
+            setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], EMPTY);
+        }
     }
 }
 
@@ -212,9 +219,8 @@ glm::vec4 Terrain::rayMarch(glm::vec3 eye, glm::vec3 look)
     while (!hit && (counter * step < 10.0f)) {
         currPos = currPos + (look * step);
         currBlockCoord = glm::floor(currPos);
-        if (getBlockAt((int)currBlockCoord[0],
-                       (int)currBlockCoord[1],
-                       (int)currBlockCoord[2]) == EMPTY) {
+        if (getBlockAt((int)currBlockCoord[0], (int)currBlockCoord[1], (int)currBlockCoord[2]) == EMPTY ||
+                getBlockAt((int)currBlockCoord[0], (int)currBlockCoord[1], (int)currBlockCoord[2]) == WATER) {
             counter++;
             continue;
         } else {
@@ -274,7 +280,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + x, y, originZ + 64 + z, STONE);
                         } else {
@@ -292,7 +298,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + 64 + x, y, originZ + 64 + z, STONE);
                         } else {
@@ -310,7 +316,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + 64 + x, y, originZ + z, STONE);
                         } else {
@@ -329,7 +335,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + 64 + x, y, originZ - 64 + z, STONE);
                         } else {
@@ -347,7 +353,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + x, y, originZ - 64 + z, STONE);
                         } else {
@@ -365,7 +371,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX - 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX - 64 + x, y, originZ - 64 + z, STONE);
                         } else {
@@ -383,7 +389,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX - 64 + x, y, originZ + z, STONE);
                         } else {
@@ -401,7 +407,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 0; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX - 64 + x, y, originZ + 64 + z, STONE);
                         } else {
