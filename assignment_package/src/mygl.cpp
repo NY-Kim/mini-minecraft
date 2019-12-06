@@ -236,7 +236,9 @@ void MyGL::timerUpdate()
 
     if (player->spacebarPressed && (player->onGround || player->inLiquid)) {
         player->velocity[1] = 2.f;
-        player->spacebarPressed = false;
+        if (!player->inLiquid) {
+            player->spacebarPressed = false;
+        }
     }
 
     if (player->qPressed) {
