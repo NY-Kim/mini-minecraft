@@ -8,6 +8,10 @@
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QThreadPool>
+#include <QSound>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
+
 
 #define MINECRAFT_TEXTURE_SLOT 0
 #define POSTPROCESS_TEXTURE_SLOT 1
@@ -104,6 +108,17 @@ void MyGL::initializeGL()
 
     mp_terrain->CreateTestScene();
     mp_terrain->create();
+
+    // Now start the background music
+    QMediaPlayer *player = new QMediaPlayer();
+    QMediaPlaylist *bgm = new QMediaPlaylist();
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/9cee16bb732c1d6925b37cccc826afa875ec932e/bgm1.mp3"));
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/9cee16bb732c1d6925b37cccc826afa875ec932e/bgm2.mp3"));
+    bgm->setPlaybackMode(QMediaPlaylist::Loop);
+    bgm->setCurrentIndex(1);
+    player->setVolume(50);
+    player->setPlaylist(bgm);
+    player->play();
 }
 
 void MyGL::resizeGL(int w, int h)

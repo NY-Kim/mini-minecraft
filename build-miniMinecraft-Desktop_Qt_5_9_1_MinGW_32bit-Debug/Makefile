@@ -235,7 +235,9 @@ Makefile: ../assignment_package/miniMinecraft.pro C:/Qt/Qt5.9.1/5.9.1/mingw53_32
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/mkspecs/features/lex.prf \
 		../assignment_package/miniMinecraft.pro \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Widgets.prl \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Multimedia.prl \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Gui.prl \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Network.prl \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Core.prl
 	$(QMAKE) -o Makefile ..\assignment_package\miniMinecraft.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"
 C:/Qt/Qt5.9.1/5.9.1/mingw53_32/mkspecs/features/spec_pre.prf:
@@ -412,7 +414,9 @@ C:/Qt/Qt5.9.1/5.9.1/mingw53_32/mkspecs/features/yacc.prf:
 C:/Qt/Qt5.9.1/5.9.1/mingw53_32/mkspecs/features/lex.prf:
 ../assignment_package/miniMinecraft.pro:
 C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Widgets.prl:
+C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Multimedia.prl:
 C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Gui.prl:
+C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Network.prl:
 C:/Qt/Qt5.9.1/5.9.1/mingw53_32/lib/Qt5Core.prl:
 qmake: FORCE
 	@$(QMAKE) -o Makefile ..\assignment_package\miniMinecraft.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"
