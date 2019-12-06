@@ -317,7 +317,6 @@ void MyGL::timerUpdate()
     if (regenCase.size() != 0) {
         // Initial load-in
         if (init) {
-            mp_terrain->regenerateTerrain(regenCase, player->position);
             mp_terrain->destroy();
             mp_terrain->create();
             init = false;

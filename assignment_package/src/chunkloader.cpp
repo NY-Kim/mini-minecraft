@@ -14,7 +14,7 @@ void ChunkLoader::run() {
         for(int x = 0; x < 16; ++x) {
             for(int z = 0; z < 16; ++z) {
                 float height = fbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
-                height = pow(height, 3.f) * 52.0 + 128.0;
+                height = pow(height, 3.f) * 32.0 + 128.0;
 
                 for (int y = 127; y < height; y++) {
                     if (y <= 128) {

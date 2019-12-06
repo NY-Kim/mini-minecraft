@@ -7,9 +7,14 @@ void LSystem::generateRiver()
 {
     setExpansionGrammar();
 
-    QString axiom = QString("X");//F");
+    QString axiom = QString("X");
     QString expandStr = axiom;
-    int iterNum = 3;
+    int iterNum;
+    if (mode == QString("linear")) {
+        iterNum = 3;
+    } else { //delta river
+        iterNum = 3;
+    }
 
     for (int i = 0; i < iterNum; i++) {
         QString expanding = QString("");
@@ -18,7 +23,11 @@ void LSystem::generateRiver()
             if (currChar == 'F') {
                 expanding.append(charToRule['F']);
             } else if (currChar == 'X') {
-                expanding.append(charToRule['X']);
+                if ((rand() % 10) > 5) {
+                    expanding.append(charToRule['X']);
+                } else {
+                    expanding.append(charToRule['Z']);
+                }
             } else if (currChar == 'Z') {
                 expanding.append(charToRule['Z']);
             } else {
@@ -31,11 +40,11 @@ void LSystem::generateRiver()
     //linear river
     if (mode == QString("linear")) {
         newTurtle.position = glm::vec2(10, 10);
-        newTurtle.orientation = 170.f;
+        newTurtle.orientation = rand() % 40 + (70);
         newTurtle.riverWidth = 10.0f;
     } else { //delta river
-        newTurtle.position = glm::vec2(100, 15);
-        newTurtle.orientation = 20.f;
+        newTurtle.position = glm::vec2(52, 15);
+        newTurtle.orientation = rand() % 40 + (-10);
         newTurtle.riverWidth = 6.0f;
     }
     runOperations(newTurtle, expandStr);
@@ -44,15 +53,14 @@ void LSystem::generateRiver()
 void LSystem::setExpansionGrammar()
 {
     if (mode == QString("linear")) {
-        charToRule.insert({'F', "FF+X-Z"});
-        charToRule.insert({'X', "F-FZ[+F]F[-F]F"});
-        charToRule.insert({'Z', "F+FF-Z+F"});
-//        charToRule.insert({'F', "FF+X-Z"});
-//        charToRule.insert({'X', "F-FX+[F]-F"});
-//        charToRule.insert({'Z', "F+FF-Z-F"});
+        charToRule.insert({'F', "F[-F]+FX-Z"});
+        charToRule.insert({'X', "F[-F][Z]F[+F]X[-F]F"});
+        charToRule.insert({'Z', "F[+F]F-Z+F"});
     } else {
         charToRule.insert({'F', "F[-F]F[+F]"});
-        charToRule.insert({'X', "F-[[X]+X]+F[+FX]-X"});
+        charToRule.insert({'X', "F-[[X]+FX]+F[+FX]-X"});
+        charToRule.insert({'Z', "F[+F]F[[-XF]+F]"});
+
     }
 
     charToDrawingOperation.insert({'F', &LSystem::drawLineMoveForward});
@@ -113,6 +121,12 @@ void LSystem::carveTerrain(int x, int z)
             currX = currX + offsetX;
             currZ = currZ + offsetZ;
             currY++;
+
+            //check if terrain exists to carve-out. If not, create 64x64 terrain first
+            if (mp_terrain->m_chunks.find(getOrigin(currX + offsetX, currZ + offsetZ))
+                    == mp_terrain->m_chunks.end()) {
+                extendTerrain(currX + offsetX, currZ + offsetZ);
+            }
         }
     }
 }
@@ -147,11 +161,12 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 {
     Turtle nextTurtle = turtle;
     float streamLength;
-    if (mode == QString("linear")) {
-        streamLength = 5.0f;
-    } else {
-        streamLength = 10.0f;
-    }
+        if (mode == QString("linear")) {
+            streamLength = 5.0f;
+        } else {
+            streamLength = 10.0f;
+        }
+
     turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
     float angRadian = turtle.orientation * M_PI / 180.0f;
     int streamWidth = (int)glm::floor((fmax(2, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
@@ -210,11 +225,11 @@ Turtle LSystem::drawLineMoveForward(Turtle turtle)
 Turtle LSystem::rotateLeft(Turtle turtle)
 {
     float rotAng;
-    //random angle between 15 ~ 35 for linear, 15 ~ 65 for delta
+    //random angle between 15 ~ 35 for linear, 15 ~ 55 for delta
     if (mode == QString("linear")) {
         rotAng = rand() % 20 + 15;
     } else {
-        rotAng = rand() % 50 + 15;
+        rotAng = rand() % 40 + 15;
     }
     turtle.orientation = turtle.orientation + rotAng;
     return turtle;
@@ -223,11 +238,11 @@ Turtle LSystem::rotateLeft(Turtle turtle)
 Turtle LSystem::rotateRight(Turtle turtle)
 {
     float rotAng;
-    //random angle between 15 ~ 35 for linear, 15 ~ 65 for delta
+    //random angle between 15 ~ 35 for linear, 15 ~ 55 for delta
     if (mode == QString("linear")) {
         rotAng = rand() % 20 + 15;
     } else {
-        rotAng = rand() % 50 + 15;
+        rotAng = rand() % 40 + 15;
     }
     turtle.orientation = turtle.orientation - rotAng;
     return turtle;

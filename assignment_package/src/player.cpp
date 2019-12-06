@@ -66,8 +66,8 @@ void Player::keyEventUpdate(QKeyEvent *e) {
 void Player::mouseEventUpdate(QMouseEvent *m) {
     if (m->type() == QEvent::MouseMove) {
         QPoint cursorXYChange = QPoint(camera->width / 2, camera->height / 2) - m->pos();
-        camera->polar[0] += cursorXYChange.x() / 10.f;
-        camera->polar[1] += cursorXYChange.y() / 10.f;
+        camera->polar[0] += cursorXYChange.x() / 60.f;
+        camera->polar[1] += cursorXYChange.y() / 60.f;
         mouseMoved = true;
     }
 }
