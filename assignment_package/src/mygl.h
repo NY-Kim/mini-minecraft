@@ -17,6 +17,7 @@
 #include "player.h"
 #include "scene/quad.h"
 
+#include <QSoundEffect>
 #include <QMutex>
 
 class MyGL : public OpenGLContext
@@ -61,6 +62,9 @@ private:
     std::vector<Chunk*> chunksToCreate;
     uPtr<QMutex> mutex;
     bool init;
+    uPtr<QSoundEffect> splashIn;
+    uPtr<QSoundEffect> waterSFX;
+
 
     void MoveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that
