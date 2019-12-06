@@ -15,6 +15,7 @@ void LSystem::generateRiver()
     } else { //delta river
         iterNum = 3;
     }
+    //cave
 
     for (int i = 0; i < iterNum; i++) {
         QString expanding = QString("");
