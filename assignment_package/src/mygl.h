@@ -64,7 +64,10 @@ private:
     bool init;
     uPtr<QSoundEffect> splashIn;
     uPtr<QSoundEffect> waterSFX;
-
+    uPtr<QSoundEffect> lavaFlow;
+    uPtr<QSoundEffect> lavaPop;
+    uPtr<QSoundEffect> walkGrass;
+    std::vector<std::string> walkSounds;
 
     void MoveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that

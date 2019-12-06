@@ -25,7 +25,8 @@ MyGL::MyGL(QWidget *parent)
       m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
       chunksToCreate(), mutex(mkU<QMutex>()), init(true),
-      splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>())
+      splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
+      walkSounds({"../assignment_package/music/grass1.wav", "../assignment_package/music/grass2.wav", "../assignment_package/music/grass3.wav"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -41,6 +42,10 @@ MyGL::MyGL(QWidget *parent)
     splashIn->setVolume(0.2);
     waterSFX->setSource(QUrl::fromLocalFile("../assignment_package/music/water.wav"));
     waterSFX->setVolume(0.5);
+    lavaFlow->setSource(QUrl::fromLocalFile("../assignment_package/music/lava.wav"));
+    lavaFlow->setVolume(0.2);
+    lavaPop->setSource(QUrl::fromLocalFile("../assignment_package/music/lavapop.wav")); // Volume set randomly
+    walkGrass->setVolume(0.2); // Source file set randomly
 }
 
 MyGL::~MyGL()
@@ -311,7 +316,11 @@ void MyGL::timerUpdate()
             minT = std::max(minT - 0.02f, 0.f);
             if (player->inLiquid) {
                 minT = minT * 2.f / 3.f;
-
+            }
+            else if (player->onGround && !walkGrass->isPlaying()) {
+                int index = rand() % 3;
+                walkGrass->setSource(QUrl::fromLocalFile(QString::fromStdString(walkSounds[index])));
+                walkGrass->play();
             }
             ray = glm::normalize(ray) * minT;
             player->camera->eye += ray;
@@ -432,22 +441,24 @@ void MyGL::timerUpdate()
     } else currPostShader = mp_onLand.get();
     update();
 
-    // Check if water is nearby, if so play
-
+    // Check if liquid is nearby, if so play corresponding SFX
     for (int x = -10; x <= 10; ++x) {
-        if (waterSFX->isPlaying()) {
-            break;
-        }
         for (int y = -10; y <= 10; y++) {
-            if (waterSFX->isPlaying()) {
-                break;
-            }
             for (int z = -10; z <= 10; z++) {
                 if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == WATER) {
                     if (!waterSFX->isPlaying()) {
                         waterSFX->play();
                     }
-                    break;
+                } else if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == LAVA) {
+                    if (!lavaFlow->isPlaying()) {
+                        lavaFlow->play();
+                    }
+                    if (rand() % 100 == 99 && !lavaPop->isPlaying()) {
+                        float vol = (rand() % 100) / 100.f;
+                        vol = glm::clamp(0.05f, 0.25f, vol);
+                        lavaPop->setVolume(vol);
+                        lavaPop->play();
+                    }
                 }
             }
         }
