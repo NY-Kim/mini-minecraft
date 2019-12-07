@@ -72,6 +72,20 @@ public:
     float fbm(float x, float y);
     float modFbm(float x, float y);
 
+    //perlin noise for moist/bump values
+    float random2(glm::vec2 n);
+    float surflet(glm::vec2 p, glm::vec2 gridPoint);
+    float perlinNoise(glm::vec2 uv);
+
+    //getting the overall height
+    float overallHeight(float bilerp1, float bilerp2, float moist);
+    float bilerp(float desert, float mountain, float bump);
+    float desertHeight(float x, float z);
+    float mountainHeight(float x, float z);
+    float islandHeight(float x, float z);
+    float grasslandHeight(float x, float z);
+
+
     //add block
     void addBlock(glm::vec3 eye, glm::vec3 look);
     //delete block

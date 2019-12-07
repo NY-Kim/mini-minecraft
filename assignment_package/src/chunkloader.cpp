@@ -15,7 +15,7 @@ void ChunkLoader::run() {
             for(int z = 0; z < 16; ++z) {
                 float height = modFbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
 
-                for (int y = 127; y < height; y++) {
+                for (int y = 1; y < height; y++) {
                     if (y <= 128) {
                         chunk->getBlockAt(x, y, z) = STONE;
                     } else {

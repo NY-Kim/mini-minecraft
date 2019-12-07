@@ -67,7 +67,7 @@ void Terrain::CreateTestScene()
         for(int z = 0; z < 64; ++z)
         {
             float height = modFbm((x / 64.0), (z / 64.0));
-            for (int y = 127; y < height; y++) {
+            for (int y = 1; y < height; y++) {
                 if (y <= 128) {
                     setBlockAt(x, y, z, STONE);
                 } else {
@@ -154,7 +154,75 @@ float Terrain::modFbm(float x, float y)
 }
 
 //perlin noise function======================================================
+//random function
+float Terrain::random2(glm::vec2 n) {
+    return (glm::fract(sin(glm::dot(n, glm::vec2(12.9898, 4.1414))) * 43758.5453));
+}
 
+//function to get surflet
+float Terrain::surflet(glm::vec2 p, glm::vec2 gridPoint)
+{
+    // Compute the distance between p and the grid point along each axis, and warp it with a
+    // quintic function so we can smooth our cells
+    glm::vec2 diff = glm::abs(p - gridPoint);
+    float t1 = 1.f - 6.f * pow(diff.x, 5.f) - 15.f * pow(diff.x, 4.f) + 10.f * pow(diff.x, 3.f);
+    float t2 = 1.f - 6.f * pow(diff.y, 5.f) - 15.f * pow(diff.y, 4.f) + 10.f * pow(diff.y, 3.f);
+    glm::vec2 t = glm::vec2(t1, t2);
+    // Get the random vector for the grid point (assume we wrote a function random2)
+    glm::vec2 gradient = glm::vec2(random2(p), random2(gridPoint));
+    gradient = glm::normalize(gradient);
+    // Get the vector from the grid point to P
+    diff = p - gridPoint;
+    // Get the value of our height field by dotting grid->P with our gradient
+    float height = glm::dot(diff, gradient);
+    // Scale our height field (i.e. reduce it) by our polynomial falloff function
+    return height * t.x * t.y;
+}
+
+//main perlin noise
+float Terrain::perlinNoise(glm::vec2 uv)
+{
+    float surfletSum = 0.f;
+    // Iterate over the four integer corners surrounding uv
+    for(int dx = 0; dx <= 1; ++dx) {
+        for(int dy = 0; dy <= 1; ++dy) {
+            surfletSum += surflet(uv, glm::floor(uv) + glm::vec2(dx, dy));
+        }
+    }
+    return surfletSum;
+}
+
+//BIOME=======================================================================
+//getting the overall height
+float Terrain::overallHeight(float bilerp1, float bilerp2, float moist)
+{
+    return 1;
+}
+
+float Terrain::bilerp(float desert, float mountain, float bump)
+{
+    return glm::mix(desert, mountain, bump);
+}
+
+float Terrain::desertHeight(float x, float z)
+{
+    return 130;
+}
+
+float Terrain::mountainHeight(float x, float z)
+{
+    return 150;
+}
+
+float Terrain::islandHeight(float x, float z)
+{
+    return 170;
+}
+
+float Terrain::grasslandHeight(float x, float z)
+{
+    return modFbm(x, z);
+}
 
 //add/delete block function===================================================
 //add
@@ -292,7 +360,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
             for(int z = 0; z < 64; ++z)
             {
                 float height = modFbm(((originX + x + xOffset) / (64.0)), ((originZ + z + zOffset) / (64.0)));
-                for (int y = 127; y < height; y++) {
+                for (int y = 1; y < height; y++) {
                     if (y <= 128) {
                         setBlockAt(originX + x + xOffset, y, originZ + z + zOffset, STONE);
                     } else {
