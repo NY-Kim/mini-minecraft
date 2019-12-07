@@ -26,6 +26,7 @@ public:
     float noise2D(glm::vec2 n);
     float interpNoise2D(float x, float y);
     float fbm(float x, float y);
+    float modFbm(float x, float y);
 };
 
 #endif // CHUNKLOADER_H

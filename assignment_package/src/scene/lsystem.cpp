@@ -11,9 +11,9 @@ void LSystem::generateRiver()
     QString expandStr = axiom;
     int iterNum;
     if (mode == QString("linear")) {
-        iterNum = 3;
+        iterNum = 1;
     } else { //delta river
-        iterNum = 3;
+        iterNum = 1;
     }
     //cave
 

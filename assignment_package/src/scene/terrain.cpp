@@ -66,9 +66,8 @@ void Terrain::CreateTestScene()
     {
         for(int z = 0; z < 64; ++z)
         {
-            float height = fbm((x / 64.0), (z / 64.0));
-            height = pow(height, 3.f) * 32.0 + 128.0;
-            for (int y = 0; y < height; y++) {
+            float height = modFbm((x / 64.0), (z / 64.0));
+            for (int y = 127; y < height; y++) {
                 if (y <= 128) {
                     setBlockAt(x, y, z, STONE);
                 } else {
@@ -146,6 +145,16 @@ float Terrain::fbm(float x, float y)
     }
     return total;
 }
+
+float Terrain::modFbm(float x, float y)
+{
+    float height = fbm(x, y);
+    height = pow(height, 3.f) * 32.0 + 128.0;
+    return height;
+}
+
+//perlin noise function======================================================
+
 
 //add/delete block function===================================================
 //add
@@ -273,150 +282,25 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
     int originX = int(origin[0]);
     int originZ = int(origin[1]);
     for (int regenCase : regenCaseList) {
-        if (regenCase == 1) {
-            for(int x = 0; x < 64; ++x)
+        int xOffset = (regenCase == 2 || regenCase == 3 || regenCase == 4) ? 64 :
+                                                                             (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
+        int zOffset = (regenCase == 1 || regenCase == 2 || regenCase == 8) ? 64 :
+                                                                             (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
+
+        for(int x = 0; x < 64; ++x)
+        {
+            for(int z = 0; z < 64; ++z)
             {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX + x, y, originZ + 64 + z, STONE);
-                        } else {
-                            setBlockAt(originX + x, y, originZ + 64 + z, DIRT);
-                        }
+                float height = modFbm(((originX + x + xOffset) / (64.0)), ((originZ + z + zOffset) / (64.0)));
+                for (int y = 127; y < height; y++) {
+                    if (y <= 128) {
+                        setBlockAt(originX + x + xOffset, y, originZ + z + zOffset, STONE);
+                    } else {
+                        setBlockAt(originX + x + xOffset, y, originZ + z + zOffset, DIRT);
                     }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
                 }
-            }
-        } else if (regenCase == 2) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX + 64 + x, y, originZ + 64 + z, STONE);
-                        } else {
-                            setBlockAt(originX + 64 + x, y, originZ + 64 + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ + 64 + z, GRASS);
-                }
-            }
-        } else if (regenCase == 3) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX + 64 + x, y, originZ + z, STONE);
-                        } else {
-                            setBlockAt(originX + 64 + x, y, originZ + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ + z, GRASS);
-                }
-            }
-        }
-        else if (regenCase == 4) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX + 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX + 64 + x, y, originZ - 64 + z, STONE);
-                        } else {
-                            setBlockAt(originX + 64 + x, y, originZ - 64 + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX + 64 + x, y, originZ - 64 + z, GRASS);
-                }
-            }
-        } else if (regenCase == 5) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX + x, y, originZ - 64 + z, STONE);
-                        } else {
-                            setBlockAt(originX + x, y, originZ - 64 + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX + x, y, originZ - 64 + z, GRASS);
-                }
-            }
-        } else if (regenCase == 6) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX - 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX - 64 + x, y, originZ - 64 + z, STONE);
-                        } else {
-                            setBlockAt(originX - 64 + x, y, originZ - 64 + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX - 64 + x, y, originZ - 64 + z, GRASS);
-                }
-            }
-        } else if (regenCase == 7) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX - 64 + x, y, originZ + z, STONE);
-                        } else {
-                            setBlockAt(originX - 64 + x, y, originZ + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX - 64 + x, y, originZ + z, GRASS);
-                }
-            }
-        } else if (regenCase == 8) {
-            for(int x = 0; x < 64; ++x)
-            {
-                for(int z = 0; z < 64; ++z)
-                {
-                    float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
-                    height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 0; y < height; y++) {
-                        if (y <= 128) {
-                            setBlockAt(originX - 64 + x, y, originZ + 64 + z, STONE);
-                        } else {
-                            setBlockAt(originX - 64 + x, y, originZ + 64 + z, DIRT);
-                        }
-                    }
-                    int y = (int)glm::floor(height);
-                    setBlockAt(originX - 64 + x, y, originZ + 64 + z, GRASS);
-                }
+                int y = (int)glm::floor(height);
+                setBlockAt(originX + x, y, originZ + 64 + z, GRASS);
             }
         }
     }

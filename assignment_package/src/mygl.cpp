@@ -352,7 +352,6 @@ void MyGL::timerUpdate()
 
                 mutex->lock();
                 if (chunksToCreate.size() > 0) {
-                    std::cout << chunksToCreate.size() << "in the loop" << std::endl;
                     for (Chunk* c : chunksToCreate) {
                         c->create();
                     }
@@ -365,7 +364,6 @@ void MyGL::timerUpdate()
             // If there are any remaining non-created chunks, lock mutex, create all the chunks, then clear the vector and unlock
             mutex->lock();
             if (chunksToCreate.size() > 0) {
-                std::cout << chunksToCreate.size() << " out of the loop " << std::endl;
                 for (Chunk* c : chunksToCreate) {
                     c->create();
                 }
@@ -417,7 +415,6 @@ void MyGL::paintGL()
 void MyGL::GLDrawScene()
 {
     mp_texture->bind(MINECRAFT_TEXTURE_SLOT);
-    std::cout << glGetError() << " in bind" << std::endl;
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
         if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
@@ -425,7 +422,6 @@ void MyGL::GLDrawScene()
             mp_progLambert->drawOpaque(*cPtr);
         }
     }
-    std::cout << glGetError() << " in opaque draw" << std::endl;
 
     for (const auto& map : mp_terrain->m_chunks) {
         Chunk* cPtr = map.second.get();
@@ -434,7 +430,6 @@ void MyGL::GLDrawScene()
             mp_progLambert->drawTrans(*cPtr);
         }
     }
-    std::cout << glGetError() << " in transparent draw" << std::endl;
 }
 
 
@@ -508,7 +503,6 @@ void MyGL::createRenderBuffers()
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cout << "Frame buffer did not initialize correctly..." << std::endl;
         printGLErrorLog();
     }
 }

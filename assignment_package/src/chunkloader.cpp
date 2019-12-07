@@ -13,10 +13,9 @@ void ChunkLoader::run() {
 
         for(int x = 0; x < 16; ++x) {
             for(int z = 0; z < 16; ++z) {
-                float height = fbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
-                height = pow(height, 3.f) * 32.0 + 128.0;
+                float height = modFbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
 
-                for (int y = 0; y < height; y++) {
+                for (int y = 127; y < height; y++) {
                     if (y <= 128) {
                         chunk->getBlockAt(x, y, z) = STONE;
                     } else {
@@ -74,4 +73,11 @@ float ChunkLoader::fbm(float x, float y) {
         total += interpNoise2D(x * freq, y * freq) * amp;
     }
     return total;
+}
+
+float ChunkLoader::modFbm(float x, float y)
+{
+    float height = fbm(x, y);
+    height = pow(height, 3.f) * 32.0 + 128.0;
+    return height;
 }
