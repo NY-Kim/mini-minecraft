@@ -18,7 +18,7 @@ class LSystem;
 // block types, but in the scope of this project we'll never get anywhere near that many.
 enum BlockType : unsigned char
 {
-    EMPTY, GRASS, DIRT, STONE, LAVA, WATER
+    EMPTY, GRASS, DIRT, STONE, LAVA, WATER, SNOW, COAL, IRON
 };
 
 class Chunk : public Drawable

@@ -443,6 +443,9 @@ void Chunk::createVBOs() {
     color_map[STONE] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     color_map[LAVA] = glm::vec4(1.f, 0.5f, 0.5f, 1.0f);
     color_map[WATER] = glm::vec4(0.5f, 0.5f, 1.5f, 0.7f);
+    color_map[SNOW] = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+    color_map[COAL] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    color_map[IRON] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
     std::map<std::pair<BlockType, int>, glm::vec2> uv_map; // 0 - top, 1 - side, 2 - bottom
     uv_map[std::pair<BlockType, int>(DIRT, 0)] = glm::vec2(2, 15) / 16.f;
@@ -460,6 +463,15 @@ void Chunk::createVBOs() {
     uv_map[std::pair<BlockType, int>(WATER, 0)] = glm::vec2(13, 3) / 16.f;
     uv_map[std::pair<BlockType, int>(WATER, 1)] = glm::vec2(14, 2) / 16.f;
     uv_map[std::pair<BlockType, int>(WATER, 2)] = glm::vec2(13, 3) / 16.f;
+    uv_map[std::pair<BlockType, int>(SNOW, 0)] = glm::vec2(2, 11) / 16.f;
+    uv_map[std::pair<BlockType, int>(SNOW, 1)] = glm::vec2(2, 11) / 16.f;
+    uv_map[std::pair<BlockType, int>(SNOW, 2)] = glm::vec2(2, 11) / 16.f;
+    uv_map[std::pair<BlockType, int>(COAL, 0)] = glm::vec2(2, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(COAL, 1)] = glm::vec2(2, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(COAL, 2)] = glm::vec2(2, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(IRON, 0)] = glm::vec2(1, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(IRON, 1)] = glm::vec2(1, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(IRON, 2)] = glm::vec2(1, 13) / 16.f;
 
     std::map<BlockType, float> cos_pow_map;
     cos_pow_map[DIRT] = 10;
@@ -467,6 +479,9 @@ void Chunk::createVBOs() {
     cos_pow_map[STONE] = 60;
     cos_pow_map[LAVA] = 50;
     cos_pow_map[WATER] = 70;
+    cos_pow_map[SNOW] = 50;
+    cos_pow_map[COAL] = 60;
+    cos_pow_map[IRON] = 60;
 
     std::map<BlockType, float> ani_flag_map;
     ani_flag_map[DIRT] = 0;
@@ -474,6 +489,9 @@ void Chunk::createVBOs() {
     ani_flag_map[STONE] = 0;
     ani_flag_map[LAVA] = 1;
     ani_flag_map[WATER] = 1;
+    ani_flag_map[SNOW] = 0;
+    ani_flag_map[COAL] = 0;
+    ani_flag_map[IRON] = 0;
 
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
                                                std::pair<int, int>(1, 0),
