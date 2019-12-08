@@ -25,7 +25,7 @@ float surflet(vec2 p , vec2 gridPoint) {
     // Compute the distance between p and the grid point along each axis, and warp it with a
     // quintic function so we can smooth our cells
     vec2 diff = abs(p - gridPoint);
-    vec2 t = vec2(1.f) - (vec2(6.f) * pow(diff, vec2(5.f)) + vec2(15.f) * pow(diff, vec2(4.f)) - vec2(10.f) * pow(diff, vec2(3.f)));
+    vec2 t = vec2(1.f) - vec2(6.f) * pow(diff, vec2(5.f)) + vec2(15.f) * pow(diff, vec2(4.f)) - vec2(10.f) * pow(diff, vec2(3.f));
 
     // Get the random vector for the grid point (assume we wrote a function random2)
     vec2 gradient = random2(gridPoint);
@@ -44,6 +44,7 @@ float surflet(vec2 p , vec2 gridPoint) {
 float perlinNoise(vec2 uv) {
     float surfletSum = 0.f;
 
+    uv *= 10;
     // Iterate over four integer corners surrounding uv
     for (int dx = 0; dx <= 1; ++dx) {
         for (int dy = 0; dy <= 1; ++dy) {
@@ -59,6 +60,5 @@ void main()
     // Use perlin noise and time to displace the UV coordinates
     vec2 grad = vec2(perlinNoise(fs_UV));
     vec4 textureColor = texture(u_RenderedTexture, coeff * grad + fs_UV);
-    //color = mix(textureColor, vec4(0.f, 0.f, 1.f, textureColor.a), 0.3);
-    color = vec4(vec3(grad.x), 1.f);
+    color = mix(textureColor, vec4(0.f, 0.f, 1.f, textureColor.a), 0.3);
 }
