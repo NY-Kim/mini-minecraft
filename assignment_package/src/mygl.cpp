@@ -26,7 +26,9 @@ MyGL::MyGL(QWidget *parent)
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
       chunksToCreate(), mutex(mkU<QMutex>()), init(true),
       splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
-      walkSounds({"../assignment_package/music/grass1.wav", "../assignment_package/music/grass2.wav", "../assignment_package/music/grass3.wav"})
+      windEff(mkU<QSoundEffect>()), birdEff(mkU<QSoundEffect>()),
+      soundBank({"../assignment_package/music/grass1.wav", "../assignment_package/music/grass2.wav", "../assignment_package/music/grass3.wav",
+                "../assignment_package/music/bird1.wav", "../assignment_package/music/bird2.wav"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -46,6 +48,9 @@ MyGL::MyGL(QWidget *parent)
     lavaFlow->setVolume(0.2);
     lavaPop->setSource(QUrl::fromLocalFile("../assignment_package/music/lavapop.wav")); // Volume set randomly
     walkGrass->setVolume(0.2); // Source file set randomly
+    windEff->setSource(QUrl::fromLocalFile("../assignment_package/music/wind.wav"));
+    windEff->setVolume(0.15);
+    birdEff->setVolume(0.2); // Source file set randomly
 }
 
 MyGL::~MyGL()
@@ -319,7 +324,7 @@ void MyGL::timerUpdate()
             }
             else if (player->onGround && !walkGrass->isPlaying()) {
                 int index = rand() % 3;
-                walkGrass->setSource(QUrl::fromLocalFile(QString::fromStdString(walkSounds[index])));
+                walkGrass->setSource(QUrl::fromLocalFile(QString::fromStdString(soundBank[index])));
                 walkGrass->play();
             }
             ray = glm::normalize(ray) * minT;
@@ -445,22 +450,37 @@ void MyGL::timerUpdate()
     for (int x = -10; x <= 10; ++x) {
         for (int y = -10; y <= 10; y++) {
             for (int z = -10; z <= 10; z++) {
-                if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == WATER) {
-                    if (!waterSFX->isPlaying()) {
+                if (!waterSFX->isPlaying()) {
+                    if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == WATER) {
                         waterSFX->play();
                     }
-                } else if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == LAVA) {
-                    if (!lavaFlow->isPlaying()) {
+                }
+                if (!lavaFlow->isPlaying()) {
+                    if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == LAVA) {
                         lavaFlow->play();
-                    }
-                    if (rand() % 100 == 99 && !lavaPop->isPlaying()) {
-                        float vol = (rand() % 100) / 100.f;
-                        vol = glm::clamp(0.05f, 0.25f, vol);
-                        lavaPop->setVolume(vol);
-                        lavaPop->play();
+                        if (rand() % 100 == 99 && !lavaPop->isPlaying()) {
+                            float vol = (rand() % 100) / 100.f;
+                            vol = glm::clamp(0.05f, 0.25f, vol);
+                            lavaPop->setVolume(vol);
+                            lavaPop->play();
+                        }
                     }
                 }
             }
+        }
+    }
+
+    // Now determine if we want to play wind or bird SFX
+    int check = rand() % 1000;
+    if (check == 998) {
+        if (!windEff->isPlaying()) {
+            windEff->play();
+        }
+    } else if (check == 999) {
+        if (!birdEff->isPlaying()) {
+            int index = rand() % 2 + 3;
+            birdEff->setSource(QUrl::fromLocalFile(QString::fromStdString(soundBank[index])));
+            birdEff->play();
         }
     }
 
