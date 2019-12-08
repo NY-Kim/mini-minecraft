@@ -7,13 +7,21 @@ void LSystem::generateRiver()
 {
     setExpansionGrammar();
 
-    QString axiom = QString("X");
+    QString axiom;
+
+    if (mode == QString("cave")) {
+        axiom = QString("C");
+    } else {
+        axiom = QString("X");
+    }
     QString expandStr = axiom;
     int iterNum;
     if (mode == QString("linear")) {
         iterNum = 1;
-    } else { //delta river
+    } else if (mode == QString("delta")) { //delta river
         iterNum = 1;
+    } else { //cave
+        iterNum = 3;
     }
     //cave
 
@@ -43,8 +51,12 @@ void LSystem::generateRiver()
         newTurtle.position = glm::vec2(10, 10);
         newTurtle.orientation = rand() % 40 + (70);
         newTurtle.riverWidth = 10.0f;
-    } else { //delta river
+    } else if (mode == QString("delta")) { //delta river
         newTurtle.position = glm::vec2(52, 15);
+        newTurtle.orientation = rand() % 40 + (-10);
+        newTurtle.riverWidth = 6.0f;
+    } else { //cave
+        newTurtle.position = glm::vec2(30, 20);
         newTurtle.orientation = rand() % 40 + (-10);
         newTurtle.riverWidth = 6.0f;
     }
@@ -57,11 +69,14 @@ void LSystem::setExpansionGrammar()
         charToRule.insert({'F', "F[-F]+FX-Z"});
         charToRule.insert({'X', "F[-F][Z]F[+F]X[-F]F"});
         charToRule.insert({'Z', "F[+F]F-Z+F"});
-    } else {
+    } else if (mode == QString("delta")) {
         charToRule.insert({'F', "F[-F]F[+F]"});
         charToRule.insert({'X', "F-[[X]+FX]+F[+FX]-X"});
         charToRule.insert({'Z', "F[+F]F[[-XF]+F]"});
-
+    } else {
+        charToRule.insert({'C', "C+CV-B"});
+        charToRule.insert({'V', "+C-CBV+CV-BC"});
+        charToRule.insert({'B', "C+CV-VC+B]"});
     }
 
     charToDrawingOperation.insert({'F', &LSystem::drawLineMoveForward});
@@ -69,6 +84,7 @@ void LSystem::setExpansionGrammar()
     charToDrawingOperation.insert({'+', &LSystem::rotateRight});
     charToDrawingOperation.insert({'[', &LSystem::saveState});
     charToDrawingOperation.insert({']', &LSystem::storeState});
+    charToDrawingOperation.insert({'C', &LSystem::caveLineMoveForward});
 }
 
 void LSystem::runOperations(Turtle turtle, QString instruction)
@@ -263,6 +279,73 @@ Turtle LSystem::storeState(Turtle turtle)
     if (!turtleStack.isEmpty()) {
         return turtleStack.pop();
     }
+}
+
+Turtle LSystem::caveLineMoveForward(Turtle turtle)
+{
+    Turtle nextTurtle = turtle;
+    float streamLength;
+        if (mode == QString("linear")) {
+            streamLength = 5.0f;
+        } else {
+            streamLength = 10.0f;
+        }
+
+    turtle.orientation = turtle.orientation + (rand() % 40 + (-20));
+    float angRadian = turtle.orientation * M_PI / 180.0f;
+    int streamWidth = (int)glm::floor((fmax(2, (turtle.riverWidth / turtle.recDepth))/ 2.0f));
+
+    glm::vec2 moveDir = glm::vec2(cos(angRadian) * streamLength,
+                                  sin(angRadian) * streamLength);
+    glm::vec2 normalizedMoveDir = glm::normalize(moveDir);
+    nextTurtle.position = nextTurtle.position + moveDir;
+
+    //set water blocks
+    for (int i = 0; i < streamLength; i++) {
+        int x = (int)(turtle.position[0] + (normalizedMoveDir[0] * i));
+        int z = (int)(turtle.position[1] + (normalizedMoveDir[1] * i));
+
+        //draw river
+        for (int yd = 0; yd <= streamWidth; yd++) {
+            for (int xd = 0; xd <= streamWidth; xd++) {
+                for (int zd = 0; zd <= (streamWidth - xd); zd++) {
+                    if (mp_terrain->m_chunks.find(getOrigin(x + xd, z + zd)) == mp_terrain->m_chunks.end()) {
+                        extendTerrain(x + xd, z + zd);
+                    }
+                    mp_terrain->setBlockAt(x + xd, 128, z + zd, WATER);
+
+                    if (mp_terrain->m_chunks.find(getOrigin(x + xd, z - zd)) == mp_terrain->m_chunks.end()) {
+                        extendTerrain(x + xd, z - zd);
+                    }
+                    mp_terrain->setBlockAt(x + xd, 128, z - zd, WATER);
+
+                    if (mp_terrain->m_chunks.find(getOrigin(x - xd, z + zd)) == mp_terrain->m_chunks.end()) {
+                        extendTerrain(x - xd, z + zd);
+                    }
+                    mp_terrain->setBlockAt(x - xd, 128, z + zd, WATER);
+
+                    if (mp_terrain->m_chunks.find(getOrigin(x - xd, z - zd)) == mp_terrain->m_chunks.end()) {
+                        extendTerrain(x - xd, z - zd);
+                    }
+                    mp_terrain->setBlockAt(x - xd, 128, z - zd, WATER);
+
+                    //clear the blocks above river
+                    for (int y = 129; y < 256; y++) {
+                        mp_terrain->setBlockAt(x + xd, y, z + zd, EMPTY);
+                        mp_terrain->setBlockAt(x + xd, y, z - zd, EMPTY);
+                        mp_terrain->setBlockAt(x - xd, y, z + zd, EMPTY);
+                        mp_terrain->setBlockAt(x - xd, y, z - zd, EMPTY);
+                    }
+                    //carve-out the terrain near river
+                    carveTerrain(x + xd, z + zd);
+                    carveTerrain(x + xd, z - zd);
+                    carveTerrain(x - xd, z + zd);
+                    carveTerrain(x - xd, z - zd);
+                }
+            }
+        }
+    }
+    return nextTurtle;
 }
 
 Turtle::Turtle() : position(glm::vec2()), orientation(0.0f), recDepth(1)

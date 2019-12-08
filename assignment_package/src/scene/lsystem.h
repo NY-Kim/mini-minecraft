@@ -21,6 +21,8 @@ public:
 
     float riverWidth;
 
+    float yVal();
+
     //constructor
     Turtle();
 };
@@ -61,4 +63,5 @@ public:
     Turtle rotateRight(Turtle turtle);
     Turtle saveState(Turtle turtle);
     Turtle storeState(Turtle turtle);
+    Turtle caveLineMoveForward(Turtle turtle);
 };

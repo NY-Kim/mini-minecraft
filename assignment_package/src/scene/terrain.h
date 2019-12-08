@@ -3,7 +3,7 @@
 #include <la.h>
 #include <drawable.h>
 #include <array>
-
+#include <QString>
 #include "lsystem.h"
 #include <memory>
 
@@ -61,6 +61,8 @@ public:
 
     glm::ivec3 dimensions;
 
+    QString biomeType;
+
     BlockType getBlockAt(int x, int y, int z) const;   // Given a world-space coordinate (which may have negative
                                                            // values) return the block stored at that point in space.
     void setBlockAt(int x, int y, int z, BlockType t); // Given a world-space coordinate (which may have negative
@@ -71,19 +73,23 @@ public:
     float interpNoise2D(float x, float y);
     float fbm(float x, float y);
     float modFbm(float x, float y);
+    float modFbm2(float x, float y);
+    float modFbm3(float x, float y);
+
 
     //perlin noise for moist/bump values
-    float random2(glm::vec2 n);
+    glm::vec2 random2(glm::vec2 n);
     float surflet(glm::vec2 p, glm::vec2 gridPoint);
     float perlinNoise(glm::vec2 uv);
 
     //getting the overall height
-    float overallHeight(float bilerp1, float bilerp2, float moist);
-    float bilerp(float desert, float mountain, float bump);
-    float desertHeight(float x, float z);
-    float mountainHeight(float x, float z);
-    float islandHeight(float x, float z);
+    float overallHeight(float x, float z, glm::vec2 moistBump);
+    float overallHeight2(float bilerp1, float bilerp2, float moist);
+    float bilerp(float biome1, float biome2, float bump);
+    float canyonHeight(float x, float z);
     float grasslandHeight(float x, float z);
+    float snowlandHeight(float x, float z);
+    float mustafarHeight(float x, float z);
 
 
     //add block

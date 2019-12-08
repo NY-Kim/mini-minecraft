@@ -3,7 +3,7 @@
 #include <iostream>
 
   Terrain::Terrain(OpenGLContext* context)
-      : context(context), m_chunks(std::map<std::pair<int, int>, uPtr<Chunk>>()), dimensions(64, 256, 64)
+      : context(context), m_chunks(std::map<std::pair<int, int>, uPtr<Chunk>>()), dimensions(64, 256, 64), biomeType()
   {}
 
 BlockType Terrain::getBlockAt(int x, int y, int z) const
@@ -61,12 +61,33 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
 
 void Terrain::CreateTestScene()
 {
+
     //Create the basic terrain floor
     for(int x = 0; x < 64; ++x)
     {
         for(int z = 0; z < 64; ++z)
         {
-            float height = modFbm((x / 64.0), (z / 64.0));
+            glm::vec2 currP = glm::vec2(x, z);
+            glm::vec2 mb = glm::vec2(fbm(x / 160.0f, z / 160.0f),
+                                     fbm((x +100.34) / 160.f, (z + 678.98234) / 160.0f));
+            std::cout << "randomVal: " << mb[0] << ", " << mb[1] << std::endl;
+
+            //assigning biomeType
+            if (mb[0] < 0.5) {
+                if (mb[1] < 0.5) {
+                    biomeType = QString("mustafar");
+                } else {
+                    biomeType = QString("canyon");
+                }
+            } else {
+                if (mb[1] < 0.5) {
+                    biomeType = QString("grassland");
+                } else {
+                    biomeType = QString("snowland");
+                }
+            }
+            float height = overallHeight(x, z, mb);
+            //std::cout << height;
             for (int y = 1; y < height; y++) {
                 if (y <= 128) {
                     setBlockAt(x, y, z, STONE);
@@ -75,15 +96,44 @@ void Terrain::CreateTestScene()
                 }
             }
             int y = (int)glm::floor(height);
-            setBlockAt(x, y, z, GRASS);
+            if (biomeType == QString("mustafar")) {
+                setBlockAt(x, y, z, LAVA);
+            } else if (biomeType == QString("canyon")) {
+                setBlockAt(x, y, z, IRON);
+            } else if (biomeType == QString("grassland")) {
+                setBlockAt(x, y, z, GRASS);
+            } else {
+                setBlockAt(x, y, z, SNOW);
+            }
         }
     }
 
-    LSystem linearRiver = LSystem(this, QString("linear"));
-    linearRiver.generateRiver();
+    //Create the basic terrain floor
+//    for(int x = 0; x < 64; ++x)
+//    {
+//        for(int z = 0; z < 64; ++z)
+//        {
+//            float height = modFbm2((x / 64.0), (z / 64.0));
+//            for (int y = 1; y < height; y++) {
+//                if (y <= 128) {
+//                    setBlockAt(x, y, z, STONE);
+//                } else {
+//                    setBlockAt(x, y, z, DIRT);
+//                }
+//            }
+//            int y = (int)glm::floor(height);
+//            setBlockAt(x, y, z, GRASS);
+//        }
+//    }
 
-    LSystem deltaRiver = LSystem(this, QString("delta"));
-    deltaRiver.generateRiver();
+//    LSystem linearRiver = LSystem(this, QString("linear"));
+//    linearRiver.generateRiver();
+
+//    LSystem deltaRiver = LSystem(this, QString("delta"));
+//    deltaRiver.generateRiver();
+
+//    LSystem cave = LSystem(this, QString("cave"));
+//    cave.generateRiver();
 }
 
 void Terrain::create() {
@@ -109,7 +159,8 @@ void Terrain::destroy() {
 //noise basis function
 float Terrain::noise2D(glm::vec2 n)
 {
-    return (glm::fract(sin(glm::dot(n, glm::vec2(12.9898, 4.1414))) * 43758.5453));
+    //return (glm::fract(sin(glm::dot(n, glm::vec2(12.9898, 4.1414))) * 43758.5453));
+    return (glm::fract(sin(glm::dot(n, glm::vec2(34.4938, 5.3244))) * 87297.8374));
 }
 
 //interpNoise2D
@@ -146,17 +197,45 @@ float Terrain::fbm(float x, float y)
     return total;
 }
 
+//for grassland
 float Terrain::modFbm(float x, float y)
 {
     float height = fbm(x, y);
-    height = pow(height, 3.f) * 32.0 + 128.0;
+    height = pow(height, 3.f) * 32.0 + 128.0;  //original
+    //height = glm::smoothstep(0.5f, 0.7f, height) * 32 + 128.0;  //canyon-style
+    //height = glm::smoothstep(0.5f, 0.7f, height) * 32 + glm::smoothstep(0.3f, 0.46f, height) * 21 + 128.0;  //canyon-style
+    return height;
+}
+
+//for canyon
+float Terrain::modFbm2(float x, float y)
+{
+    float height = fbm(x, y);
+    //height = pow(height, 3.f) * 32.0 + 128.0;  //original
+    height = glm::smoothstep(0.4f, 0.64f, height) * 32 + 128.0 + glm::smoothstep(0.2f, 0.75f, height) * 3;  //canyon-style
+    //height = glm::smoothstep(0.5f, 0.7f, height) * 32 + glm::smoothstep(0.3f, 0.46f, height) * 21 + 128.0;  //canyon-style
+    return height;
+}
+
+//for canyon
+float Terrain::modFbm3(float x, float y)
+{
+    float height = fbm(x, y);
+    //height = pow(height, 3.f) * 32.0 + 128.0;  //original
+    //height = glm::smoothstep(0.5f, 0.7f, height) * 42 + 128.0;  //canyon-style
+    //height = glm::smoothstep(0.7f, 0.9f, height) * 22 + glm::smoothstep(0.3f, 0.46f, height) * 46 + 128.0;  //canyon-style
+    height = pow(height, 2.f) * 52.0 + 128.0;  //original
     return height;
 }
 
 //perlin noise function======================================================
 //random function
-float Terrain::random2(glm::vec2 n) {
-    return (glm::fract(sin(glm::dot(n, glm::vec2(12.9898, 4.1414))) * 43758.5453));
+glm::vec2 Terrain::random2(glm::vec2 n) {
+    float r1 = (glm::fract(sin(glm::dot(n, glm::vec2(12.9898, 4.1414))) * 38271.6347));
+    float r2 = (glm::fract(sin(glm::dot(n, glm::vec2(31.7326, 5.8182))) * 25712.3829));
+    glm::vec2 result =  glm::normalize(glm::vec2(r1, r2));
+    std::cout << "randomVal: " << result[0] << ", " << result[1] << std::endl;
+    return result;
 }
 
 //function to get surflet
@@ -164,12 +243,12 @@ float Terrain::surflet(glm::vec2 p, glm::vec2 gridPoint)
 {
     // Compute the distance between p and the grid point along each axis, and warp it with a
     // quintic function so we can smooth our cells
-    glm::vec2 diff = glm::abs(p - gridPoint);
+    glm::vec2 diff = glm::normalize(glm::abs(p - gridPoint));
     float t1 = 1.f - 6.f * pow(diff.x, 5.f) - 15.f * pow(diff.x, 4.f) + 10.f * pow(diff.x, 3.f);
     float t2 = 1.f - 6.f * pow(diff.y, 5.f) - 15.f * pow(diff.y, 4.f) + 10.f * pow(diff.y, 3.f);
     glm::vec2 t = glm::vec2(t1, t2);
     // Get the random vector for the grid point (assume we wrote a function random2)
-    glm::vec2 gradient = glm::vec2(random2(p), random2(gridPoint));
+    glm::vec2 gradient = random2(gridPoint);
     gradient = glm::normalize(gradient);
     // Get the vector from the grid point to P
     diff = p - gridPoint;
@@ -189,40 +268,110 @@ float Terrain::perlinNoise(glm::vec2 uv)
             surfletSum += surflet(uv, glm::floor(uv) + glm::vec2(dx, dy));
         }
     }
+    std::cout << "heightVal : " << surfletSum << std::endl;
     return surfletSum;
 }
 
 //BIOME=======================================================================
 //getting the overall height
-float Terrain::overallHeight(float bilerp1, float bilerp2, float moist)
+float Terrain::overallHeight(float x, float z, glm::vec2 moistBump)
 {
-    return 1;
+    float moist = moistBump[0];
+    float bump = moistBump[1];
+    float canyonY = canyonHeight(x / 64.0f, z / 64.0f);
+    float grassY = grasslandHeight(x / 64.0f, z / 64.0f);
+    float snowY = snowlandHeight(x / 64.0f, z / 64.0f);
+    float mustafarY = mustafarHeight(x / 64.0f, z / 64.0f);
+
+    float bilerp1 = bilerp(mustafarY, canyonY, bump);
+    float bilerp2 = bilerp(grassY, snowY, bump);
+
+    //return glm::mix(bilerp1, bilerp2, moist);
+    //return glm::smoothstep(bilerp1, bilerp2, moist);
+    return bilerp(bilerp1, bilerp2, moist);
+
+
 }
 
-float Terrain::bilerp(float desert, float mountain, float bump)
+float Terrain::overallHeight2(float bilerp1, float bilerp2, float moist)
 {
-    return glm::mix(desert, mountain, bump);
+    return glm::mix(bilerp1, bilerp2, moist);
 }
 
-float Terrain::desertHeight(float x, float z)
+// mustafa-canyon, grassland-snowland
+float Terrain::bilerp(float biome1, float biome2, float bump)
+{
+    //return glm::mix(biome1, biome2, bump);
+    return glm::mix(biome1, biome2, glm::smoothstep(0.45f, 0.6f, bump));
+}
+
+float Terrain::canyonHeight(float x, float z)
 {
     return 130;
-}
-
-float Terrain::mountainHeight(float x, float z)
-{
-    return 150;
-}
-
-float Terrain::islandHeight(float x, float z)
-{
-    return 170;
 }
 
 float Terrain::grasslandHeight(float x, float z)
 {
     return modFbm(x, z);
 }
+
+float Terrain::snowlandHeight(float x, float z)
+{
+    return  modFbm3(x, z);
+}
+
+float Terrain::mustafarHeight(float x, float z)
+{
+    return modFbm2(x, z);
+}
+
+//helper functions for biome height calculations
+//float Terrain::noise2D(glm::vec2 n)
+//{
+//    return (glm::fract(sin(glm::dot(n, glm::vec2(12.9898, 4.1414))) * 43758.5453));
+//}
+
+////interpNoise2D
+//float Terrain::interpNoise2D(float x, float y)
+//{
+//    float intX = floor(x);
+//    float fractX = glm::fract(x);
+//    float intY = floor(y);
+//    float fractY = glm::fract(y);
+
+//    float v1 = noise2D(glm::vec2(intX, intY));
+//    float v2 = noise2D(glm::vec2(intX + 1, intY));
+//    float v3 = noise2D(glm::vec2(intX, intY + 1));
+//    float v4 = noise2D(glm::vec2(intX + 1, intY + 1));
+
+//    float i1 = glm::mix(v1, v2, fractX);
+//    float i2 = glm::mix(v3, v4, fractX);
+//    return glm::mix(i1, i2, fractY);
+//}
+
+////fbm function
+//float Terrain::fbm(float x, float y)
+//{
+//    float total = 0;
+//    float persistence = 0.5f;
+//    int octaves = 8;
+
+//    for(int i = 1; i <= octaves; i++) {
+//        float freq = pow(2.f, i);
+//        float amp = pow(persistence, i);
+
+//        total += interpNoise2D(x * freq, y * freq) * amp;
+//    }
+//    return total;
+//}
+
+////for grassland
+//float Terrain::modFbm(float x, float y)
+//{
+//    float height = fbm(x, y);
+//    height = pow(height, 3.f) * 32.0 + 128.0;
+//    return height;
+//}
 
 //add/delete block function===================================================
 //add
@@ -443,9 +592,13 @@ void Chunk::createVBOs() {
     color_map[STONE] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     color_map[LAVA] = glm::vec4(1.f, 0.5f, 0.5f, 1.0f);
     color_map[WATER] = glm::vec4(0.5f, 0.5f, 1.5f, 0.7f);
-    color_map[SNOW] = glm::vec4(0.8f, 0.8f, 0.8f, 1.0f);
+    color_map[SNOW] = glm::vec4(1.f, 1.f, 1.f, 1.0f);
     color_map[COAL] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
     color_map[IRON] = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    color_map[ORANGE] = glm::vec4(255.f, 153.f, 51.f, 255.f) / 255.f;
+    color_map[BROWN] = glm::vec4(102.f, 51.f, 0.f, 255.f) / 255.f;
+    color_map[IVORY] = glm::vec4(255.f, 255.f, 204.f, 255.f) / 255.f;
+    color_map[SAND] = glm::vec4(208.f, 189.f, 115.f, 255.f) / 255.f;
 
     std::map<std::pair<BlockType, int>, glm::vec2> uv_map; // 0 - top, 1 - side, 2 - bottom
     uv_map[std::pair<BlockType, int>(DIRT, 0)] = glm::vec2(2, 15) / 16.f;
@@ -464,14 +617,26 @@ void Chunk::createVBOs() {
     uv_map[std::pair<BlockType, int>(WATER, 1)] = glm::vec2(14, 2) / 16.f;
     uv_map[std::pair<BlockType, int>(WATER, 2)] = glm::vec2(13, 3) / 16.f;
     uv_map[std::pair<BlockType, int>(SNOW, 0)] = glm::vec2(2, 11) / 16.f;
-    uv_map[std::pair<BlockType, int>(SNOW, 1)] = glm::vec2(2, 11) / 16.f;
-    uv_map[std::pair<BlockType, int>(SNOW, 2)] = glm::vec2(2, 11) / 16.f;
+    uv_map[std::pair<BlockType, int>(SNOW, 1)] = glm::vec2(4, 11) / 16.f;
+    uv_map[std::pair<BlockType, int>(SNOW, 2)] = glm::vec2(2, 15) / 16.f;
     uv_map[std::pair<BlockType, int>(COAL, 0)] = glm::vec2(2, 13) / 16.f;
     uv_map[std::pair<BlockType, int>(COAL, 1)] = glm::vec2(2, 13) / 16.f;
     uv_map[std::pair<BlockType, int>(COAL, 2)] = glm::vec2(2, 13) / 16.f;
     uv_map[std::pair<BlockType, int>(IRON, 0)] = glm::vec2(1, 13) / 16.f;
     uv_map[std::pair<BlockType, int>(IRON, 1)] = glm::vec2(1, 13) / 16.f;
     uv_map[std::pair<BlockType, int>(IRON, 2)] = glm::vec2(1, 13) / 16.f;
+    uv_map[std::pair<BlockType, int>(ORANGE, 0)] = glm::vec2(2, 2) / 16.f;
+    uv_map[std::pair<BlockType, int>(ORANGE, 1)] = glm::vec2(2, 2) / 16.f;
+    uv_map[std::pair<BlockType, int>(ORANGE, 2)] = glm::vec2(2, 2) / 16.f;
+    uv_map[std::pair<BlockType, int>(BROWN, 0)] = glm::vec2(1, 5) / 16.f;
+    uv_map[std::pair<BlockType, int>(BROWN, 1)] = glm::vec2(1, 5) / 16.f;
+    uv_map[std::pair<BlockType, int>(BROWN, 2)] = glm::vec2(1, 5) / 16.f;
+    uv_map[std::pair<BlockType, int>(IVORY, 0)] = glm::vec2(0, 4) / 16.f;
+    uv_map[std::pair<BlockType, int>(IVORY, 1)] = glm::vec2(0, 4) / 16.f;
+    uv_map[std::pair<BlockType, int>(IVORY, 2)] = glm::vec2(0, 4) / 16.f;
+    uv_map[std::pair<BlockType, int>(SAND, 0)] = glm::vec2(7, 14) / 16.f;
+    uv_map[std::pair<BlockType, int>(SAND, 1)] = glm::vec2(7, 14) / 16.f;
+    uv_map[std::pair<BlockType, int>(SAND, 2)] = glm::vec2(7, 14) / 16.f;
 
     std::map<BlockType, float> cos_pow_map;
     cos_pow_map[DIRT] = 10;
@@ -482,6 +647,10 @@ void Chunk::createVBOs() {
     cos_pow_map[SNOW] = 50;
     cos_pow_map[COAL] = 60;
     cos_pow_map[IRON] = 60;
+    cos_pow_map[ORANGE] = 60;
+    cos_pow_map[BROWN] = 60;
+    cos_pow_map[IVORY] = 60;
+    cos_pow_map[SAND] = 60;
 
     std::map<BlockType, float> ani_flag_map;
     ani_flag_map[DIRT] = 0;
@@ -492,6 +661,10 @@ void Chunk::createVBOs() {
     ani_flag_map[SNOW] = 0;
     ani_flag_map[COAL] = 0;
     ani_flag_map[IRON] = 0;
+    ani_flag_map[ORANGE] = 0;
+    ani_flag_map[BROWN] = 0;
+    ani_flag_map[IVORY] = 0;
+    ani_flag_map[SAND] = 0;
 
     std::vector<std::pair<int, int>> offsets = {std::pair<int, int>(0, 0),
                                                std::pair<int, int>(1, 0),
