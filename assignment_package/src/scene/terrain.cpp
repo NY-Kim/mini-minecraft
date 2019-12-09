@@ -274,7 +274,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + x, y, originZ + 64 + z, STONE);
                         } else {
@@ -292,7 +292,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + 64 + x, y, originZ + 64 + z, STONE);
                         } else {
@@ -310,7 +310,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + 64 + x) / (64.0)), ((originZ + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + 64 + x, y, originZ + z, STONE);
                         } else {
@@ -329,7 +329,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + 64 + x, y, originZ - 64 + z, STONE);
                         } else {
@@ -347,7 +347,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX + x, y, originZ - 64 + z, STONE);
                         } else {
@@ -365,7 +365,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX - 64 + x) / (64.0)), ((originZ - 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX - 64 + x, y, originZ - 64 + z, STONE);
                         } else {
@@ -383,7 +383,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX - 64 + x, y, originZ + z, STONE);
                         } else {
@@ -401,7 +401,7 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
                 {
                     float height = fbm(((originX - 64 + x) / (64.0)), ((originZ + 64 + z) / (64.0)));
                     height = pow(height, 3.f) * 32.0 + 128.0;
-                    for (int y = 127; y < height; y++) {
+                    for (int y = 1; y < height; y++) {
                         if (y <= 128) {
                             setBlockAt(originX - 64 + x, y, originZ + 64 + z, STONE);
                         } else {
