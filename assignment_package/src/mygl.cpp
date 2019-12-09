@@ -28,7 +28,7 @@ MyGL::MyGL(QWidget *parent)
       splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
       windEff(mkU<QSoundEffect>()), birdEff(mkU<QSoundEffect>()),
       soundBank({"https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass1.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass2.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass3.mp3",
-                "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird1.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird2.wav"})
+                "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird1.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird2.mp3"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -48,7 +48,7 @@ MyGL::MyGL(QWidget *parent)
     lavaFlow->setVolume(0.2);
     lavaPop->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/lavapop.mp3")); // Volume set randomly
     walkGrass->setVolume(0.2); // Source file set randomly
-    windEff->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/wind.wav"));
+    windEff->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/wind.mp3"));
     windEff->setVolume(0.15);
     birdEff->setVolume(0.2); // Source file set randomly
 }
@@ -228,15 +228,15 @@ void MyGL::timerUpdate()
         player->velocity[0] = 0.f;
     }
     if (std::get<1>(player->wasdPressed)) {
-        player->velocity[2] = -2.f;
+        player->velocity[2] = -10.f;
     } else {
         player->velocity[2] = 0.f;
     }
     if (std::get<2>(player->wasdPressed)) {
-        player->velocity[0] = (player->velocity[2] == 2.f) ? 0.f : -2.f;
+        player->velocity[0] = (player->velocity[2] == 2.f) ? 0.f : -10.f;
     }
     if (std::get<3>(player->wasdPressed)) {
-        player->velocity[2] = (player->velocity[0] == -2.f) ? 0.f : 2.f;
+        player->velocity[2] = (player->velocity[0] == -2.f) ? 0.f : 10.f;
     }
 
     if (player->mouseMoved) {
@@ -252,13 +252,13 @@ void MyGL::timerUpdate()
     }
 
     if (player->qPressed) {
-        player->velocity[1] = -2.f;
+        player->velocity[1] = -10.f;
     } else if (player->godMode) {
         player->velocity[1] = 0.f;
     }
 
     if (player->ePressed) {
-        player->velocity[1] = (player->qPressed) ? 0.f : 2.f;
+        player->velocity[1] = (player->qPressed) ? 0.f : 10.f;
     }
 
     if (player->fPressed) {
