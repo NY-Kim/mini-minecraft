@@ -10,13 +10,14 @@ void ChunkLoader::run() {
     // Step 1. Build FBM blocks
         int originX = chunk->position[0];
         int originZ = chunk->position[1];
-        //========================
+        //scene with biomes ===============================================
         for(int x = 0; x < 16; ++x) {
             for(int z = 0; z < 16; ++z) {
-                glm::vec2 mb = glm::vec2(mb_fbm((originX + x) / 500.f, (originZ + z) / 500.f),
-                                         mb_fbm((originX + x + 100.34) / 500.f, (originZ + z + 678.98234) / 500.f));
+                glm::vec2 mb = glm::vec2(mb_fbm((originX + x) / 700.f, (originZ + z) / 700.f),
+                                         mb_fbm((originX + x + 100.34) / 700.f,
+                                                (originZ + z + 678.98234) / 700.f));
                 //assigning biomeType
-                if (mb[0] < 0.5) {
+                if (mb[0] < 0.45) {
                     if (mb[1] < 0.5) {
                         biomeType = QString("mustafar");
                     } else {
@@ -43,6 +44,26 @@ void ChunkLoader::run() {
                 }
             }
         }
+        //===================================================================
+        //scene with rivers =================================================
+//        for(int x = 0; x < 16; ++x) {
+//            for(int z = 0; z < 16; ++z) {
+
+//                float height = fbm(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
+//                height = pow(height, 3.f) * 32.0 + 128.0;
+
+//                for (int y = 1; y < height; y++) {
+//                    if (y <= 128) {
+//                        chunk->getBlockAt(x, y, z) = STONE;
+//                    } else {
+//                        chunk->getBlockAt(x, y, z) = DIRT;
+//                    }
+//                }
+//                int y = (int)glm::floor(height);
+//                chunk->getBlockAt(x, y, z) = GRASS;
+//            }
+//        }
+        //====================================================================
 
         // Step 2. Build VBO vectors without passing to GPU
         chunk->createVBOs();
@@ -135,28 +156,28 @@ float ChunkLoader::fbm(float x, float y) {
 float ChunkLoader::modGrass(float x, float y)
 {
     float height = fbm(x, y);
-    height = pow(height, 3.f) * 16.0 + 128.0;
+    height = pow(height, 3.f) * 6.0 + 128.0;
     return height;
 }
 
 float ChunkLoader::modMustafar(float x, float y)
 {
     float height = fbm(x, y);
-    height = glm::smoothstep(0.55f, 0.75f, height) * 22 + 128.0 + glm::smoothstep(0.62f, 0.8f, height) * 20;
+    height = glm::smoothstep(0.4f, 0.55f, height) * 1 + glm::smoothstep(0.55f, 0.68f, height) * 12 + 130.0 + glm::smoothstep(0.6f, 0.8f, height) * 10;
     return height;
 }
 
 float ChunkLoader::modSnow(float x, float y)
 {
     float height = fbm(x, y);
-    height = pow(height, 2.f) * 72.0 + 148.0 + glm::smoothstep(0.45f, 0.6f, height) * 15;
+    height = pow(height, 3.f) * 15.0 + pow(height, 3.5f) * 12.0 + 148.0 + glm::smoothstep(0.4f, 0.8f, height) * 15;
     return height;
 }
 
 float ChunkLoader::modCanyon(float x, float y)
 {
     float height = fbm(x, y);
-    height = glm::smoothstep(0.55f, 0.7f, height) * 20 + 128.0 + glm::smoothstep(0.2f, 0.75f, height) * 3 + glm::smoothstep(0.55f, 0.65f, height) * 13;
+    height = glm::smoothstep(0.55f, 0.65f, height) * 20 + 128.0 + glm::smoothstep(0.5f, 0.6f, height) * 3 + glm::smoothstep(0.6f, 0.7f, height) * 13;
     return height;
 }
 
@@ -180,8 +201,7 @@ float ChunkLoader::overallHeight(float x, float z, glm::vec2 moistBump)
 // mustafa-canyon, grassland-snowland
 float ChunkLoader::bilerp(float biome1, float biome2, float bump)
 {
-    //return glm::mix(biome1, biome2, bump);
-    return glm::mix(biome1, biome2, glm::smoothstep(0.45f, 0.6f, bump));
+    return glm::mix(biome1, biome2, glm::smoothstep(0.45f, 0.55f, bump));
 }
 
 float ChunkLoader::canyonHeight(float x, float z)
@@ -256,7 +276,7 @@ void ChunkLoader::setMustafar(float x, float z, float height, Chunk* chunk)
     for (int y = 1; y < height; y++) {
         if (y < 127) {
             chunk->getBlockAt(x, y, z) = STONE;
-        } else if (y < 128){
+        } else if (y < 130){
             chunk->getBlockAt(x, y, z) = LAVA;
         } else {
             chunk->getBlockAt(x, y, z) = DARK;

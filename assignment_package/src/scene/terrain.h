@@ -55,6 +55,9 @@ public:
 
     std::map<std::pair<int, int>, uPtr<Chunk>> m_chunks;
 
+    //normal scene with rivers
+    void CreateRiverScene();
+    //scene with biomes
     void CreateTestScene();
     void create();
     void destroy();

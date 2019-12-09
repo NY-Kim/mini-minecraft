@@ -23,6 +23,17 @@ Adam explained to me, where the random number should come in in the river genera
 2019-11-27 3:20PM 
 Ryan gave me an insight for generating river and also smooth transition between terrains. Also he told me about using hemisphere for better looking carving out effect.
 
+Milestone 3: Biomes
+
+2019-12-3 12:00PM 
+Nick explained how to use Worley noise function for biome implementation.
+
+2019-12-3 12:40PM 
+Adam explained to me, how I should approach the biomes part. He explained using peril-noise function to decide "moist", "bumpy" value for each coordinate, which are used to determine type of a biome that coordinate lies in. Also, he suggested using smooth step for interpolating heights between biomes for better looks.
+
+2019-12-7 10:30PM 
+Veronica told me she couldn't figure out problem in her peril-noise, so Jake suggested her to use fbm noise function instead, for getting moist-bump value. My peril-noise was not working too, so I took her advice to use fbm instead.
+
 *Nayeong Kim 
 
 Milestone 1: Terrain Rendering and Chunking

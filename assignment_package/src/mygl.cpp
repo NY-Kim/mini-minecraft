@@ -123,6 +123,10 @@ void MyGL::initializeGL()
     //    vao.bind();
     glBindVertexArray(vao);
 
+    //for regular scene with RIVERS
+    //mp_terrain->CreateRiverScene();
+
+    //for scen with BIOMES
     mp_terrain->CreateTestScene();
     mp_terrain->create();
 
@@ -373,7 +377,7 @@ void MyGL::timerUpdate()
             mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != LAVA ||
             mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != LAVA);
 
-    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
+    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -20.0);
 
     // Step 5. Process all renderable entities and draw them
 
@@ -563,7 +567,7 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
         mp_terrain->create();
         update();
     } else if (m->button() == Qt::RightButton) {
-        mp_terrain->addBlock(player->camera->eye, player->camera->look, LAVA);
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, STONE);
         mp_terrain->destroy();
         mp_terrain->create();
         update();

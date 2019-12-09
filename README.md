@@ -1,5 +1,22 @@
 # Milestone 3
 
+## Biomes - Ray DongHo Kim
+
+**Terrain class:**
+
+- In order to assign biome type in random but smooth fashion, I used FBM noise function. For each coordinate, I get "moist" and "bumpiness" values, which decides the biome type among 4 types: Canyon, Grassland, Snowland, Mustafar(lava land). After deciding the biome type, I use 4 functions that returns height of that coordinate, if the coordinate was in certain biome. Each function represents one biome. Those height generating functions use FBM and smoothstep to create unique and separate looks from each other. For each point, I get 4 height values, then interpolate(using smoothstep) them to get the overall height value of that coordinate.
+- Created more block types: SNOW, COAL, IRON, ORANGE, BROWN, IVORY, SAND, DARK to use in different biomes, so each of them gives unique, different looks.
+- Same logic used in chunkLoader, which is used for generating terrain, using multithread.
+
+**Difficulties:** 
+- First, I was trying to use Perlin-Noise function to get moist-bumpiness value. But it was keep giving me values, not ranging [-1, 1]. Eventually, I had to use FBM instead, to generate moist-bumpiness value for each coordinate.
+- Properly using fbm, smoothstep to give desired look for each biome was hard. I had to calculate and try to get the right formula for the looks of the biomes.
+
+## Things to point out
+- I commented-out the river generation part from createTestScene(), because Biome Scene looks better without the rivers and the carvings. If you run the current code, it will show you the terrain with different biomes. TAs told me to just comment that part out, leave it in the code, and write it in ReadMe.
+- To test/check the rivers
+    1) in mygl.cpp->initializeGL( )->use createRiverScene( ) at line 17 and comment-out createTestScene at line 130
+    2) in chunkloader.cpp->run( )->comment-out line 14-46, and use code from line 49-65.
 
 ## Post-Process Shader and Sound - Alexander Do
 

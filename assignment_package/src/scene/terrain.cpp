@@ -58,6 +58,35 @@ void Terrain::setBlockAt(int x, int y, int z, BlockType t)
     }
 }
 
+void Terrain::CreateRiverScene()
+{
+
+    //Create the basic terrain floor
+    for(int x = 0; x < 64; ++x)
+    {
+        for(int z = 0; z < 64; ++z)
+        {
+            float height = fbm((x / 64.0), (z / 64.0));
+            height = pow(height, 3.f) * 32.0 + 128.0;
+
+            for (int y = 1; y < height; y++) {
+                if (y <= 128) {
+                    setBlockAt(x, y, z, STONE);
+                } else {
+                    setBlockAt(x, y, z, DIRT);
+                }
+            }
+            int y = (int)glm::floor(height);
+            setBlockAt(x, y, z, GRASS);
+        }
+    }
+
+    LSystem linearRiver = LSystem(this, QString("linear"));
+    linearRiver.generateRiver();
+
+    LSystem deltaRiver = LSystem(this, QString("delta"));
+    deltaRiver.generateRiver();
+}
 
 void Terrain::CreateTestScene()
 {
@@ -67,8 +96,8 @@ void Terrain::CreateTestScene()
     {
         for(int z = 0; z < 64; ++z)
         {
-            glm::vec2 mb = glm::vec2(mb_fbm(x / 500.f, z / 500.f),
-                                     mb_fbm((x + 100.34) / 500.f, (z + 678.98234) / 500.f));
+            glm::vec2 mb = glm::vec2(mb_fbm(x / 700.f, z / 700.f),
+                                     mb_fbm((x + 100.34) / 700.f, (z + 678.98234) / 700.f));
             //assigning biomeType
             if (mb[0] < 0.5) {
                 if (mb[1] < 0.5) {
@@ -93,53 +122,8 @@ void Terrain::CreateTestScene()
             } else {
                 setSnowland(x, z, height);
             }
-//            for (int y = 1; y < height; y++) {
-//                if (y <= 128) {
-//                    setBlockAt(x, y, z, STONE);
-//                } else {
-//                    setBlockAt(x, y, z, DIRT);
-//                }
-//            }
-//            int y = (int)glm::floor(height);
-//            if (biomeType == QString("mustafar")) {
-//                setBlockAt(x, y, z, LAVA);
-//            } else if (biomeType == QString("canyon")) {
-//                setBlockAt(x, y, z, IRON);
-//            } else if (biomeType == QString("grassland")) {
-//                setBlockAt(x, y, z, GRASS);
-//            } else {
-//                setBlockAt(x, y, z, SNOW);
-//            }
         }
     }
-
-    //Create the basic terrain floor
-//    for(int x = 0; x < 64; ++x)
-//    {
-//        for(int z = 0; z < 64; ++z)
-//        {
-//            float height = modMustafar((x / 64.0), (z / 64.0));
-//            for (int y = 1; y < height; y++) {
-//                if (y <= 128) {
-//                    setBlockAt(x, y, z, STONE);
-//                } else {
-//                    setBlockAt(x, y, z,
-    );
-//                }
-//            }
-//            int y = (int)glm::floor(height);
-//            setBlockAt(x, y, z, GRASS);
-//        }
-//    }
-
-//    LSystem linearRiver = LSystem(this, QString("linear"));
-//    linearRiver.generateRiver();
-
-//    LSystem deltaRiver = LSystem(this, QString("delta"));
-//    deltaRiver.generateRiver();
-
-//    LSystem cave = LSystem(this, QString("cave"));
-//    cave.generateRiver();
 }
 
 void Terrain::create() {
@@ -243,28 +227,28 @@ float Terrain::fbm(float x, float y)
 float Terrain::modGrass(float x, float y)
 {
     float height = fbm(x, y);
-    height = pow(height, 3.f) * 16.0 + 128.0;
+    height = pow(height, 3.f) * 6.0 + 128.0;
     return height;
 }
 
 float Terrain::modMustafar(float x, float y)
 {
     float height = fbm(x, y);
-    height = glm::smoothstep(0.55f, 0.75f, height) * 22 + 128.0 + glm::smoothstep(0.62f, 0.8f, height) * 20;
+    height = glm::smoothstep(0.4f, 0.55f, height) * 1 + glm::smoothstep(0.55f, 0.68f, height) * 12 + 130.0 + glm::smoothstep(0.6f, 0.8f, height) * 10;
     return height;
 }
 
 float Terrain::modSnow(float x, float y)
 {
     float height = fbm(x, y);
-    height = pow(height, 2.f) * 72.0 + 148.0 + glm::smoothstep(0.45f, 0.6f, height) * 15;
+    height = pow(height, 3.f) * 15.0 + pow(height, 3.5f) * 12.0 + 148.0 + glm::smoothstep(0.4f, 0.8f, height) * 15;
     return height;
 }
 
 float Terrain::modCanyon(float x, float y)
 {
     float height = fbm(x, y);
-    height = glm::smoothstep(0.55f, 0.7f, height) * 20 + 128.0 + glm::smoothstep(0.2f, 0.75f, height) * 3 + glm::smoothstep(0.55f, 0.65f, height) * 13;
+    height = glm::smoothstep(0.55f, 0.65f, height) * 20 + 128.0 + glm::smoothstep(0.5f, 0.6f, height) * 3 + glm::smoothstep(0.6f, 0.7f, height) * 13;
     return height;
 }
 
@@ -288,8 +272,7 @@ float Terrain::overallHeight(float x, float z, glm::vec2 moistBump)
 // mustafa-canyon, grassland-snowland
 float Terrain::bilerp(float biome1, float biome2, float bump)
 {
-    //return glm::mix(biome1, biome2, bump);
-    return glm::mix(biome1, biome2, glm::smoothstep(0.45f, 0.6f, bump));
+    return glm::mix(biome1, biome2, glm::smoothstep(0.45f, 0.55f, bump));
 }
 
 float Terrain::canyonHeight(float x, float z)
@@ -364,7 +347,7 @@ void Terrain::setMustafar(float x, float z, float height)
     for (int y = 1; y < height; y++) {
         if (y < 127) {
             setBlockAt(x, y, z, STONE);
-        } else if (y < 128){
+        } else if (y < 130){
             setBlockAt(x, y, z, LAVA);
         } else {
             setBlockAt(x, y, z, DARK);
@@ -507,8 +490,8 @@ void Terrain::regenerateTerrain(std::vector<int> regenCaseList, glm::vec3 eye)
         {
             for(int z = 0; z < 64; ++z)
             {
-                glm::vec2 mb = glm::vec2(mb_fbm((originX + x + xOffset) / 500.f, (originZ + z + zOffset) / 500.f),
-                                         mb_fbm((originX + x + xOffset + 100.34) / 500.f, (originZ + z + zOffset + 678.98234) / 500.f));
+                glm::vec2 mb = glm::vec2(mb_fbm((originX + x + xOffset) / 700.f, (originZ + z + zOffset) / 700.f),
+                                         mb_fbm((originX + x + xOffset + 100.34) / 700.f, (originZ + z + zOffset + 678.98234) / 700.f));
                 //assigning biomeType
                 if (mb[0] < 0.5) {
                     if (mb[1] < 0.5) {
@@ -670,12 +653,12 @@ void Chunk::createVBOs() {
     uv_map[std::pair<BlockType, int>(DARK, 2)] = glm::vec2(1, 8) / 16.f;
 
     std::map<BlockType, float> cos_pow_map;
-    cos_pow_map[DIRT] = 10;
-    cos_pow_map[GRASS] = 10;
+    cos_pow_map[DIRT] = 50;
+    cos_pow_map[GRASS] = 50;
     cos_pow_map[STONE] = 60;
     cos_pow_map[LAVA] = 50;
     cos_pow_map[WATER] = 70;
-    cos_pow_map[SNOW] = 10;
+    cos_pow_map[SNOW] = 50;
     cos_pow_map[COAL] = 60;
     cos_pow_map[IRON] = 60;
     cos_pow_map[ORANGE] = 60;
