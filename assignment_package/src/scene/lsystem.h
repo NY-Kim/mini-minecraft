@@ -66,32 +66,4 @@ public:
     Turtle saveState(Turtle turtle);
     Turtle storeState(Turtle turtle);
     Turtle caveLineMoveForward(Turtle turtle);
-
-    //mb deciding noise function
-    float mb_noise2D(glm::vec2 n);
-    float mb_interpNoise2D(float x, float y);
-    float mb_fbm(float x, float y);
-
-    //fbm functions
-    float noise2D(glm::vec2 n);
-    float interpNoise2D(float x, float y);
-    float fbm(float x, float y);
-    float modGrass(float x, float y);
-    float modMustafar(float x, float y);
-    float modSnow(float x, float y);
-    float modCanyon(float x, float y);
-
-    //getting the overall height
-    float overallHeight(float x, float z, glm::vec2 moistBump);
-    float bilerp(float biome1, float biome2, float bump);
-    float canyonHeight(float x, float z);
-    float grasslandHeight(float x, float z);
-    float snowlandHeight(float x, float z);
-    float mustafarHeight(float x, float z);
-
-    //setting blocks for biome
-    void setCanyon(float x, float z, float height);
-    void setGrassland(float x, float z, float height);
-    void setSnowland(float x, float z, float height);
-    void setMustafar(float x, float z, float height);
 };
