@@ -43,22 +43,6 @@ void ChunkLoader::run() {
                 }
             }
         }
-        //==============================
-//        for(int x = 0; x < 16; ++x) {
-//            for(int z = 0; z < 16; ++z) {
-//                float height = modMustafar(((originX + x) / (64.0)), ((originZ + z) / (64.0)));
-
-//                for (int y = 1; y < height; y++) {
-//                    if (y <= 128) {
-//                        chunk->getBlockAt(x, y, z) = STONE;
-//                    } else {
-//                        chunk->getBlockAt(x, y, z) = DIRT;
-//                    }
-//                }
-//                int y = (int)glm::floor(height);
-//                chunk->getBlockAt(x, y, z) = GRASS;
-//            }
-//        }
 
         // Step 2. Build VBO vectors without passing to GPU
         chunk->createVBOs();
