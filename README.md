@@ -1,3 +1,21 @@
+# Milestone 3
+
+
+## Post-Process Shader and Sound - Alexander Do
+
+For the post-process shader, I added onto the pipeline I implemented for milestone two. Specifically, I used worley noise to modify the view of the player when in lava, and I used perlin noise to modify the view of the player when in water. Both post-process shaders use the output of the noise multiplied by a random time-dependant factor to displace the vertex coordinates. Time is also used to modfify the overlay color when in lava to simulate heat, whereas in water the LERP is by a constant offset.
+
+For sound, I have two sounds for background music that play on loop. Ambient noises (bird calls and wind) are played at random throughout the playtime. When a bird sound is played, it is chosen at random from one of two possible sounds. When within a radius of 10 blocks, water will make a rushing noise, and lava will make a rushing noise as well as pop at random. Footsteps play when moving, and the sound of the footstep is chosen at random from a bank of three sounds. When a player enters or exits water, a splashing noise plays.
+
+**Difficulties:**
+The primary difficult came with figuring out how to use the sound APIs provided in QT. It was difficult finding the right directory to play the sounds from, and I ended up just pushing my sound files to Github. Other than that, I spent time trying to modify my noise functions to look somewhat nice. 
+
+
+## Things to point out
+- I fixed some of the code from my previous milestones (in particular, movement and swimming). I also fixed multithreading to work on merge, as well as to generate instaneously.
+- For some reason, QSoundEffect does not work on Mac, but it does on Windows. Please see my branch (Alex_MS3) for working sound effects.
+
+
 # Milestone 2
 
 ## L-System Rivers - Ray DongHo Kim
