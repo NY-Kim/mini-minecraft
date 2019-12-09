@@ -8,6 +8,10 @@
 #include <QKeyEvent>
 #include <QDateTime>
 #include <QThreadPool>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
+#include <QSoundEffect>
+
 
 #define MINECRAFT_TEXTURE_SLOT 0
 #define POSTPROCESS_TEXTURE_SLOT 1
@@ -20,7 +24,11 @@ MyGL::MyGL(QWidget *parent)
       mp_onLand(mkU<PostProcessShader>(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader>(this)), currPostShader(nullptr),
       m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
-      chunksToCreate(), mutex(mkU<QMutex>()), init(true)
+      chunksToCreate(), mutex(mkU<QMutex>()), init(true),
+      splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
+      windEff(mkU<QSoundEffect>()), birdEff(mkU<QSoundEffect>()),
+      soundBank({"../assignment_package/music/grass1.wav", "../assignment_package/music/grass2.wav", "../assignment_package/music/grass3.wav",
+                "../assignment_package/music/bird1.wav", "../assignment_package/music/bird2.wav"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -30,6 +38,19 @@ MyGL::MyGL(QWidget *parent)
 
     setMouseTracking(true); // MyGL will track the mouse's movements even if a mouse button is not pressed
     setCursor(Qt::BlankCursor); // Make the cursor invisible
+
+    // Set up sound effects
+    splashIn->setSource(QUrl::fromLocalFile("../assignment_package/music/splash.wav"));
+    splashIn->setVolume(0.2);
+    waterSFX->setSource(QUrl::fromLocalFile("../assignment_package/music/water.wav"));
+    waterSFX->setVolume(0.5);
+    lavaFlow->setSource(QUrl::fromLocalFile("../assignment_package/music/lava.wav"));
+    lavaFlow->setVolume(0.2);
+    lavaPop->setSource(QUrl::fromLocalFile("../assignment_package/music/lavapop.wav")); // Volume set randomly
+    walkGrass->setVolume(0.2); // Source file set randomly
+    windEff->setSource(QUrl::fromLocalFile("../assignment_package/music/wind.wav"));
+    windEff->setVolume(0.15);
+    birdEff->setVolume(0.2); // Source file set randomly
 }
 
 MyGL::~MyGL()
@@ -104,6 +125,17 @@ void MyGL::initializeGL()
 
     mp_terrain->CreateTestScene();
     mp_terrain->create();
+
+    // Now start the background music
+    QMediaPlayer *player = new QMediaPlayer();
+    QMediaPlaylist *bgm = new QMediaPlaylist();
+    bgm->addMedia(QUrl::fromLocalFile("../assignment_package/music/bgm1.mp3"));
+    bgm->addMedia(QUrl::fromLocalFile("../assignment_package/music/bgm2.mp3"));
+    bgm->setPlaybackMode(QMediaPlaylist::Loop);
+    bgm->setCurrentIndex(1);
+    player->setVolume(25);
+    player->setPlaylist(bgm);
+    player->play();
 }
 
 void MyGL::resizeGL(int w, int h)
@@ -183,6 +215,7 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
 void MyGL::timerUpdate()
 {
+
     // Step 1. Computer time elapsed since last update call
     int64_t prev = lastUpdate;
     int64_t deltaT = QDateTime::currentMSecsSinceEpoch() - prev;
@@ -213,7 +246,9 @@ void MyGL::timerUpdate()
 
     if (player->spacebarPressed && (player->onGround || player->inLiquid)) {
         player->velocity[1] = 2.f;
-        player->spacebarPressed = false;
+        if (!player->inLiquid) {
+            player->spacebarPressed = false;
+        }
     }
 
     if (player->qPressed) {
@@ -239,6 +274,7 @@ void MyGL::timerUpdate()
     // Step 4. Prevent physics entities from colliding with other physics entities
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
+    bool inLiquidBefore = player->inLiquid;
     if (glm::length(player->velocity) > 0.f) {
         glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
                 player->velocity[1] * deltaT / 100.f,
@@ -286,6 +322,11 @@ void MyGL::timerUpdate()
             if (player->inLiquid) {
                 minT = minT * 2.f / 3.f;
             }
+            else if (player->onGround && !walkGrass->isPlaying()) {
+                int index = rand() % 3;
+                walkGrass->setSource(QUrl::fromLocalFile(QString::fromStdString(soundBank[index])));
+                walkGrass->play();
+            }
             ray = glm::normalize(ray) * minT;
             player->camera->eye += ray;
             player->camera->ref += ray;
@@ -294,8 +335,9 @@ void MyGL::timerUpdate()
     }
 
     // Gravity only affects player if not in god mode or not on ground
-    glm::ivec3 currPos(player->position);
-    player->inLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
+    glm::ivec3 currPos(glm::floor(player->position));
+
+    bool bottomInLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
             mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
             (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
             mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) ||
@@ -303,11 +345,33 @@ void MyGL::timerUpdate()
             mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) ||
             (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
             mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
-    player->onGround = !player->inLiquid &&
+    bool topInLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2] - 1) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2] - 1) == WATER);
+
+    player->inLiquid = bottomInLiquid || topInLiquid;
+
+    if (inLiquidBefore != player->inLiquid) {
+        splashIn->play();
+    }
+    player->onGround =
             (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
             mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
             mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
-            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY) &&
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != WATER ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != WATER ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != WATER ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != WATER) &&
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != LAVA);
 
     player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -4.0);
 
@@ -374,13 +438,52 @@ void MyGL::timerUpdate()
     }
 
     // Check which post-process buffer to use
-    glm::ivec3 camPos(player->camera->eye);
+    glm::ivec3 camPos(glm::floor(player->camera->eye));
     if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == LAVA) {
         currPostShader = mp_inLava.get();
     } else if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == WATER) {
         currPostShader = mp_inWater.get();
     } else currPostShader = mp_onLand.get();
     update();
+
+    // Check if liquid is nearby, if so play corresponding SFX
+    for (int x = -10; x <= 10; ++x) {
+        for (int y = -10; y <= 10; y++) {
+            for (int z = -10; z <= 10; z++) {
+                if (!waterSFX->isPlaying()) {
+                    if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == WATER) {
+                        waterSFX->play();
+                    }
+                }
+                if (!lavaFlow->isPlaying()) {
+                    if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == LAVA) {
+                        lavaFlow->play();
+                        if (rand() % 100 == 99 && !lavaPop->isPlaying()) {
+                            float vol = (rand() % 100) / 100.f;
+                            vol = glm::clamp(0.05f, 0.25f, vol);
+                            lavaPop->setVolume(vol);
+                            lavaPop->play();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Now determine if we want to play wind or bird SFX
+    int check = rand() % 1000;
+    if (check == 998) {
+        if (!windEff->isPlaying()) {
+            windEff->play();
+        }
+    } else if (check == 999) {
+        if (!birdEff->isPlaying()) {
+            int index = rand() % 2 + 3;
+            birdEff->setSource(QUrl::fromLocalFile(QString::fromStdString(soundBank[index])));
+            birdEff->play();
+        }
+    }
+
 
     // Potential fix for deltaT, don't update lastUpdate counter until finished
     lastUpdate = QDateTime::currentMSecsSinceEpoch();
@@ -402,7 +505,10 @@ void MyGL::paintGL()
     mp_progFlat->setViewProjMatrix(player->camera->getViewProj());
     mp_progLambert->setViewProjMatrix(player->camera->getViewProj());
     mp_progLambert->setTime(m_time);
+    currPostShader->setTime(m_time);
     m_time++;
+
+    currPostShader->setDimensions(glm::ivec2(this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio()));
 
     GLDrawScene();
 
@@ -457,7 +563,12 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
         mp_terrain->create();
         update();
     } else if (m->button() == Qt::RightButton) {
-        mp_terrain->addBlock(player->camera->eye, player->camera->look);
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, LAVA);
+        mp_terrain->destroy();
+        mp_terrain->create();
+        update();
+    } else if (m->button() == Qt::MiddleButton) {
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, WATER);
         mp_terrain->destroy();
         mp_terrain->create();
         update();

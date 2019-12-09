@@ -17,6 +17,7 @@
 #include "player.h"
 #include "scene/quad.h"
 
+#include <QSoundEffect>
 #include <QMutex>
 
 class MyGL : public OpenGLContext
@@ -61,6 +62,15 @@ private:
     std::vector<Chunk*> chunksToCreate;
     uPtr<QMutex> mutex;
     bool init;
+    uPtr<QSoundEffect> splashIn;
+    uPtr<QSoundEffect> waterSFX;
+    uPtr<QSoundEffect> lavaFlow;
+    uPtr<QSoundEffect> lavaPop;
+    uPtr<QSoundEffect> walkGrass;
+    uPtr<QSoundEffect> windEff;
+    uPtr<QSoundEffect> birdEff;
+    std::vector<std::string> soundBank; // For walk and bird SFX
+
 
     void MoveMouseToCenter(); // Forces the mouse position to the screen's center. You should call this
                               // from within a mouse move event after reading the mouse movement so that
