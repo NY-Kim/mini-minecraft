@@ -123,7 +123,8 @@ void Terrain::CreateTestScene()
 //                if (y <= 128) {
 //                    setBlockAt(x, y, z, STONE);
 //                } else {
-//                    setBlockAt(x, y, z, DIRT);
+//                    setBlockAt(x, y, z,
+    );
 //                }
 //            }
 //            int y = (int)glm::floor(height);
@@ -674,7 +675,7 @@ void Chunk::createVBOs() {
     cos_pow_map[STONE] = 60;
     cos_pow_map[LAVA] = 50;
     cos_pow_map[WATER] = 70;
-    cos_pow_map[SNOW] = 50;
+    cos_pow_map[SNOW] = 10;
     cos_pow_map[COAL] = 60;
     cos_pow_map[IRON] = 60;
     cos_pow_map[ORANGE] = 60;
