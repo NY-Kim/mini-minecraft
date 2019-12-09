@@ -31,6 +31,7 @@ The primary difficult came with figuring out how to use the sound APIs provided 
 ## Things to point out
 - I fixed some of the code from my previous milestones (in particular, movement and swimming). I also fixed multithreading to work on merge, as well as to generate instaneously.
 - For some reason, QSoundEffect does not work on Mac, but it does on Windows. Please see my branch (Alex_MS3) for working sound effects.
+- If the sound files do not load on my personal branch, replace the strings for the directories with the permanent links from https://github.com/acdo/Mini-Minecraft-Sounds (e.g. replace QUrl::fromLocalFile("../assignment_package/music/bgm1.mp3") with QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm1.mp3"). 
 
 
 # Milestone 2
