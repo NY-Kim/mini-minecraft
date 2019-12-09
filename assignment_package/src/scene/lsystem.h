@@ -46,6 +46,8 @@ public:
 
     LSystem(Terrain* terrain, QString riverMode);
 
+    QString biomeType;
+
     //generating river
     void generateRiver();
     //setting expansion grammar

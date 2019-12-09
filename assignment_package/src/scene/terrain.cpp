@@ -131,11 +131,11 @@ void Terrain::CreateTestScene()
 //        }
 //    }
 
-    LSystem linearRiver = LSystem(this, QString("linear"));
-    linearRiver.generateRiver();
+//    LSystem linearRiver = LSystem(this, QString("linear"));
+//    linearRiver.generateRiver();
 
-    LSystem deltaRiver = LSystem(this, QString("delta"));
-    deltaRiver.generateRiver();
+//    LSystem deltaRiver = LSystem(this, QString("delta"));
+//    deltaRiver.generateRiver();
 
 //    LSystem cave = LSystem(this, QString("cave"));
 //    cave.generateRiver();
