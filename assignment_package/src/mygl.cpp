@@ -27,8 +27,8 @@ MyGL::MyGL(QWidget *parent)
       chunksToCreate(), mutex(mkU<QMutex>()), init(true),
       splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
       windEff(mkU<QSoundEffect>()), birdEff(mkU<QSoundEffect>()),
-      soundBank({"https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/grass1.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/grass2.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/grass3.wav",
-                "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bird1.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bird2.wav"})
+      soundBank({"https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass1.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass2.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass3.mp3",
+                "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird1.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird2.wav"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -40,15 +40,15 @@ MyGL::MyGL(QWidget *parent)
     setCursor(Qt::BlankCursor); // Make the cursor invisible
 
     // Set up sound effects
-    splashIn->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/splash.wav"));
+    splashIn->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/splash.mp3"));
     splashIn->setVolume(0.2);
-    waterSFX->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/water.wav"));
+    waterSFX->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/water.mp3"));
     waterSFX->setVolume(0.5);
-    lavaFlow->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/lava.wav"));
+    lavaFlow->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/lava.mp3"));
     lavaFlow->setVolume(0.2);
-    lavaPop->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/lavapop.wav")); // Volume set randomly
+    lavaPop->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/lavapop.mp3")); // Volume set randomly
     walkGrass->setVolume(0.2); // Source file set randomly
-    windEff->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/wind.wav"));
+    windEff->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/wind.wav"));
     windEff->setVolume(0.15);
     birdEff->setVolume(0.2); // Source file set randomly
 }
@@ -129,8 +129,8 @@ void MyGL::initializeGL()
     // Now start the background music
     QMediaPlayer *player = new QMediaPlayer();
     QMediaPlaylist *bgm = new QMediaPlaylist();
-    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bgm1.mp3"));
-    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bgm2.mp3"));
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm1.mp3"));
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm2.mp3"));
     bgm->setPlaybackMode(QMediaPlaylist::Loop);
     bgm->setCurrentIndex(1);
     player->setVolume(25);
@@ -223,7 +223,7 @@ void MyGL::timerUpdate()
     // Step 2. Iterate over all entities that are capable of receiving input
     // and read their present controller state
     if (std::get<0>(player->wasdPressed)) {
-        player->velocity[0] = 2.f;
+        player->velocity[0] = 10.f;
     } else {
         player->velocity[0] = 0.f;
     }
