@@ -27,8 +27,8 @@ MyGL::MyGL(QWidget *parent)
       chunksToCreate(), mutex(mkU<QMutex>()), init(true),
       splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
       windEff(mkU<QSoundEffect>()), birdEff(mkU<QSoundEffect>()),
-      soundBank({"../assignment_package/music/grass1.wav", "../assignment_package/music/grass2.wav", "../assignment_package/music/grass3.wav",
-                "../assignment_package/music/bird1.wav", "../assignment_package/music/bird2.wav"})
+      soundBank({"https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/grass1.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/grass2.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/grass3.wav",
+                "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bird1.wav", "https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bird2.wav"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -40,15 +40,15 @@ MyGL::MyGL(QWidget *parent)
     setCursor(Qt::BlankCursor); // Make the cursor invisible
 
     // Set up sound effects
-    splashIn->setSource(QUrl::fromLocalFile("../assignment_package/music/splash.wav"));
+    splashIn->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/splash.wav"));
     splashIn->setVolume(0.2);
-    waterSFX->setSource(QUrl::fromLocalFile("../assignment_package/music/water.wav"));
+    waterSFX->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/water.wav"));
     waterSFX->setVolume(0.5);
-    lavaFlow->setSource(QUrl::fromLocalFile("../assignment_package/music/lava.wav"));
+    lavaFlow->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/lava.wav"));
     lavaFlow->setVolume(0.2);
-    lavaPop->setSource(QUrl::fromLocalFile("../assignment_package/music/lavapop.wav")); // Volume set randomly
+    lavaPop->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/lavapop.wav")); // Volume set randomly
     walkGrass->setVolume(0.2); // Source file set randomly
-    windEff->setSource(QUrl::fromLocalFile("../assignment_package/music/wind.wav"));
+    windEff->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/wind.wav"));
     windEff->setVolume(0.15);
     birdEff->setVolume(0.2); // Source file set randomly
 }
@@ -129,8 +129,8 @@ void MyGL::initializeGL()
     // Now start the background music
     QMediaPlayer *player = new QMediaPlayer();
     QMediaPlaylist *bgm = new QMediaPlaylist();
-    bgm->addMedia(QUrl::fromLocalFile("../assignment_package/music/bgm1.mp3"));
-    bgm->addMedia(QUrl::fromLocalFile("../assignment_package/music/bgm2.mp3"));
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/blob/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bgm1.mp3"));
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/bad9f879adc6bdc5130e3d92e808639c1c9ef53e/bgm2.mp3"));
     bgm->setPlaybackMode(QMediaPlaylist::Loop);
     bgm->setCurrentIndex(1);
     player->setVolume(25);
@@ -324,7 +324,7 @@ void MyGL::timerUpdate()
             }
             else if (player->onGround && !walkGrass->isPlaying()) {
                 int index = rand() % 3;
-                walkGrass->setSource(QUrl::fromLocalFile(QString::fromStdString(soundBank[index])));
+                walkGrass->setSource(QUrl(QString::fromStdString(soundBank[index])));
                 walkGrass->play();
             }
             ray = glm::normalize(ray) * minT;
@@ -479,7 +479,7 @@ void MyGL::timerUpdate()
     } else if (check == 999) {
         if (!birdEff->isPlaying()) {
             int index = rand() % 2 + 3;
-            birdEff->setSource(QUrl::fromLocalFile(QString::fromStdString(soundBank[index])));
+            birdEff->setSource(QUrl(QString::fromStdString(soundBank[index])));
             birdEff->play();
         }
     }

@@ -526,6 +526,7 @@ release/moc_mygl.cpp: ../assignment_package/src/openglcontext.h \
 		../assignment_package/src/camera.h \
 		../assignment_package/src/scene/terrain.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QList \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QString \
 		../assignment_package/src/scene/lsystem.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QStack \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qstack.h \
@@ -547,6 +548,10 @@ release/moc_mygl.cpp: ../assignment_package/src/openglcontext.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLContext \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLBuffer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglbuffer.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/QSoundEffect \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qsoundeffect.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimediaglobal.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimedia-config.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QMutex \
 		../assignment_package/src/mygl.h \
 		release/moc_predefs.h \
@@ -889,6 +894,7 @@ ui_mainwindow.h: ../assignment_package/forms/mainwindow.ui \
 		../assignment_package/src/camera.h \
 		../assignment_package/src/scene/terrain.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QList \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QString \
 		../assignment_package/src/scene/lsystem.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QStack \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qstack.h \
@@ -910,6 +916,10 @@ ui_mainwindow.h: ../assignment_package/forms/mainwindow.ui \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLContext \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLBuffer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglbuffer.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/QSoundEffect \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qsoundeffect.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimediaglobal.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimedia-config.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QMutex
 	C:\Qt\Qt5.9.1\5.9.1\mingw53_32\bin\uic.exe ..\assignment_package\forms\mainwindow.ui -o ui_mainwindow.h
 
@@ -1153,192 +1163,7 @@ release/mainwindow.o: ../assignment_package/src/mainwindow.cpp ../assignment_pac
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qicon.h \
 		../assignment_package/src/cameracontrolshelp.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QWidget \
-		ui_mainwindow.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QVariant \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QAction \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qaction.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qactiongroup.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QApplication \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qapplication.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qcoreapplication.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qeventloop.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qdesktopwidget.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qguiapplication.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qinputmethod.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QButtonGroup \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qbuttongroup.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QGridLayout \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qgridlayout.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qlayout.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qlayoutitem.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qboxlayout.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QHeaderView \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qheaderview.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractitemview.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractscrollarea.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qframe.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qabstractitemmodel.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qitemselectionmodel.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractitemdelegate.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qstyleoption.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractspinbox.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qvalidator.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qregularexpression.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qslider.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractslider.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qstyle.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qtabbar.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qrubberband.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QMenu \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qmenu.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QMenuBar \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qmenubar.h \
-		../assignment_package/src/mygl.h \
-		../assignment_package/src/openglcontext.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QOpenGLWidget \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qopenglwidget.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QSurfaceFormat \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qsurfaceformat.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopengl.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qt_windows.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtANGLE/GLES3/gl3.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtANGLE/GLES3/gl3platform.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtANGLE/KHR/khrplatform.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtANGLE/GLES2/gl2.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtANGLE/GLES2/gl2platform.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopengles2ext.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglext.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLFunctions_3_2_Core \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglfunctions_3_2_core.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLVersionFunctions \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglversionfunctions.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglcontext.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QObject \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QScopedPointer \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QTimer \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qtimer.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qbasictimer.h \
-		../assignment_package/src/utils.h \
-		../assignment_package/src/shaderprogram.h \
-		../assignment_package/src/la.h \
-		../assignment_package/include/glm/glm.hpp \
-		../assignment_package/include/glm/detail/_fixes.hpp \
-		../assignment_package/include/glm/fwd.hpp \
-		../assignment_package/include/glm/detail/type_int.hpp \
-		../assignment_package/include/glm/detail/setup.hpp \
-		../assignment_package/include/glm/detail/type_float.hpp \
-		../assignment_package/include/glm/detail/type_vec.hpp \
-		../assignment_package/include/glm/detail/precision.hpp \
-		../assignment_package/include/glm/detail/type_mat.hpp \
-		../assignment_package/include/glm/vec2.hpp \
-		../assignment_package/include/glm/detail/type_vec2.hpp \
-		../assignment_package/include/glm/detail/_swizzle.hpp \
-		../assignment_package/include/glm/detail/_swizzle_func.hpp \
-		../assignment_package/include/glm/detail/type_vec2.inl \
-		../assignment_package/include/glm/vec3.hpp \
-		../assignment_package/include/glm/detail/type_vec3.hpp \
-		../assignment_package/include/glm/detail/type_vec3.inl \
-		../assignment_package/include/glm/vec4.hpp \
-		../assignment_package/include/glm/detail/type_vec4.hpp \
-		../assignment_package/include/glm/detail/type_vec4.inl \
-		../assignment_package/include/glm/mat2x2.hpp \
-		../assignment_package/include/glm/detail/type_mat2x2.hpp \
-		../assignment_package/include/glm/detail/type_mat2x2.inl \
-		../assignment_package/include/glm/mat2x3.hpp \
-		../assignment_package/include/glm/detail/type_mat2x3.hpp \
-		../assignment_package/include/glm/detail/type_mat2x3.inl \
-		../assignment_package/include/glm/mat2x4.hpp \
-		../assignment_package/include/glm/detail/type_mat2x4.hpp \
-		../assignment_package/include/glm/detail/type_mat2x4.inl \
-		../assignment_package/include/glm/mat3x2.hpp \
-		../assignment_package/include/glm/detail/type_mat3x2.hpp \
-		../assignment_package/include/glm/detail/type_mat3x2.inl \
-		../assignment_package/include/glm/mat3x3.hpp \
-		../assignment_package/include/glm/detail/type_mat3x3.hpp \
-		../assignment_package/include/glm/detail/type_mat3x3.inl \
-		../assignment_package/include/glm/mat3x4.hpp \
-		../assignment_package/include/glm/detail/type_mat3x4.hpp \
-		../assignment_package/include/glm/detail/type_mat3x4.inl \
-		../assignment_package/include/glm/mat4x2.hpp \
-		../assignment_package/include/glm/detail/type_mat4x2.hpp \
-		../assignment_package/include/glm/detail/type_mat4x2.inl \
-		../assignment_package/include/glm/mat4x3.hpp \
-		../assignment_package/include/glm/detail/type_mat4x3.hpp \
-		../assignment_package/include/glm/detail/type_mat4x3.inl \
-		../assignment_package/include/glm/mat4x4.hpp \
-		../assignment_package/include/glm/detail/type_mat4x4.hpp \
-		../assignment_package/include/glm/detail/type_mat4x4.inl \
-		../assignment_package/include/glm/trigonometric.hpp \
-		../assignment_package/include/glm/detail/func_trigonometric.hpp \
-		../assignment_package/include/glm/detail/func_trigonometric.inl \
-		../assignment_package/include/glm/detail/_vectorize.hpp \
-		../assignment_package/include/glm/detail/type_vec1.hpp \
-		../assignment_package/include/glm/detail/type_vec1.inl \
-		../assignment_package/include/glm/exponential.hpp \
-		../assignment_package/include/glm/detail/func_exponential.hpp \
-		../assignment_package/include/glm/detail/func_exponential.inl \
-		../assignment_package/include/glm/detail/func_vector_relational.hpp \
-		../assignment_package/include/glm/detail/func_vector_relational.inl \
-		../assignment_package/include/glm/common.hpp \
-		../assignment_package/include/glm/detail/func_common.hpp \
-		../assignment_package/include/glm/detail/func_common.inl \
-		../assignment_package/include/glm/packing.hpp \
-		../assignment_package/include/glm/detail/func_packing.hpp \
-		../assignment_package/include/glm/detail/func_packing.inl \
-		../assignment_package/include/glm/detail/type_half.hpp \
-		../assignment_package/include/glm/detail/type_half.inl \
-		../assignment_package/include/glm/geometric.hpp \
-		../assignment_package/include/glm/detail/func_geometric.hpp \
-		../assignment_package/include/glm/detail/func_geometric.inl \
-		../assignment_package/include/glm/matrix.hpp \
-		../assignment_package/include/glm/detail/func_matrix.hpp \
-		../assignment_package/include/glm/detail/func_matrix.inl \
-		../assignment_package/include/glm/vector_relational.hpp \
-		../assignment_package/include/glm/integer.hpp \
-		../assignment_package/include/glm/detail/func_integer.hpp \
-		../assignment_package/include/glm/detail/func_integer.inl \
-		../assignment_package/include/glm/gtc/matrix_transform.hpp \
-		../assignment_package/include/glm/gtc/constants.hpp \
-		../assignment_package/include/glm/gtc/constants.inl \
-		../assignment_package/include/glm/gtc/matrix_transform.inl \
-		../assignment_package/include/glm/gtx/string_cast.hpp \
-		../assignment_package/include/glm/gtx/integer.hpp \
-		../assignment_package/include/glm/gtx/integer.inl \
-		../assignment_package/include/glm/gtx/quaternion.hpp \
-		../assignment_package/include/glm/gtc/quaternion.hpp \
-		../assignment_package/include/glm/gtx/quaternion.inl \
-		../assignment_package/include/glm/gtx/norm.hpp \
-		../assignment_package/include/glm/gtx/norm.inl \
-		../assignment_package/include/glm/gtx/string_cast.inl \
-		../assignment_package/include/glm/gtc/type_ptr.hpp \
-		../assignment_package/include/glm/gtc/type_ptr.inl \
-		../assignment_package/src/drawable.h \
-		../assignment_package/src/postprocessshader.h \
-		../assignment_package/src/camera.h \
-		../assignment_package/src/scene/terrain.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QList \
-		../assignment_package/src/scene/lsystem.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QStack \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qstack.h \
-		../assignment_package/src/texture.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLVertexArrayObject \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglvertexarrayobject.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLShaderProgram \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglshaderprogram.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qvector3d.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qvector4d.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qmatrix4x4.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qquaternion.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qgenericmatrix.h \
-		../assignment_package/src/smartpointerhelp.h \
-		../assignment_package/src/player.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QKeyEvent \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QMouseEvent \
-		../assignment_package/src/scene/quad.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLContext \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLBuffer \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglbuffer.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QMutex
+		ui_mainwindow.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\mainwindow.o ..\assignment_package\src\mainwindow.cpp
 
 release/mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/mygl.h \
@@ -1565,6 +1390,7 @@ release/mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/myg
 		../assignment_package/src/camera.h \
 		../assignment_package/src/scene/terrain.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QList \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QString \
 		../assignment_package/src/scene/lsystem.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QStack \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qstack.h \
@@ -1586,11 +1412,14 @@ release/mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/myg
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLContext \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/QOpenGLBuffer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qopenglbuffer.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/QSoundEffect \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qsoundeffect.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimediaglobal.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimedia-config.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QMutex \
 		../assignment_package/src/chunkloader.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QRunnable \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qrunnable.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QString \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QApplication \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qapplication.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qcoreapplication.h \
@@ -1603,10 +1432,6 @@ release/mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/myg
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QThreadPool \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qthreadpool.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qthread.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/QSound \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qsound.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimediaglobal.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qtmultimedia-config.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/QMediaPlayer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qmediaplayer.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qmediaobject.h \
@@ -1625,10 +1450,7 @@ release/mygl.o: ../assignment_package/src/mygl.cpp ../assignment_package/src/myg
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtNetwork/qnetworkconfiguration.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/QMediaPlaylist \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qmediaplaylist.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qmediabindableinterface.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QDir \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qdir.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qfileinfo.h
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtMultimedia/qmediabindableinterface.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\mygl.o ..\assignment_package\src\mygl.cpp
 
 release/shaderprogram.o: ../assignment_package/src/shaderprogram.cpp ../assignment_package/src/shaderprogram.h \
@@ -2273,42 +2095,7 @@ release/cameracontrolshelp.o: ../assignment_package/src/cameracontrolshelp.cpp .
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qfiledevice.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qvector2d.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qtouchdevice.h \
-		ui_cameracontrolshelp.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QVariant \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QAction \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qaction.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qicon.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qactiongroup.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QApplication \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qapplication.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qcoreapplication.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qeventloop.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qdesktopwidget.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qguiapplication.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qinputmethod.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QButtonGroup \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qbuttongroup.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QFrame \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qframe.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QHeaderView \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qheaderview.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractitemview.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractscrollarea.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qabstractitemmodel.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qitemselectionmodel.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractitemdelegate.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qstyleoption.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractspinbox.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtGui/qvalidator.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qregularexpression.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qslider.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qabstractslider.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qstyle.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qtabbar.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qtabwidget.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qrubberband.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/QLabel \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtWidgets/qlabel.h
+		ui_cameracontrolshelp.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\cameracontrolshelp.o ..\assignment_package\src\cameracontrolshelp.cpp
 
 release/transform.o: ../assignment_package/src/scene/transform.cpp ../assignment_package/src/scene/transform.h \
@@ -2763,6 +2550,7 @@ release/terrain.o: ../assignment_package/src/scene/terrain.cpp ../assignment_pac
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QTimer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qtimer.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qbasictimer.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QString \
 		../assignment_package/src/scene/lsystem.h \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QStack \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qstack.h
@@ -3385,7 +3173,8 @@ release/lsystem.o: ../assignment_package/src/scene/lsystem.cpp ../assignment_pac
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QScopedPointer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QTimer \
 		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qtimer.h \
-		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qbasictimer.h
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/qbasictimer.h \
+		C:/Qt/Qt5.9.1/5.9.1/mingw53_32/include/QtCore/QString
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o release\lsystem.o ..\assignment_package\src\scene\lsystem.cpp
 
 release/chunkloader.o: ../assignment_package/src/chunkloader.cpp ../assignment_package/src/chunkloader.h \
