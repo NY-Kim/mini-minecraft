@@ -14,6 +14,7 @@
 uniform vec4 u_Color; // The color with which to render this instance of geometry.
 uniform sampler2D u_Texture;
 uniform float u_Time;
+uniform vec4 u_Player;
 // These are the interpolated values out of the rasterizer, so you can't know
 // their specific values without knowing the vertices that contributed to them
 in vec4 fs_LightVec;
@@ -56,5 +57,10 @@ void main()
 
     float light_intensity = diffuse_term + ambient_term + specular_intensity;
 
-    out_Col = vec4(diffuse_color.rgb * light_intensity, diffuse_color. a);
+    vec4 color = vec4(diffuse_color.rgb * light_intensity, diffuse_color.a);
+    float a = diffuse_color.a;
+    vec4 sky_color = vec4(0.37f, 0.74f, 1.0f, 1);
+    color = mix(color, sky_color, pow(smoothstep(0, 1, min(1.0, length(fs_Pos.xz - u_Player.xz) * 0.01)), 2.0f));
+
+    out_Col = vec4(color.rgb, a);
 }

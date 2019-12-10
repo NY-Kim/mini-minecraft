@@ -398,8 +398,9 @@ void Terrain::addBlock(glm::vec3 eye, glm::vec3 look, BlockType t)
 }
 
 //delete
-void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
+BlockType Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
 {
+    BlockType t;
     glm::vec4 rayMarched = rayMarch(eye, look);
     if (rayMarched[3] == 1) {
         glm::vec3 blockCoord = glm::vec3(rayMarched);
@@ -410,9 +411,13 @@ void Terrain::deleteBlock(glm::vec3 eye, glm::vec3 look)
                 getBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2] + 1) == WATER ||
                 getBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2] - 1) == WATER) {
             setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], WATER);
+            t = EMPTY;
         } else {
+            t = getBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2]);
             setBlockAt((int)blockCoord[0], (int)blockCoord[1], (int)blockCoord[2], EMPTY);
         }
+
+        return t;
     }
 }
 

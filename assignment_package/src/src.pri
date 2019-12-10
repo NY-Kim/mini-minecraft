@@ -18,7 +18,8 @@ SOURCES += \
     $$PWD/scene/lsystem.cpp \
     $$PWD/chunkloader.cpp \
     $$PWD/scene/quad.cpp \
-    $$PWD/postprocessshader.cpp
+    $$PWD/postprocessshader.cpp \
+    $$PWD/scene/inventory.cpp
 
 
 HEADERS += \
@@ -39,5 +40,6 @@ HEADERS += \
     $$PWD/scene/lsystem.h \
     $$PWD/chunkloader.h \
     $$PWD/scene/quad.h \
-    $$PWD/postprocessshader.h
+    $$PWD/postprocessshader.h \
+    $$PWD/scene/inventory.h
 

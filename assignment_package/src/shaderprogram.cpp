@@ -8,7 +8,7 @@
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrCosPow(-1), attrAniFlag(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifCamera(-1), unifSampler2D(-1),
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifCamera(-1), unifSampler2D(-1), unifPlayer(-1),
       context(context)
 {}
 
@@ -74,6 +74,7 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifCamera     = context->glGetUniformLocation(prog, "u_Camera");
     unifSampler2D  = context->glGetUniformLocation(prog, "u_Texture");
     unifTime       = context->glGetUniformLocation(prog, "u_Time");
+    unifPlayer     = context->glGetUniformLocation(prog, "u_Player");
 
 }
 
@@ -247,6 +248,34 @@ void ShaderProgram::drawTrans(Drawable &d)
     if (attrAniFlag != -1) context->glDisableVertexAttribArray(attrAniFlag);
 }
 
+void ShaderProgram::draw(Drawable &d)
+{
+    useMe();
+
+    if(unifSampler2D != -1) {
+        context->glUniform1i(unifSampler2D, 0);
+    }
+
+    if (attrPos != -1 && d.bindPos()) {
+        context->glEnableVertexAttribArray(attrPos);
+        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 0, NULL);
+    }
+    if (attrUV != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 0, NULL);
+    }
+
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdxOpaque();
+    context->glDrawElements(d.drawMode(), d.elemCountOpaque(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
+
+    context->printGLErrorLog();
+}
+
 char* ShaderProgram::textFileRead(const char* fileName) {
     char* text;
 
@@ -338,5 +367,13 @@ void ShaderProgram::setTime(float t)
 
     if (unifTime != -1) {
         context->glUniform1f(unifTime, t);
+    }
+}
+
+void ShaderProgram::setPlayerPosition(glm::vec4 pos) {
+    useMe();
+
+    if (unifPlayer != -1) {
+        context->glUniform4fv(unifPlayer, 1, &pos[0]);
     }
 }

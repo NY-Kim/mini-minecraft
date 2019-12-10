@@ -22,7 +22,7 @@ MyGL::MyGL(QWidget *parent)
       mp_texture(mkU<Texture>(this)), m_time(0.0f),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
       mp_onLand(mkU<PostProcessShader>(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader>(this)), currPostShader(nullptr),
-      m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this),
+      m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this), mp_inventory(mkU<Inventory>(this)),
       mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
       chunksToCreate(), mutex(mkU<QMutex>()), init(true),
       splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
@@ -93,8 +93,6 @@ void MyGL::initializeGL()
     // Create a Vertex Attribute Object
     glGenVertexArrays(1, &vao);
 
-
-
     // Set up the post-processing pipeline
     createRenderBuffers();
 
@@ -110,6 +108,7 @@ void MyGL::initializeGL()
     currPostShader = mp_onLand.get();
 
     m_geomQuad.create();
+    mp_inventory->create();
     // Set a color with which to draw geometry since you won't have one
     // defined until you implement the Node classes.
     // This makes your geometry render green.
@@ -157,6 +156,7 @@ void MyGL::resizeGL(int w, int h)
     mp_progLambert->setViewProjMatrix(viewproj);
     mp_progFlat->setViewProjMatrix(viewproj);
     mp_progLambert->setCameraPosition(player->camera->eye);
+    mp_progFlat->setCameraPosition(player->camera->eye);
 
     printGLErrorLog();
 }
@@ -511,14 +511,18 @@ void MyGL::paintGL()
     mp_progLambert->setTime(m_time);
     currPostShader->setTime(m_time);
     m_time++;
+    mp_progLambert->setPlayerPosition(glm::vec4(player->position[0], player->position[1], player->position[2], 0));
 
     currPostShader->setDimensions(glm::ivec2(this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio()));
 
     GLDrawScene();
 
-
     glDisable(GL_DEPTH_TEST);
     performPostprocessRenderPass();
+    if (mp_inventory->drawn) {
+        mp_progFlat->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+        mp_progFlat->draw(*mp_inventory);
+    }
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -547,6 +551,24 @@ void MyGL::keyPressEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Escape) {
         QApplication::quit();
+    } else if (e->key() == Qt::Key_Right) {
+        mp_inventory->selectRight();
+        mp_inventory->destroy();
+        mp_inventory->create();
+        update();
+    } else if (e->key() == Qt::Key_Left) {
+        mp_inventory->selectLeft();
+        mp_inventory->destroy();
+        mp_inventory->create();
+        update();
+    } else if (e->key() == Qt::Key_I) {
+        if (mp_inventory->drawn) {
+            mp_inventory->drawn = false;
+            update();
+        } else {
+            mp_inventory->drawn = true;
+            update();
+        }
     } else player->keyEventUpdate(e);
 }
 
@@ -562,14 +584,18 @@ void MyGL::mouseMoveEvent(QMouseEvent *m) {
 void MyGL::mousePressEvent(QMouseEvent *m) {
     player->mouseEventUpdate(m);
     if (m->button() == Qt::LeftButton) {
-        mp_terrain->deleteBlock(player->camera->eye, player->camera->look);
+        BlockType t = mp_terrain->deleteBlock(player->camera->eye, player->camera->look);
         mp_terrain->destroy();
         mp_terrain->create();
+        mp_inventory->destroy();
+        mp_inventory->create();
         update();
     } else if (m->button() == Qt::RightButton) {
-        mp_terrain->addBlock(player->camera->eye, player->camera->look, STONE);
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, mp_inventory->selected_type);
         mp_terrain->destroy();
         mp_terrain->create();
+        mp_inventory->destroy();
+        mp_inventory->create();
         update();
     } else if (m->button() == Qt::MiddleButton) {
         mp_terrain->addBlock(player->camera->eye, player->camera->look, WATER);

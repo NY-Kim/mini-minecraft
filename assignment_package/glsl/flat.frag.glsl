@@ -1,14 +1,10 @@
 #version 150
-// ^ Change this to version 130 if you have compatibility issues
+uniform sampler2D u_Texture;
+in vec2 fs_UV;
 
-// Refer to the lambert shader files for useful comments
-
-in vec4 fs_Col;
-
-out vec4 out_Col;
+out vec4 out_Col;//This is the final output color that you will see on your screen for the pixel that is currently being processed.
 
 void main()
 {
-    // Copy the color; there is no shading.
-    out_Col = fs_Col;
+    out_Col = texture(u_Texture, fs_UV).rgba;
 }

@@ -59,8 +59,6 @@ void Player::keyEventUpdate(QKeyEvent *e) {
             qPressed = false;
         } else if (e->key() == Qt::Key_E) {
             ePressed = false;
-        } else if (e->key() == Qt::Key_Space) {
-            spacebarPressed = false;
         }
     }
 }

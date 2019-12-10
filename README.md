@@ -12,7 +12,7 @@
 - First, I was trying to use Perlin-Noise function to get moist-bumpiness value. But it was keep giving me values, not ranging [-1, 1]. Eventually, I had to use FBM instead, to generate moist-bumpiness value for each coordinate.
 - Properly using fbm, smoothstep to give desired look for each biome was hard. I had to calculate and try to get the right formula for the looks of the biomes.
 
-## Things to point out
+### Things to point out
 - I commented-out the river generation part from createTestScene(), because Biome Scene looks better without the rivers and the carvings. If you run the current code, it will show you the terrain with different biomes. TAs told me to just comment that part out, leave it in the code, and write it in ReadMe.
 - To test/check the rivers
     1) in mygl.cpp->initializeGL( )->use createRiverScene( ) at line 17 and comment-out createTestScene at line 130
@@ -28,11 +28,19 @@ For sound, I have two sounds for background music that play on loop. Ambient noi
 The primary difficult came with figuring out how to use the sound APIs provided in QT. It was difficult finding the right directory to play the sounds from, and I ended up just pushing my sound files to Github. Other than that, I spent time trying to modify my noise functions to look somewhat nice. 
 
 
-## Things to point out
+### Things to point out
 - I fixed some of the code from my previous milestones (in particular, movement and swimming). I also fixed multithreading to work on merge, as well as to generate instaneously.
 - For some reason, QSoundEffect does not work on Mac, but it does on Windows. Please see my branch (Alex_MS3) for working sound effects.
 - If the sound files do not load on my personal branch, replace the strings for the directories with the permanent links from https://github.com/acdo/Mini-Minecraft-Sounds (e.g. replace QUrl::fromLocalFile("../assignment_package/music/bgm1.mp3") with QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm1.mp3"). 
 
+## Inventory & Fog - Nayeong Kim
+
+For fog, I modified the code Adam wrote during class by modifying the Lambert shader fragment file. As the player moves, the fog moves along to give a player a clear view of only close distances. 
+
+For inventory, I created an inventory class that contains a set of 8 predetermined blocks. It appears on the bottom of the screen (like a toolkit) when user presses on the I button. The user can select which block to place using the left and right arrow key.
+
+** Difficulties:**
+Initially, I tried implementing the inventory that can count how many elements exist, and update depending on the blocks the user removes. I had difficulties when drawing the different blocks into the screen. The position data was correct, yet the blocks were being drawn in wrong positions with distorted UV. 
 
 # Milestone 2
 
@@ -50,10 +58,10 @@ The primary difficult came with figuring out how to use the sound APIs provided 
 - First, I was unsure how to make rivers that is continuous, even though it goes over from already-created terrain to coordinates where nothing exists. Initially river was being created, without the terrain around that area, and when the camera gets closer, terrain was regenerated on top of it, causing the river to be cut off.
 - After solving that issue, same thing happened in the process of carving out. Sometimes carving was stopped only until the already-generated terrain. And when new neighboring terrain was generated afterwards, there were obvious spikes, because part of the mountain in already-generated side was carved, while the other part was just generated now, without the influence of carving out.
 
-## Things to point out
+### Things to point out
 - After our final merge, our terrain loses texture and gets toned to a blue color. However, if we comment out either post-processing part or the lambert shading part, it works fine. Branch named "lsystemWithTexture" is a version with lsystem and texturing merged, which works fine, just without the multi-thread. To check river generation and terrain generation, please check that version(lsystemWithTexture), which is easier visually.
 
-## Texturing and Texture Animation
+## Texturing and Texture Animation - Nayeong Kim
 
 For texturing, I modified my interleaving VBO to include uv, cosine power, and animation flag, along with position, normal, and color. So in Terrain.cpp, I compute the UV, and set the cosine power and animation flag depending on the type of block.
 
@@ -63,11 +71,6 @@ In the Lambert shader, I modified it to a Blinn-Phong shader by referencing my c
 
 **Difficulties:**
 At first, it took a while to come up with how to do the animation since 5 blocks were given accross 2 rows in the texture map. I ended up only using 4 blocks (2 column blocks when I shift down, and 2 row blocks when I shift to the right).
-
-
-## Things to point out
-- Once we merge, our terrain loses texture and gets toned to a blue color. However, if we comment out either post-processing part or the lambert shading part, it works fine.
-
 
 ## Swimming and Multithreaded Terrain Generation - Alexander Do
 

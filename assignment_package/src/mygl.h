@@ -9,6 +9,7 @@
 #include "camera.h"
 #include <scene/terrain.h>
 #include "texture.h"
+#include <scene/inventory.h>
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLShaderProgram>
@@ -51,6 +52,7 @@ private:
 
     uPtr<Terrain> mp_terrain;
     uPtr<Texture> mp_texture;
+    uPtr<Inventory> mp_inventory;
 
     /// Timer linked to timerUpdate(). Fires approx. 60 times per second
     QTimer timer;

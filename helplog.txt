@@ -59,6 +59,12 @@ Adel and Eddie helped me make changes in myGL for my textures to load (bind(0) &
 2019-12-01 6:39PM
 Transparent blocks weren't showing correctly -> Draw all the opaque blocks first, then draw transparent blocks
 
+Milestone 3: Fog, Inventory
+2019-12-10 2:12AM How to find key through value in std::map
+https://stackoverflow.com/questions/51587127/efficient-way-to-get-key-from-stdmap-value
+
+For fog, I inferences the code Adam wrote during class
+
 *Alexander Do
 
 Milestone 1: Terrain Rendering and Chunking

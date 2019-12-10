@@ -103,7 +103,7 @@ public:
     //add block
     void addBlock(glm::vec3 eye, glm::vec3 look, BlockType t);
     //delete block
-    void deleteBlock(glm::vec3 eye, glm::vec3 look);
+    BlockType deleteBlock(glm::vec3 eye, glm::vec3 look);
     //ray marching helper function
     glm::vec4 rayMarch(glm::vec3 eye, glm::vec3 look);
 

@@ -29,7 +29,7 @@ public:
     int unifCamera; // A handle for the "uniform" vec2 representing camera position in the vertex shader
     int unifSampler2D; // A handle to the "uniform" sampler2D that will be used to read the texture containing the scene render
     int unifTime; // A handle for the "uniform" float representing time in the shader
-
+    int unifPlayer;
 public:
     ShaderProgram(OpenGLContext* context);
     // Sets up the requisite GL data and shaders from the given .glsl files
@@ -45,6 +45,7 @@ public:
     // Draw the given object to our screen using this ShaderProgram's shaders
     void drawOpaque(Drawable &d);
     void drawTrans(Drawable &d);
+    void draw(Drawable &d);
     // Utility function used in create()
     char* textFileRead(const char*);
     // Utility function that prints any shader compilation errors to the console
@@ -55,6 +56,7 @@ public:
     void setCameraPosition(const glm::vec3 &cameraPos);
     QString qTextFileRead(const char*);
     void setTime(float t);
+    void setPlayerPosition(glm::vec4 pos);
 
 protected:
     OpenGLContext* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,
