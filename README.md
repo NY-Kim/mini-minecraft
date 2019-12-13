@@ -41,7 +41,7 @@ For inventory, I created an inventory class that contains a set of 8 predetermin
 
 For procedural grass/snow color, I reference what Adam taught during class. I didn't use the grey scale image. Instead, I add a bit of a darker variation in grass colors so it looks more natural. For snow, I made it depend partially on the height of the snow block. The higher the blocks are, the darker their colors look. I used a noise function depending on the x and z coordinates and mixed darker green color for grass and grey color for snow.
 
-** Difficulties:**
+** Difficulties: **
 Initially, I tried implementing the inventory that can count how many elements exist, and update depending on the blocks the user removes. I had difficulties when drawing the different blocks into the screen. The position data was correct, yet the blocks were being drawn in wrong positions with distorted UV. 
 
 # Milestone 2
