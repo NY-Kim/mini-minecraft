@@ -33,11 +33,13 @@ The primary difficult came with figuring out how to use the sound APIs provided 
 - For some reason, QSoundEffect does not work on Mac, but it does on Windows. Please see my branch (Alex_MS3) for working sound effects.
 - If the sound files do not load on my personal branch, replace the strings for the directories with the permanent links from https://github.com/acdo/Mini-Minecraft-Sounds (e.g. replace QUrl::fromLocalFile("../assignment_package/music/bgm1.mp3") with QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm1.mp3"). 
 
-## Inventory & Fog - Nayeong Kim
+## Inventory, Fog, Procedural Grass/Snow Color - Nayeong Kim
 
-For fog, I modified the code Adam wrote during class by modifying the Lambert shader fragment file. As the player moves, the fog moves along to give a player a clear view of only close distances. 
+For fog, I modified the code Adam wrote during class by modifying the Lambert shader fragment file. As the player moves, the fog moves along to give a player a clear view of only close distances. To implement this, I had to receive the player's position as a uniform variable (u_Player), and compute the distance between the rendered object and the player. Since the player can fly around the see the terrain, I only considered the x and z coordinates.
 
-For inventory, I created an inventory class that contains a set of 8 predetermined blocks. It appears on the bottom of the screen (like a toolkit) when user presses on the I button. The user can select which block to place using the left and right arrow key.
+For inventory, I created an inventory class that contains a set of 8 predetermined blocks. (I added a texture for inventory to the texture file.) It appears on the bottom of the screen (like a toolkit) when user presses on the I button. The user can select which block to place using the left and right arrow key, and the selected block is indicated with a bright edge.
+
+For procedural grass/snow color, I reference what Adam taught during class. I didn't use the grey scale image. Instead, I add a bit of a darker variation in grass colors so it looks more natural. For snow, I made it depend partially on the height of the snow block. The higher the blocks are, the darker their colors look. I used a noise function depending on the x and z coordinates and mixed darker green color for grass and grey color for snow.
 
 ** Difficulties:**
 Initially, I tried implementing the inventory that can count how many elements exist, and update depending on the blocks the user removes. I had difficulties when drawing the different blocks into the screen. The position data was correct, yet the blocks were being drawn in wrong positions with distorted UV. 

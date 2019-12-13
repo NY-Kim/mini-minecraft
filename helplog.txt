@@ -59,11 +59,14 @@ Adel and Eddie helped me make changes in myGL for my textures to load (bind(0) &
 2019-12-01 6:39PM
 Transparent blocks weren't showing correctly -> Draw all the opaque blocks first, then draw transparent blocks
 
-Milestone 3: Fog, Inventory
+Milestone 3: Fog, Inventory, Procedural Grass/Snow Color
 2019-12-10 2:12AM How to find key through value in std::map
 https://stackoverflow.com/questions/51587127/efficient-way-to-get-key-from-stdmap-value
 
-For fog, I inferences the code Adam wrote during class
+2019-12-13 2:51AM Reference noise functions from GLSL Noise Algorithms
+https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
+
+For fog, I inferences the code Adam wrote during class. But made it brighter to give a more majestic feeling. 
 
 *Alexander Do
 
@@ -78,9 +81,9 @@ Looked up how to properly merge branches into master
 https://stackoverflow.com/questions/5292184/merging-multiple-branches-with-git
 
 Milestone 2: Swimming and Multithreading
+
 2019-11-21 10:57AM
 Used https://en.wikibooks.org/wiki/OpenGL_Programming/Post-Processing to help decifer the post-processing pipeline
-
 
 2019-11-25 8:25PM
 Used https://stackoverflow.com/questions/35064362/cannot-iterate-over-map-whose-elements-hold-a-uniq-ptr/35064887 to help iterate through a map with unique pointers

@@ -31,6 +31,30 @@ in vec4 fs_CameraPos;
 out vec4 out_Col; // This is the final output color that you will see on your
                   // screen for the pixel that is currently being processed.
 
+float rand(vec2 n) {
+        return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+}
+
+float noise(vec2 n) {
+        const vec2 d = vec2(0.0, 1.0);
+  vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+        return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+}
+
+float fbm(vec2 x) {
+        float v = 0.0;
+        float a = 0.5;
+        vec2 shift = vec2(100);
+        // Rotate to reduce axial bias
+    mat2 rot = mat2(cos(0.5), sin(0.5), -sin(0.5), cos(0.50));
+        for (int i = 0; i < 5; ++i) {
+                v += a * noise(x);
+                x = rot * x * 2.0 + shift;
+                a *= 0.5;
+        }
+        return v;
+}
+
 void main()
 {
     vec2 uv = fs_UV;
@@ -43,6 +67,18 @@ void main()
     }
 
     vec4 diffuse_color = texture(u_Texture, uv);
+
+    if (fs_UV.x >= 8.f / 16.f && fs_UV.y >= 13.f / 16.f && fs_UV.x <= 9.f / 16.f && fs_UV.y <= 14.f / 16.f) {
+        float n = fbm(fs_Pos.xz / 16.f);
+        vec3 color = mix(vec3(0.5, 0.5, 0.25) * diffuse_color.rgb, diffuse_color.rgb, n);
+        diffuse_color = vec4(color, diffuse_color.a);
+    }
+
+    if (fs_UV.x >= 2.f / 16.f && fs_UV.y >= 11.f / 16.f && fs_UV.x <= 3.f / 16.f && fs_UV.y <= 12.f / 16.f) {
+        float n = fbm(fs_Pos.xz / 16.f);
+        vec3 color = mix(vec3(0.7, 0.7, 0.7) * fs_Pos.y / 150.f , diffuse_color.rgb, n);
+        diffuse_color = vec4(color, diffuse_color.a);
+    }
 
     float diffuse_term = dot(normalize(fs_Nor), normalize(fs_LightVec));
     diffuse_term = clamp(diffuse_term, 0, 1);
