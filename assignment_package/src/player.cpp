@@ -5,7 +5,7 @@ Player::Player()
     : camera(mkU<Camera>()), velocity(0.f, 0.f, 0.f),
       wasdPressed(std::make_tuple(false, false, false, false)), spacebarPressed(false),
       mouseMoved(false), lmbPressed(false), rmbPressed(false),
-      godMode(true), onGround(true),
+      godMode(true), onGround(false), inLiquid(false),
       qPressed(false), ePressed(false), fPressed(false)
 {}
 
@@ -66,8 +66,8 @@ void Player::keyEventUpdate(QKeyEvent *e) {
 void Player::mouseEventUpdate(QMouseEvent *m) {
     if (m->type() == QEvent::MouseMove) {
         QPoint cursorXYChange = QPoint(camera->width / 2, camera->height / 2) - m->pos();
-        camera->polar[0] += cursorXYChange.x() / 150.f;
-        camera->polar[1] += cursorXYChange.y() / 150.f;
+        camera->polar[0] += cursorXYChange.x() / 130.f;
+        camera->polar[1] += cursorXYChange.y() / 130.f;
         mouseMoved = true;
     }
 }

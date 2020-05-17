@@ -3,19 +3,23 @@
 #include <iostream>
 
 Drawable::Drawable(OpenGLContext* context)
-    : bufIdx(), bufPos(), bufNor(), bufCol(), bufPNC(),
-      idxBound(false), posBound(false), norBound(false), colBound(false), pncBound(false),
+    : countOpaque(0), countTrans(0), bufIdxOpaque(), bufIdxTrans(), bufPNCOpaque(), bufPNCTrans(), bufPos(), bufUV(),
+      idxOpaqueBound(false), idxTransBound(false),
+      pncOpaqueBound(false), pncTransBound(false),
+      posBound(false), uvBound(false),
+
       context(context)
 {}
 
 Drawable::~Drawable()
 {}
 
-
 void Drawable::destroy()
 {
-    context->glDeleteBuffers(1, &bufIdx);
-    context->glDeleteBuffers(1, &bufPNC);
+    context->glDeleteBuffers(1, &bufIdxOpaque);
+    context->glDeleteBuffers(1, &bufPNCOpaque);
+    context->glDeleteBuffers(1, &bufIdxTrans);
+    context->glDeleteBuffers(1, &bufPNCTrans);
 }
 
 GLenum Drawable::drawMode()
@@ -29,16 +33,75 @@ GLenum Drawable::drawMode()
     return GL_TRIANGLES;
 }
 
-int Drawable::elemCount()
+int Drawable::elemCountOpaque()
 {
-    return count;
+    return countOpaque;
 }
 
-void Drawable::generateIdx()
+int Drawable::elemCountTrans()
 {
-    idxBound = true;
+    return countTrans;
+}
+
+void Drawable::generateIdxOpaque()
+{
+    idxOpaqueBound = true;
     // Create a VBO on our GPU and store its handle in bufIdx
-    context->glGenBuffers(1, &bufIdx);
+    context->glGenBuffers(1, &bufIdxOpaque);
+}
+
+void Drawable::generateIdxTrans()
+{
+    idxTransBound = true;
+    // Create a VBO on our GPU and store its handle in bufIdx
+    context->glGenBuffers(1, &bufIdxTrans);
+}
+
+void Drawable::generatePNCOpaque()
+{
+    pncOpaqueBound = true;
+    // Create a VBO on our GPU and store its handle in bufPNC
+    context->glGenBuffers(1, &bufPNCOpaque);
+}
+
+
+void Drawable::generatePNCTrans()
+{
+    pncTransBound = true;
+    // Create a VBO on our GPU and store its handle in bufPNC
+    context->glGenBuffers(1, &bufPNCTrans);
+}
+
+bool Drawable::bindIdxOpaque()
+{
+    if(bufIdxOpaque) {
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxOpaque);
+    }
+    return idxOpaqueBound;
+}
+
+bool Drawable::bindIdxTrans()
+{
+    if(idxTransBound) {
+        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdxTrans);
+    }
+    return idxTransBound;
+}
+
+bool Drawable::bindPNCOpaque()
+{
+    if(pncOpaqueBound) {
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCOpaque);
+    }
+    return pncOpaqueBound;
+}
+
+bool Drawable::bindPNCTrans()
+{
+    if(pncTransBound) {
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNCTrans);
+    }
+    return pncTransBound;
 }
 
 void Drawable::generatePos()
@@ -48,33 +111,11 @@ void Drawable::generatePos()
     context->glGenBuffers(1, &bufPos);
 }
 
-void Drawable::generateNor()
+void Drawable::generateUV()
 {
-    norBound = true;
-    // Create a VBO on our GPU and store its handle in bufNor
-    context->glGenBuffers(1, &bufNor);
-}
-
-void Drawable::generateCol()
-{
-    colBound = true;
+    uvBound = true;
     // Create a VBO on our GPU and store its handle in bufCol
-    context->glGenBuffers(1, &bufCol);
-}
-
-void Drawable::generatePNC()
-{
-    pncBound = true;
-    // Create a VBO on our GPU and store its handle in bufPNC
-    context->glGenBuffers(1, &bufPNC);
-}
-
-bool Drawable::bindIdx()
-{
-    if(idxBound) {
-        context->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, bufIdx);
-    }
-    return idxBound;
+    context->glGenBuffers(1, &bufUV);
 }
 
 bool Drawable::bindPos()
@@ -85,26 +126,10 @@ bool Drawable::bindPos()
     return posBound;
 }
 
-bool Drawable::bindNor()
+bool Drawable::bindUV()
 {
-    if(norBound){
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufNor);
+    if(uvBound){
+        context->glBindBuffer(GL_ARRAY_BUFFER, bufUV);
     }
-    return norBound;
-}
-
-bool Drawable::bindCol()
-{
-    if(colBound){
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufCol);
-    }
-    return colBound;
-}
-
-bool Drawable::bindPNC()
-{
-    if(pncBound) {
-        context->glBindBuffer(GL_ARRAY_BUFFER, bufPNC);
-    }
-    return pncBound;
+    return uvBound;
 }

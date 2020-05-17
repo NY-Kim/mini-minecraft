@@ -1,19 +1,34 @@
 #include "mygl.h"
 #include "la.h"
-#include "scene/cube.h"
+#include "chunkloader.h"
 
 #include <iostream>
 #include <algorithm>
 #include <QApplication>
 #include <QKeyEvent>
 #include <QDateTime>
+#include <QThreadPool>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
+#include <QSoundEffect>
+
+
+#define MINECRAFT_TEXTURE_SLOT 0
+#define POSTPROCESS_TEXTURE_SLOT 1
 
 
 MyGL::MyGL(QWidget *parent)
     : OpenGLContext(parent),
-      mp_worldAxes(mkU<WorldAxes>(this)), mp_texture(mkU<Texture>(this)),
+      mp_texture(mkU<Texture>(this)), m_time(0.0f),
       mp_progLambert(mkU<ShaderProgram>(this)), mp_progFlat(mkU<ShaderProgram>(this)),
-      mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch())
+      mp_onLand(mkU<PostProcessShader>(this)), mp_inWater(mkU<PostProcessShader>(this)), mp_inLava(mkU<PostProcessShader>(this)), currPostShader(nullptr),
+      m_frameBuffer(-1), m_renderedTexture(-1), m_depthRenderBuffer(-1), m_geomQuad(this), mp_inventory(mkU<Inventory>(this)),
+      mp_terrain(mkU<Terrain>(this)), player(mkU<Player>()), lastUpdate(QDateTime::currentMSecsSinceEpoch()),
+      chunksToCreate(), mutex(mkU<QMutex>()), init(true),
+      splashIn(mkU<QSoundEffect>()), waterSFX(mkU<QSoundEffect>()), lavaFlow(mkU<QSoundEffect>()), lavaPop(mkU<QSoundEffect>()), walkGrass(mkU<QSoundEffect>()),
+      windEff(mkU<QSoundEffect>()), birdEff(mkU<QSoundEffect>()),
+      soundBank({"https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass1.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass2.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/grass3.mp3",
+                "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird1.mp3", "https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bird2.mp3"})
 {
     // Connect the timer to a function so that when the timer ticks the function is executed
     connect(&timer, SIGNAL(timeout()), this, SLOT(timerUpdate()));
@@ -23,12 +38,26 @@ MyGL::MyGL(QWidget *parent)
 
     setMouseTracking(true); // MyGL will track the mouse's movements even if a mouse button is not pressed
     setCursor(Qt::BlankCursor); // Make the cursor invisible
+
+    // Set up sound effects
+    splashIn->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/splash.mp3"));
+    splashIn->setVolume(0.2);
+    waterSFX->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/water.mp3"));
+    waterSFX->setVolume(0.5);
+    lavaFlow->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/lava.mp3"));
+    lavaFlow->setVolume(0.2);
+    lavaPop->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/lavapop.mp3")); // Volume set randomly
+    walkGrass->setVolume(0.2); // Source file set randomly
+    windEff->setSource(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/wind.mp3"));
+    windEff->setVolume(0.15);
+    birdEff->setVolume(0.2); // Source file set randomly
 }
 
 MyGL::~MyGL()
 {
     makeCurrent();
     glDeleteVertexArrays(1, &vao);
+    m_geomQuad.destroy();
 }
 
 
@@ -48,9 +77,12 @@ void MyGL::initializeGL()
     // Set a few settings/modes in OpenGL rendering
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LINE_SMOOTH);
-    glEnable(GL_POLYGON_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-    glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
+
+    //Allow for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     // Set the size with which points should be rendered
     glPointSize(5);
     // Set the color with which the screen is filled at the start of each render call.
@@ -61,28 +93,52 @@ void MyGL::initializeGL()
     // Create a Vertex Attribute Object
     glGenVertexArrays(1, &vao);
 
-    //Create the instance of Cube
-    mp_worldAxes->create();
+    // Set up the post-processing pipeline
+    createRenderBuffers();
 
     // Create and set up the diffuse shader
     mp_progLambert->create(":/glsl/lambert.vert.glsl", ":/glsl/lambert.frag.glsl");
     // Create and set up the flat lighting shader
     mp_progFlat->create(":/glsl/flat.vert.glsl", ":/glsl/flat.frag.glsl");
 
+    // Create and set up the post-processing shaders
+    mp_onLand->create(":/glsl/passthrough.vert.glsl", ":glsl/noOp.frag.glsl");
+    mp_inWater->create(":/glsl/passthrough.vert.glsl", ":glsl/water.frag.glsl");
+    mp_inLava->create(":/glsl/passthrough.vert.glsl", ":glsl/lava.frag.glsl");
+    currPostShader = mp_onLand.get();
+
+    m_geomQuad.create();
+    mp_inventory->create();
     // Set a color with which to draw geometry since you won't have one
     // defined until you implement the Node classes.
     // This makes your geometry render green.
     mp_progLambert->setGeometryColor(glm::vec4(0,1,0,1));
 
     mp_texture->create(":/minecraft_textures_all.png");
-    mp_texture->load(0);
+    mp_texture->load(MINECRAFT_TEXTURE_SLOT);
 
     // We have to have a VAO bound in OpenGL 3.2 Core. But if we're not
     // using multiple VAOs, we can just bind one once.
     //    vao.bind();
     glBindVertexArray(vao);
+
+    //for regular scene with RIVERS
+    //mp_terrain->CreateRiverScene();
+
+    //for scen with BIOMES
     mp_terrain->CreateTestScene();
     mp_terrain->create();
+
+    // Now start the background music
+    QMediaPlayer *player = new QMediaPlayer();
+    QMediaPlaylist *bgm = new QMediaPlaylist();
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm1.mp3"));
+    bgm->addMedia(QUrl("https://github.com/acdo/Mini-Minecraft-Sounds/raw/ee431e10817a4384afedfeea6422703cc5bc9971/bgm2.mp3"));
+    bgm->setPlaybackMode(QMediaPlaylist::Loop);
+    bgm->setCurrentIndex(1);
+    player->setVolume(25);
+    player->setPlaylist(bgm);
+    player->play();
 }
 
 void MyGL::resizeGL(int w, int h)
@@ -90,7 +146,7 @@ void MyGL::resizeGL(int w, int h)
     //This code sets the concatenated view and perspective projection matrices used for
     //our scene's camera view.
     *player->camera = Camera(w, h, glm::vec3(19.f, 200.f, 8.f),
-                            glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
+                             glm::vec3(mp_terrain->dimensions.x / 2, mp_terrain->dimensions.y / 2, mp_terrain->dimensions.z / 2), glm::vec3(0,1,0));
     player->position = player->camera->eye - glm::vec3(0.f, 1.5, 0.f);
 
     glm::mat4 viewproj = player->camera->getViewProj();
@@ -100,6 +156,7 @@ void MyGL::resizeGL(int w, int h)
     mp_progLambert->setViewProjMatrix(viewproj);
     mp_progFlat->setViewProjMatrix(viewproj);
     mp_progLambert->setCameraPosition(player->camera->eye);
+    mp_progFlat->setCameraPosition(player->camera->eye);
 
     printGLErrorLog();
 }
@@ -109,15 +166,22 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
     float currT = 0.f;
     float length = glm::length(ray);
     ray = glm::normalize(ray);
-    glm::ivec3 currCell(currPos);
+    glm::ivec3 currCell(glm::floor(currPos));
 
     // March to find blocks that the vertex (position: currPos) will intersect with
+    // Do this for each cardinal axis respectively and use corresponding minT to scale velocity
     while (currT < length) {
         minT = std::sqrt(3);
         int axisOfIntersection = -1;
         for (int i = 0; i < 3; i++) {
             if (ray[i] != 0) {
                 int signOffset = std::max(0.f, glm::sign(ray[i]));
+                // If the player is *exactly* on an interface then
+                // they'll never move if they're looking in a negative direction
+                if(currCell[i] == ray[i] && signOffset == 0) {
+                    signOffset = -1;
+                }
+
                 float axisT = (currCell[i] + signOffset - currPos[i]) / ray[i];
                 if(axisT < minT && axisT > 0) {
                     minT = axisT;
@@ -126,13 +190,10 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
             }
         }
 
-        if (axisOfIntersection == -1) {
-            return 0.f;
-        }
-
         // Move position to next block
-        currPos += ray * minT;
         currT += minT;
+        currPos += ray * minT;
+
 
         // Offset block coord by -1 along the axis we hit IF AND ONLY IF the ray's direction
         // along that axis is negative.
@@ -143,7 +204,11 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
         // Check if there will be a collision
         glm::vec3 blockCoords = glm::floor(currPos) + offset;
         if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) != EMPTY) {
-            return std::max(currT - 0.01f, 0.f);
+            if (mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == LAVA ||
+                    mp_terrain->getBlockAt(blockCoords[0], blockCoords[1], blockCoords[2]) == WATER) {
+                player->inLiquid = true;
+            }
+            else return std::max(currT, 0.f);
         }
         currCell = blockCoords;
     }
@@ -154,28 +219,28 @@ float MyGL::rayMarch(glm::vec3 ray, glm::vec3 currPos) {
 // We're treating MyGL as our game engine class, so we're going to use timerUpdate
 void MyGL::timerUpdate()
 {
+
     // Step 1. Computer time elapsed since last update call
     int64_t prev = lastUpdate;
-    lastUpdate = QDateTime::currentMSecsSinceEpoch();
-    int64_t deltaT = lastUpdate - prev;
+    int64_t deltaT = QDateTime::currentMSecsSinceEpoch() - prev;
 
     // Step 2. Iterate over all entities that are capable of receiving input
     // and read their present controller state
     if (std::get<0>(player->wasdPressed)) {
-        player->velocity[0] = 2.f;
+        player->velocity[0] = 10.f;
     } else {
         player->velocity[0] = 0.f;
     }
     if (std::get<1>(player->wasdPressed)) {
-        player->velocity[2] = -2.f;
+        player->velocity[2] = -10.f;
     } else {
         player->velocity[2] = 0.f;
     }
     if (std::get<2>(player->wasdPressed)) {
-        player->velocity[0] = (player->velocity[2] == 2.f) ? 0.f : -2.f;
+        player->velocity[0] = (player->velocity[2] == 2.f) ? 0.f : -10.f;
     }
     if (std::get<3>(player->wasdPressed)) {
-        player->velocity[2] = (player->velocity[0] == -2.f) ? 0.f : 2.f;
+        player->velocity[2] = (player->velocity[0] == -2.f) ? 0.f : 10.f;
     }
 
     if (player->mouseMoved) {
@@ -183,19 +248,21 @@ void MyGL::timerUpdate()
         player->mouseMoved = false;
     }
 
-    if (player->spacebarPressed) {
+    if (player->spacebarPressed && (player->onGround || player->inLiquid)) {
         player->velocity[1] = 2.f;
-        player->spacebarPressed = false;
+        if (!player->inLiquid) {
+            player->spacebarPressed = false;
+        }
     }
 
     if (player->qPressed) {
-        player->velocity[1] = -2.f;
+        player->velocity[1] = -10.f;
     } else if (player->godMode) {
         player->velocity[1] = 0.f;
     }
 
     if (player->ePressed) {
-        player->velocity[1] = (player->qPressed) ? 0.f : 2.f;
+        player->velocity[1] = (player->qPressed) ? 0.f : 10.f;
     }
 
     if (player->fPressed) {
@@ -211,21 +278,22 @@ void MyGL::timerUpdate()
     // Step 4. Prevent physics entities from colliding with other physics entities
     // In order to check for collisions, we volume cast using the translation vector
     // We find the furthest possible point , then volume cast and reupdate camera if necessary
+    bool inLiquidBefore = player->inLiquid;
     if (glm::length(player->velocity) > 0.f) {
         glm::vec3 trans(player->velocity[0] * deltaT / 100.f,
-                        player->velocity[1] * deltaT / 100.f,
-                        player->velocity[2] * deltaT / 100.f);
+                player->velocity[1] * deltaT / 100.f,
+                player->velocity[2] * deltaT / 100.f);
 
         glm::vec3 updatedPos(player->position);
 
         if (player->godMode) {
             updatedPos += player->camera->look * trans[0];
+            updatedPos += player->camera->up * trans[1];
         } else {
             glm::vec3 grounded = glm::normalize(glm::vec3(player->camera->look[0], 0.f, player->camera->look[2]));
             updatedPos += grounded * trans[0];
+            updatedPos += player->camera->world_up * trans[1];
         }
-
-        updatedPos += player->camera->up * trans[1];
         updatedPos += player->camera->right * trans[2];
 
         glm::vec3 ray = updatedPos - player->position;
@@ -241,44 +309,188 @@ void MyGL::timerUpdate()
             player->camera->eye += ray;
             player->camera->ref += ray;
             player->position += ray;
-            update();
-            return;
         }
-        glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
+        else {
+            glm::vec3 bottomLeftVertex = player->position - glm::vec3(0.5, 0.f, 0.f);
 
-        float minT = glm::length(ray);
-        for (int x = 0; x <= 1; ++x) {
-            for (int y = 0; y <= 2; ++y) {
-                for (int z = 0; z >= -1; --z) {
-                    glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
-                    minT = std::min(minT, rayMarch(ray, currVertPos));
+            float minT = glm::length(ray);
+            for (int x = 0; x <= 1; ++x) {
+                for (int y = 0; y <= 2; ++y) {
+                    for (int z = 0; z >= -1; --z) {
+                        glm::vec3 currVertPos = bottomLeftVertex + glm::vec3(x, y, z);
+                        minT = std::min(minT, rayMarch(ray, currVertPos));
+                    }
                 }
             }
+            minT = std::max(minT - 0.02f, 0.f);
+            if (player->inLiquid) {
+                minT = minT * 2.f / 3.f;
+            }
+            else if (player->onGround && !walkGrass->isPlaying()) {
+                int index = rand() % 3;
+                walkGrass->setSource(QUrl(QString::fromStdString(soundBank[index])));
+                walkGrass->play();
+            }
+            ray = glm::normalize(ray) * minT;
+            player->camera->eye += ray;
+            player->camera->ref += ray;
+            player->position += ray;
         }
-        minT -= 0.01f;
-        ray = glm::normalize(ray) * minT;
-        player->camera->eye += ray;
-        player->camera->ref += ray;
-        player->position += ray;
     }
 
     // Gravity only affects player if not in god mode or not on ground
-    glm::ivec3 currPos(player->position + glm::vec3(-0.5, 0.5f, 0.f));
-    player->onGround = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
-                        mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY);
-    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -2.0);
+    glm::ivec3 currPos(glm::floor(player->position));
+
+    bool bottomInLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) == WATER);
+    bool topInLiquid = (mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2]) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2]) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1], currPos[2] - 1) == WATER) ||
+            (mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2] - 1) == LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1], currPos[2] - 1) == WATER);
+
+    player->inLiquid = bottomInLiquid || topInLiquid;
+
+    if (inLiquidBefore != player->inLiquid) {
+        splashIn->play();
+    }
+    player->onGround =
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != EMPTY ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != EMPTY) &&
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != WATER ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != WATER ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != WATER ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != WATER) &&
+            (mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2]) != LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2]) != LAVA ||
+            mp_terrain->getBlockAt(currPos[0], currPos[1] - 1.f, currPos[2] - 1) != LAVA ||
+            mp_terrain->getBlockAt(currPos[0] + 1, currPos[1] - 1.f, currPos[2] - 1) != LAVA);
+
+    player->velocity[1] = (player->godMode || player->onGround) ? 0.f : std::max(player->velocity[1] - (9.8 * deltaT / 1000.f), -20.0);
 
     // Step 5. Process all renderable entities and draw them
 
     std::vector<int> regenCase = mp_terrain->checkRegenerate(player->position);
     if (regenCase.size() != 0) {
-        mp_terrain->regenerateTerrain(regenCase, player->position);
-        mp_terrain->destroy();
-        mp_terrain->create();
+        // Initial load-in
+        if (init) {
+            mp_terrain->destroy();
+            mp_terrain->create();
+            init = false;
+        }
+
+        else {
+            for (int dir : regenCase) {
+                // a) Create 4x4 chunks and set its neighbors
+                glm::ivec2 currOrigin = mp_terrain->terrOrigin(player->position);
+                glm::ivec2 chunkOrigin = getNewOrigin(currOrigin, dir);
+                if (mp_terrain->m_chunks.find(std::pair<int, int>(chunkOrigin[0], chunkOrigin[1])) != mp_terrain->m_chunks.end()) {
+                    continue;
+                }
+
+                std::vector<Chunk*> threadChunks;
+                for (int x = 0; x < 4; ++x) {
+                    for (int z = 0; z < 4; ++z) {
+                        uPtr<Chunk> chunk = mkU<Chunk>(this, chunkOrigin + glm::ivec2(x * 16, z * 16));
+                        Chunk* currChunk = chunk.get();
+                        mp_terrain->m_chunks[std::pair<int, int>(currChunk->position[0], currChunk->position[1])] = std::move(chunk);
+                        mp_terrain->setNeighbors(currChunk);
+                        threadChunks.push_back(currChunk);
+                    }
+                }
+
+                // b) Make worker to handle the chunks and start it
+                QString name("Worker ");
+                name.append(QString::number(dir));
+                ChunkLoader* worker = new ChunkLoader(dir, threadChunks, &chunksToCreate, name, mutex.get());
+                QThreadPool::globalInstance()->start(worker);
+
+                // c) Lock mutex, create all the chunks that have been processed so far, then clear the vector and unlock
+
+                mutex->lock();
+                if (chunksToCreate.size() > 0) {
+                    for (Chunk* c : chunksToCreate) {
+                        c->create();
+                    }
+                    chunksToCreate.clear();
+                }
+                mutex->unlock();
+
+
+            }
+            // If there are any remaining non-created chunks, lock mutex, create all the chunks, then clear the vector and unlock
+            mutex->lock();
+            if (chunksToCreate.size() > 0) {
+                for (Chunk* c : chunksToCreate) {
+                    c->create();
+                }
+                chunksToCreate.clear();
+            }
+            mutex->unlock();
+        }
     }
+
+    // Check which post-process buffer to use
+    glm::ivec3 camPos(glm::floor(player->camera->eye));
+    if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == LAVA) {
+        currPostShader = mp_inLava.get();
+    } else if (mp_terrain->getBlockAt(camPos[0], camPos[1], camPos[2]) == WATER) {
+        currPostShader = mp_inWater.get();
+    } else currPostShader = mp_onLand.get();
     update();
+
+    // Check if liquid is nearby, if so play corresponding SFX
+    for (int x = -10; x <= 10; ++x) {
+        for (int y = -10; y <= 10; y++) {
+            for (int z = -10; z <= 10; z++) {
+                if (!waterSFX->isPlaying()) {
+                    if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == WATER) {
+                        waterSFX->play();
+                    }
+                }
+                if (!lavaFlow->isPlaying()) {
+                    if (mp_terrain->getBlockAt(camPos[0] + x, camPos[1] + y, camPos[2] + z) == LAVA) {
+                        lavaFlow->play();
+                        if (rand() % 100 == 99 && !lavaPop->isPlaying()) {
+                            float vol = (rand() % 100) / 100.f;
+                            vol = glm::clamp(0.05f, 0.25f, vol);
+                            lavaPop->setVolume(vol);
+                            lavaPop->play();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Now determine if we want to play wind or bird SFX
+    int check = rand() % 1000;
+    if (check == 998) {
+        if (!windEff->isPlaying()) {
+            windEff->play();
+        }
+    } else if (check == 999) {
+        if (!birdEff->isPlaying()) {
+            int index = rand() % 2 + 3;
+            birdEff->setSource(QUrl(QString::fromStdString(soundBank[index])));
+            birdEff->play();
+        }
+    }
+
+
+    // Potential fix for deltaT, don't update lastUpdate counter until finished
+    lastUpdate = QDateTime::currentMSecsSinceEpoch();
 }
 
 // This function is called whenever update() is called.
@@ -286,27 +498,51 @@ void MyGL::timerUpdate()
 // so paintGL() called at a rate of 60 frames per second.
 void MyGL::paintGL()
 {
+    // Render the 3D scene to our frame buffer
+
+    // Render to our framebuffer rather than the viewport
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
     // Clear the screen so that we only see newly drawn images
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     mp_progFlat->setViewProjMatrix(player->camera->getViewProj());
     mp_progLambert->setViewProjMatrix(player->camera->getViewProj());
+    mp_progLambert->setTime(m_time);
+    currPostShader->setTime(m_time);
+    m_time++;
+    mp_progLambert->setPlayerPosition(glm::vec4(player->position[0], player->position[1], player->position[2], 0));
+
+    currPostShader->setDimensions(glm::ivec2(this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio()));
 
     GLDrawScene();
-    mp_texture->bind(0);
 
     glDisable(GL_DEPTH_TEST);
-    mp_progFlat->setModelMatrix(glm::mat4());
-    mp_progFlat->draw(*mp_worldAxes);
+    performPostprocessRenderPass();
+    if (mp_inventory->drawn) {
+        mp_progFlat->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+        mp_progFlat->draw(*mp_inventory);
+    }
     glEnable(GL_DEPTH_TEST);
-
 }
 
 void MyGL::GLDrawScene()
 {
-    for (std::map<std::pair<int, int>, Chunk>::iterator i = mp_terrain->m_chunks.begin(); i != mp_terrain->m_chunks.end(); i++) {
-        mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
-        mp_progLambert->draw(i->second);
+    mp_texture->bind(MINECRAFT_TEXTURE_SLOT);
+    for (const auto& map : mp_terrain->m_chunks) {
+        Chunk* cPtr = map.second.get();
+        if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
+            mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+            mp_progLambert->drawOpaque(*cPtr);
+        }
+    }
+
+    for (const auto& map : mp_terrain->m_chunks) {
+        Chunk* cPtr = map.second.get();
+        if (std::find(chunksToCreate.begin(), chunksToCreate.end(), cPtr) == chunksToCreate.end()) {
+            mp_progLambert->setModelMatrix(glm::translate(glm::mat4(), glm::vec3(0)));
+            mp_progLambert->drawTrans(*cPtr);
+        }
     }
 }
 
@@ -315,6 +551,24 @@ void MyGL::keyPressEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Escape) {
         QApplication::quit();
+    } else if (e->key() == Qt::Key_Right) {
+        mp_inventory->selectRight();
+        mp_inventory->destroy();
+        mp_inventory->create();
+        update();
+    } else if (e->key() == Qt::Key_Left) {
+        mp_inventory->selectLeft();
+        mp_inventory->destroy();
+        mp_inventory->create();
+        update();
+    } else if (e->key() == Qt::Key_I) {
+        if (mp_inventory->drawn) {
+            mp_inventory->drawn = false;
+            update();
+        } else {
+            mp_inventory->drawn = true;
+            update();
+        }
     } else player->keyEventUpdate(e);
 }
 
@@ -330,12 +584,21 @@ void MyGL::mouseMoveEvent(QMouseEvent *m) {
 void MyGL::mousePressEvent(QMouseEvent *m) {
     player->mouseEventUpdate(m);
     if (m->button() == Qt::LeftButton) {
-        mp_terrain->deleteBlock(player->camera->eye, player->camera->look);
+        BlockType t = mp_terrain->deleteBlock(player->camera->eye, player->camera->look);
         mp_terrain->destroy();
         mp_terrain->create();
+        mp_inventory->destroy();
+        mp_inventory->create();
         update();
     } else if (m->button() == Qt::RightButton) {
-        mp_terrain->addBlock(player->camera->eye, player->camera->look);
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, mp_inventory->selected_type);
+        mp_terrain->destroy();
+        mp_terrain->create();
+        mp_inventory->destroy();
+        mp_inventory->create();
+        update();
+    } else if (m->button() == Qt::MiddleButton) {
+        mp_terrain->addBlock(player->camera->eye, player->camera->look, WATER);
         mp_terrain->destroy();
         mp_terrain->create();
         update();
@@ -344,4 +607,69 @@ void MyGL::mousePressEvent(QMouseEvent *m) {
 
 void MyGL::mouseReleaseEvent(QMouseEvent *m) {
     player->mouseEventUpdate(m);
+}
+
+void MyGL::createRenderBuffers()
+{
+    // Initialize the frame buffers and render textures
+    glGenFramebuffers(1, &m_frameBuffer);
+    glGenTextures(1, &m_renderedTexture);
+    glGenRenderbuffers(1, &m_depthRenderBuffer);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, m_frameBuffer);
+    // Bind our texture so that all functions that deal with textures will interact with this one
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)0);
+
+    // Set the render settings for the texture we've just created.
+    // Essentially zero filtering on the "texture" so it appears exactly as rendered
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    // Clamp the colors at the edge of our texture
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Initialize our depth buffer
+    glBindRenderbuffer(GL_RENDERBUFFER, m_depthRenderBuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthRenderBuffer);
+
+    // Set m_renderedTexture as the color output of our frame buffer
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_renderedTexture, 0);
+
+    // Sets the color output of the fragment shader to be stored in GL_COLOR_ATTACHMENT0, which we previously set to m_renderedTextures[i]
+    GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+    glDrawBuffers(1, drawBuffers); // "1" is the size of drawBuffers
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        printGLErrorLog();
+    }
+}
+
+void MyGL::performPostprocessRenderPass()
+{
+    // Render the frame buffer as a texture on a screen-size quad
+
+    // Tell OpenGL to render to the viewport's frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, this->defaultFramebufferObject());
+    // Render on the whole framebuffer, complete from the lower left corner to the upper right
+    glViewport(0,0,this->width() * this->devicePixelRatio(), this->height() * this->devicePixelRatio());
+    // Clear the screen
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Bind our texture in Texture Unit 0
+    glActiveTexture(GL_TEXTURE0 + POSTPROCESS_TEXTURE_SLOT);
+    glBindTexture(GL_TEXTURE_2D, m_renderedTexture);
+
+    currPostShader->draw(m_geomQuad, POSTPROCESS_TEXTURE_SLOT);
+}
+
+glm::ivec2 MyGL::getNewOrigin(glm::ivec2 curr, int regenCase) {
+    int xOffset = (regenCase == 2 || regenCase == 3 || regenCase == 4) ? 64 :
+                                                                         (regenCase == 6 || regenCase == 7 || regenCase == 8) ? -64 : 0;
+    int zOffset = (regenCase == 1 || regenCase == 2 || regenCase == 8) ? 64 :
+                                                                         (regenCase == 4 || regenCase == 5 || regenCase == 6) ? -64 : 0;
+
+    return curr + glm::ivec2(xOffset, zOffset);
 }

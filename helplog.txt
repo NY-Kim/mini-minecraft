@@ -15,6 +15,25 @@ Helen explained to me how to avoid diagonally adding block and determine the fac
 2019 11-17 5:00PM 
 I was inefficiently creating chunks and setting blocks for generating additional terrain. Jake suggested me to just iterate to the blocks of "new terrain", instead of initializing the chunks first then setting blocks for each of them.
 
+Milestone 2: L-System Rivers
+
+2019-11-27 2:50PM 
+Adam explained to me, where the random number should come in in the river generation. I was not understanding the instructions 100%. Also, he told me how to call the functions from map with function pointers(syntax).
+
+2019-11-27 3:20PM 
+Ryan gave me an insight for generating river and also smooth transition between terrains. Also he told me about using hemisphere for better looking carving out effect.
+
+Milestone 3: Biomes
+
+2019-12-3 12:00PM 
+Nick explained how to use Worley noise function for biome implementation.
+
+2019-12-3 12:40PM 
+Adam explained to me, how I should approach the biomes part. He explained using peril-noise function to decide "moist", "bumpy" value for each coordinate, which are used to determine type of a biome that coordinate lies in. Also, he suggested using smooth step for interpolating heights between biomes for better looks.
+
+2019-12-7 10:30PM 
+Veronica told me she couldn't figure out problem in her peril-noise, so Jake suggested her to use fbm noise function instead, for getting moist-bump value. My peril-noise was not working too, so I took her advice to use fbm instead.
+
 *Nayeong Kim 
 
 Milestone 1: Terrain Rendering and Chunking
@@ -28,9 +47,26 @@ Blocks in negative-x or negative-z values won't draw correctly. Made a several f
 - updated all my functions to support negative values (find correct origin of chunk)
 - changed my key structure of Terrain::m_chunks to be std::pair<int, int> instead of int64_t (std::pair is hashable) 
 
-2019 11-17 1:38PM 
+2019-11-17 1:38PM 
 Looked up how to remove DS_Store files
 https://stackoverflow.com/questions/107701/how-can-i-remove-ds-store-files-from-a-git-repository
+
+Milestone 2: Texturing and Texture Animation
+
+2019-11-25 8:30PM
+Adel and Eddie helped me make changes in myGL for my textures to load (bind(0) & load(0)) function
+
+2019-12-01 6:39PM
+Transparent blocks weren't showing correctly -> Draw all the opaque blocks first, then draw transparent blocks
+
+Milestone 3: Fog, Inventory, Procedural Grass/Snow Color
+2019-12-10 2:12AM How to find key through value in std::map
+https://stackoverflow.com/questions/51587127/efficient-way-to-get-key-from-stdmap-value
+
+2019-12-13 2:51AM Reference noise functions from GLSL Noise Algorithms
+https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
+
+For fog, I inferences the code Adam wrote during class. But made it brighter to give a more majestic feeling. 
 
 *Alexander Do
 
@@ -44,3 +80,17 @@ https://en.cppreference.com/w/cpp/utility/tuple
 Looked up how to properly merge branches into master
 https://stackoverflow.com/questions/5292184/merging-multiple-branches-with-git
 
+Milestone 2: Swimming and Multithreading
+
+2019-11-21 10:57AM
+Used https://en.wikibooks.org/wiki/OpenGL_Programming/Post-Processing to help decifer the post-processing pipeline
+
+2019-11-25 8:25PM
+Used https://stackoverflow.com/questions/35064362/cannot-iterate-over-map-whose-elements-hold-a-uniq-ptr/35064887 to help iterate through a map with unique pointers
+
+Milestone 3: Post-Process Shader and Sound
+2019-12-06 11:27 AM
+Used https://www.qtcentre.org/threads/55257-QSound-No-such-file-or-directory to figure out why says QSound no such file
+
+2019-12-06 9:12 PM
+Used https://together.jolla.com/question/53394/qsoundeffectpulseaudio-error-decoding-sourc/ to try to fix QSoundEffect on Mac

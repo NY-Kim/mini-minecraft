@@ -8,7 +8,7 @@
 ShaderProgram::ShaderProgram(OpenGLContext *context)
     : vertShader(), fragShader(), prog(),
       attrPos(-1), attrNor(-1), attrCol(-1), attrUV(-1), attrCosPow(-1), attrAniFlag(-1),
-      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifCamera(-1), unifSampler2D(-1),
+      unifModel(-1), unifModelInvTr(-1), unifViewProj(-1), unifColor(-1), unifCamera(-1), unifSampler2D(-1), unifPlayer(-1),
       context(context)
 {}
 
@@ -73,6 +73,8 @@ void ShaderProgram::create(const char *vertfile, const char *fragfile)
     unifColor      = context->glGetUniformLocation(prog, "u_Color");
     unifCamera     = context->glGetUniformLocation(prog, "u_Camera");
     unifSampler2D  = context->glGetUniformLocation(prog, "u_Texture");
+    unifTime       = context->glGetUniformLocation(prog, "u_Time");
+    unifPlayer     = context->glGetUniformLocation(prog, "u_Player");
 
 }
 
@@ -140,9 +142,13 @@ void ShaderProgram::setGeometryColor(glm::vec4 color)
 }
 
 //This function, as its name implies, uses the passed in GL widget
-void ShaderProgram::draw(Drawable &d)
+void ShaderProgram::drawOpaque(Drawable &d)
 {
         useMe();
+
+        if(unifSampler2D != -1) {
+            context->glUniform1i(unifSampler2D, 0);
+        }
 
     // Each of the following blocks checks that:
     //   * This shader has this attribute, and
@@ -154,7 +160,7 @@ void ShaderProgram::draw(Drawable &d)
         // meaning that glVertexAttribPointer associates vs_Pos
         // (referred to by attrPos) with that VBO
 
-    if (d.bindPNC()) {
+    if (d.bindPNCOpaque()) {
         if (attrPos != -1) {
             context->glEnableVertexAttribArray(attrPos);
             context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)0);
@@ -183,8 +189,8 @@ void ShaderProgram::draw(Drawable &d)
 
     // Bind the index buffer and then draw shapes from it.
     // This invokes the shader program, which accesses the vertex buffers.
-    d.bindIdx();
-    context->glDrawElements(d.drawMode(), d.elemCount(), GL_UNSIGNED_INT, 0);
+    d.bindIdxOpaque();
+    context->glDrawElements(d.drawMode(), d.elemCountOpaque(), GL_UNSIGNED_INT, 0);
 
     if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
     if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
@@ -192,6 +198,80 @@ void ShaderProgram::draw(Drawable &d)
     if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
     if (attrCosPow != -1) context->glDisableVertexAttribArray(attrCosPow);
     if (attrAniFlag != -1) context->glDisableVertexAttribArray(attrAniFlag);
+
+}
+
+void ShaderProgram::drawTrans(Drawable &d)
+{
+    useMe();
+
+    if(unifSampler2D != -1) {
+        context->glUniform1i(unifSampler2D, 0);
+    }
+
+    if (d.bindPNCTrans()) {
+        if (attrPos != -1) {
+            context->glEnableVertexAttribArray(attrPos);
+            context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)0);
+        }
+        if (attrNor != -1) {
+            context->glEnableVertexAttribArray(attrNor);
+            context->glVertexAttribPointer(attrNor, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)sizeof(glm::vec4));
+        }
+        if (attrCol != -1) {
+            context->glEnableVertexAttribArray(attrCol);
+            context->glVertexAttribPointer(attrCol, 4, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(2 * sizeof(glm::vec4)));
+        }
+        if (attrUV != -1) {
+            context->glEnableVertexAttribArray(attrUV);
+            context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4)));
+        }
+        if (attrCosPow != -1) {
+            context->glEnableVertexAttribArray(attrCosPow);
+            context->glVertexAttribPointer(attrCosPow, 1, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4) + 2 * sizeof(float)));
+        }
+        if (attrAniFlag != -1) {
+            context->glEnableVertexAttribArray(attrAniFlag);
+            context->glVertexAttribPointer(attrAniFlag, 1, GL_FLOAT, false, 4 * sizeof(glm::vec4), (void*)(3 * sizeof(glm::vec4) + 3 * sizeof(float)));
+        }
+    }
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdxTrans();
+    context->glDrawElements(d.drawMode(), d.elemCountTrans(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrNor != -1) context->glDisableVertexAttribArray(attrNor);
+    if (attrCol != -1) context->glDisableVertexAttribArray(attrCol);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
+    if (attrCosPow != -1) context->glDisableVertexAttribArray(attrCosPow);
+    if (attrAniFlag != -1) context->glDisableVertexAttribArray(attrAniFlag);
+}
+
+void ShaderProgram::draw(Drawable &d)
+{
+    useMe();
+
+    if(unifSampler2D != -1) {
+        context->glUniform1i(unifSampler2D, 0);
+    }
+
+    if (attrPos != -1 && d.bindPos()) {
+        context->glEnableVertexAttribArray(attrPos);
+        context->glVertexAttribPointer(attrPos, 4, GL_FLOAT, false, 0, NULL);
+    }
+    if (attrUV != -1 && d.bindUV()) {
+        context->glEnableVertexAttribArray(attrUV);
+        context->glVertexAttribPointer(attrUV, 2, GL_FLOAT, false, 0, NULL);
+    }
+
+    // Bind the index buffer and then draw shapes from it.
+    // This invokes the shader program, which accesses the vertex buffers.
+    d.bindIdxOpaque();
+    context->glDrawElements(d.drawMode(), d.elemCountOpaque(), GL_UNSIGNED_INT, 0);
+
+    if (attrPos != -1) context->glDisableVertexAttribArray(attrPos);
+    if (attrUV != -1) context->glDisableVertexAttribArray(attrUV);
 
     context->printGLErrorLog();
 }
@@ -278,5 +358,22 @@ void ShaderProgram::setCameraPosition(const glm::vec3 &cameraPos)
 
     if (unifCamera != -1) {
         context->glUniform3fv(unifCamera, 1, &cameraPos[0]);
+    }
+}
+
+void ShaderProgram::setTime(float t)
+{
+    useMe();
+
+    if (unifTime != -1) {
+        context->glUniform1f(unifTime, t);
+    }
+}
+
+void ShaderProgram::setPlayerPosition(glm::vec4 pos) {
+    useMe();
+
+    if (unifPlayer != -1) {
+        context->glUniform4fv(unifPlayer, 1, &pos[0]);
     }
 }

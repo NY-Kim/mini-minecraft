@@ -28,7 +28,8 @@ public:
     int unifColor; // A handle for the "uniform" vec4 representing color of geometry in the vertex shader
     int unifCamera; // A handle for the "uniform" vec2 representing camera position in the vertex shader
     int unifSampler2D; // A handle to the "uniform" sampler2D that will be used to read the texture containing the scene render
-
+    int unifTime; // A handle for the "uniform" float representing time in the shader
+    int unifPlayer;
 public:
     ShaderProgram(OpenGLContext* context);
     // Sets up the requisite GL data and shaders from the given .glsl files
@@ -42,6 +43,8 @@ public:
     // Pass the given color to this shader on the GPU
     void setGeometryColor(glm::vec4 color);
     // Draw the given object to our screen using this ShaderProgram's shaders
+    void drawOpaque(Drawable &d);
+    void drawTrans(Drawable &d);
     void draw(Drawable &d);
     // Utility function used in create()
     char* textFileRead(const char*);
@@ -52,8 +55,10 @@ public:
 
     void setCameraPosition(const glm::vec3 &cameraPos);
     QString qTextFileRead(const char*);
+    void setTime(float t);
+    void setPlayerPosition(glm::vec4 pos);
 
-private:
+protected:
     OpenGLContext* context;   // Since Qt's OpenGL support is done through classes like QOpenGLFunctions_3_2_Core,
                             // we need to pass our OpenGL context to the Drawable in order to call GL functions
                             // from within this class.
